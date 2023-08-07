@@ -1,1 +1,1 @@
-../../../urbit/pkg/base-dev/lib/noun-diff.hoon
+../../urbit/pkg/base-dev/lib/noun-diff.hoon

@@ -1,1 +1,1 @@
-../../../urbit/pkg/base-dev/mar/tang.hoon
+../../urbit/pkg/base-dev/mar/tang.hoon

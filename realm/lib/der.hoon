@@ -1,1 +1,1 @@
-../../../urbit/pkg/base-dev/lib/der.hoon
+../../urbit/pkg/base-dev/lib/der.hoon

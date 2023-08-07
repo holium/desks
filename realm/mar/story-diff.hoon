@@ -1,1 +1,1 @@
-../../../urbit/pkg/base-dev/mar/story-diff.hoon
+../../urbit/pkg/base-dev/mar/story-diff.hoon

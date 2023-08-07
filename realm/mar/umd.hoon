@@ -1,1 +1,1 @@
-../../../urbit/pkg/base-dev/mar/umd.hoon
+../../urbit/pkg/base-dev/mar/umd.hoon

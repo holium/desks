@@ -13,9 +13,9 @@ function link() { # source desk, target desk, filepath
     pax=$(dirname "$pax");
     bak="../$bak";
   done;
-  printf "../../$bak/pkg/$rel/$src\n";
+  printf "../$bak/pkg/$rel/$src\n";
   printf "../$2/$src\n\n";
-  ln -sf "../../$bak/pkg/$rel/$src" "../$2/$src";
+  ln -sf "../$bak/pkg/$rel/$src" "../$2/$src";
 }
 
 # mirror directory structure

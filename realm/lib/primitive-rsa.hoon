@@ -1,1 +1,1 @@
-../../../urbit/pkg/base-dev/lib/primitive-rsa.hoon
+../../urbit/pkg/base-dev/lib/primitive-rsa.hoon

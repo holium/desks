@@ -1,1 +1,1 @@
-../../../urbit/pkg/base-dev/sur/aquarium.hoon
+../../urbit/pkg/base-dev/sur/aquarium.hoon

@@ -1,1 +1,1 @@
-../../../urbit/pkg/base-dev/lib/strand.hoon
+../../urbit/pkg/base-dev/lib/strand.hoon

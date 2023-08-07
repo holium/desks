@@ -1,1 +1,1 @@
-../../../../urbit/pkg/base-dev/lib/language-server/rune-snippet.hoon
+../../../urbit/pkg/base-dev/lib/language-server/rune-snippet.hoon

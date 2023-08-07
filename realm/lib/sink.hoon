@@ -1,1 +1,1 @@
-../../../urbit/pkg/base-dev/lib/sink.hoon
+../../urbit/pkg/base-dev/lib/sink.hoon

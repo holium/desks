@@ -1,1 +1,1 @@
-../../../urbit/pkg/base-dev/mar/mime.hoon
+../../urbit/pkg/base-dev/mar/mime.hoon

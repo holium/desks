@@ -1,1 +1,1 @@
-../../../urbit/pkg/base-dev/mar/html.hoon
+../../urbit/pkg/base-dev/mar/html.hoon

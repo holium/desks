@@ -1,1 +1,1 @@
-../../../urbit/pkg/base-dev/lib/agentio.hoon
+../../urbit/pkg/base-dev/lib/agentio.hoon

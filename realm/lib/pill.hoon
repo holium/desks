@@ -1,1 +1,1 @@
-../../../urbit/pkg/base-dev/lib/pill.hoon
+../../urbit/pkg/base-dev/lib/pill.hoon

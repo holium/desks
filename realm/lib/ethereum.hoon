@@ -1,1 +1,1 @@
-../../../urbit/pkg/base-dev/lib/ethereum.hoon
+../../urbit/pkg/base-dev/lib/ethereum.hoon

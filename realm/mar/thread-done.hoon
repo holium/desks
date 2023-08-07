@@ -1,1 +1,1 @@
-../../../urbit/pkg/base-dev/mar/thread-done.hoon
+../../urbit/pkg/base-dev/mar/thread-done.hoon

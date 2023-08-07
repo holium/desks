@@ -1,1 +1,1 @@
-../../../urbit/pkg/base-dev/lib/ethio.hoon
+../../urbit/pkg/base-dev/lib/ethio.hoon

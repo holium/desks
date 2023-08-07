@@ -1,1 +1,1 @@
-../../../urbit/pkg/base-dev/sur/sss.hoon
+../../urbit/pkg/base-dev/sur/sss.hoon

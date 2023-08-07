@@ -1,1 +1,1 @@
-../../../../../urbit/pkg/base-dev/mar/language-server/rpc/response.hoon
+../../../../urbit/pkg/base-dev/mar/language-server/rpc/response.hoon

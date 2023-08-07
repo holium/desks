@@ -1,1 +1,1 @@
-../../../urbit/pkg/base-dev/sur/hood.hoon
+../../urbit/pkg/base-dev/sur/hood.hoon
