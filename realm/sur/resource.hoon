@@ -1,1 +1,1 @@
-urbit/pkg/landscape/sur/resource.hoon
+../../urbit/pkg/landscape/sur/resource.hoon

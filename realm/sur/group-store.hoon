@@ -1,1 +1,1 @@
-urbit/pkg/landscape/sur/group-store.hoon
+../../urbit/pkg/landscape/sur/group-store.hoon

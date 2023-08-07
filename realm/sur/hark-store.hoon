@@ -1,1 +1,1 @@
-urbit/pkg/landscape/sur/hark-store.hoon
+../../urbit/pkg/landscape/sur/hark-store.hoon
