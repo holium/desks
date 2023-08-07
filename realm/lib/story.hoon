@@ -1,0 +1,1 @@
+../../../urbit/pkg/base-dev/lib/story.hoon
