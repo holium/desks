@@ -1,0 +1,3 @@
+[submodule "urbit"]
+	path = urbit
+	url = https://github.com/urbit/urbit
