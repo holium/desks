@@ -1,10 +1,1 @@
-^?
-|%
-+$  resource   [=entity name=term]
-+$  resources  (set resource)
-::
-+$  entity
-  $@  ship
-  $%  !!
-  ==
---
+urbit/pkg/landscape/sur/resource.hoon
