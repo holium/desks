@@ -532,7 +532,7 @@
 ::bedrock &db-action [%create [~zod now] /example %foo 0 [%general ~[1 'a']] ~[['num' 'ud'] ['str' 't']]]
 ::bedrock &db-action [%create [~zod now] /example %vote 0 [%vote [%.y %foo [~zod ~2023.6.21..22.25.01..e411] /example]] ~]
 :: from ~bus:
-::~zod/bedrock &db-action [%create /example %foo 0 [%general ~[1 'a']]  ~[['num' 'ud'] ['str' 't']]]
+::~zod/bedrock &db-action [%create [our now] /example %foo 0 [%general ~[1 'a']] ~[['num' 'ud'] ['str' 't']]]
 ::
 ::  in zod
 ::bedrock &db-action [%create-path /example %host ~ ~ ~ ~[[~zod %host] [~bus %member]]]
@@ -542,7 +542,7 @@
 ::bedrock &db-action [%relay [~bus now] /target %relay 0 [%relay [~zod ~2023.6.13..15.57.34..aa97] %foo /example 0 %all %.n] ~]
 ::  then, in zod again
 ::bedrock &db-action [%edit [our ~2023.5.22..17.21.47..9d73] /example %foo 0 [%general ~[2 'b']] ~]
-::bedrock &db-action [%remove %foo /example [our ~2023.5.22..19.22.29..d0f7]]
+::bedrock &db-action [%remove %foo /example [our ~2023.8.9..16.43.15..96af]]
 ++  create-path
 ::bedrock &db-action [%create-path /example %host ~ ~ ~ ~[[~zod %host] [~bus %member]]]
 ::bedrock &db-action [%create-path /target %host ~ ~ ~ ~[[~bus %host] [~fed %member]]]
@@ -891,7 +891,7 @@
   =/  subs  :~
     [
       %pass
-      (weld /next path.path-row)
+      (weld /next/(scot %da updated-at.path-row) path.path-row)
       %agent
       [src.bowl dap.bowl]
       %watch
@@ -942,7 +942,7 @@
   :: the full path state updated
   =/  log2  (maybe-log hide-logs.state "we are OUT OF sync, resubbing")
   =/  newpath  (weld /next/~2000.1.1 path)
-  =/  cards=(list card)  [%pass (weld /next path) %agent [host.path-row dap.bowl] %watch newpath]~
+  =/  cards=(list card)  [%pass newpath %agent [host.path-row dap.bowl] %watch newpath]~
   [cards state]
 ::
 ++  create

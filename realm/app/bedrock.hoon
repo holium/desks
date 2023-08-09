@@ -253,7 +253,7 @@
                 [cards this]
             ==
         ==
-      [%next *]
+      [%next @ *]
         ?-    -.sign
           %poke-ack
             ?~  p.sign  `this
@@ -265,22 +265,22 @@
             ::~&  >>>  "{<dap.bowl>}: /next/[path] subscription failed"
             `this
           %kick
-            =/  pathrow    (~(get by paths.state) +.wire)
+            =/  pathrow    (~(get by paths.state) +.+.wire)
             ?:  =(~ pathrow)
-              ::~&  >>>  "got a %kick on {(spud +.wire)} that we are ignoring because that path is not in our state"
+              ::~&  >>>  "got a %kick on {(spud +.+.wire)} that we are ignoring because that path is not in our state"
               `this
             =/  newpath  (weld /next/(scot %da updated-at:(need pathrow)) path:(need pathrow))
             ::~&  >  "{<dap.bowl>}: /next/[path] kicked us, resubbing {(spud newpath)}"
             :_  this
             :~
-              [%pass wire %agent [src.bowl dap.bowl] %watch newpath]
+              [%pass newpath %agent [src.bowl dap.bowl] %watch newpath]
             ==
           %fact
             :: handle the update by updating our local state and
             :: pushing db-changes out to our subscribers
             =^  cards  state
             ^-  (quip card state-0)
-            =/  dbpath=path         +.wire
+            =/  dbpath=path         +.+.wire
             =/  factmark  -.+.sign
             ::~&  >>  "%fact on {(spud wire)}: {<factmark>}"
             ?+  factmark
