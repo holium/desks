@@ -56,7 +56,7 @@
         =/  creds=row:db  (snag 0 (sort ~(val by u.ucreds) |=([a=row:db b=row:db] (gth t.id.a t.id.b))))
         ?+  -.data.creds  !!
             %creds
-          ``api-store-configuration+!>([%configuration buckets.data.creds current-bucket.data.creds current-bucket.data.creds])
+          ``api-store-configuration+!>([%configuration buckets.data.creds current-bucket.data.creds region.data.creds])
         ==
     ::
       [%x %credentials ~]
