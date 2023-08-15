@@ -14,6 +14,7 @@
       @tas
   ==
 +$  id        [=ship t=@da] :: ship is who created the row, t is when it was created since that's inherently unique in one-at-a-time only creation fashion
++$  u-path-id  (unit [=path =id])
 ::
 :: pre-built data-types
 ::
@@ -121,7 +122,7 @@
   ==
 +$  message
   $:  chat-id=id
-      reply-to=(unit (pair path id))
+      reply-to=u-path-id
       expires-at=@da  :: *@da is treated as "unset"
       metadata=(map cord cord)
       content=(list formatted-text)

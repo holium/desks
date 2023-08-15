@@ -1603,7 +1603,6 @@
         [%n *]  (di jon)
         ~       *@da
       ==
-      (cu |=(t=@ud ^-(@dr (div (mul ~s1 t) 1.000))) null-or-ni)
     ::
     ++  dri   :: specify in integer milliseconds, returns a @dr
       (cu |=(t=@ud ^-(@dr (div (mul ~s1 t) 1.000))) ni)
@@ -1837,6 +1836,23 @@
                 ['current-bucket' s+current-bucket.data.row]
                 ['region' s+region.data.row]
             ==
+          %chat
+            :~  metadata+(metadata-to-json metadata.data.row)
+                ['type' s+type.data.row]
+                ['pins' a+(turn ~(tap in pins.data.row) row-id-to-json)]
+                ['invites' s+invites.data.row]
+                ['peers-get-backlog' b+peers-get-backlog.data.row]
+                :: return as integer millisecond duration
+                ['max-expires-at-duration' (numb (|=(t=@dr ^-(@ud (mul (div t ~s1) 1.000))) max-expires-at-duration.data.row))]
+            ==
+          %message
+            :~  ['chat-id' (row-id-to-json chat-id.data.row)]
+                reply-to+(reply-to-to-json reply-to.data.row)
+                expires-at+(time-bunt-null expires-at.data.row)
+                metadata+(metadata-to-json metadata.data.row)
+                ['content' a+(turn content.data.row en-formatted-text)]
+                ['sender' s+(scot %p ship.id.row)]
+            ==
         ==
       =/  keyvals
         :_  basekvs
@@ -1918,6 +1934,32 @@
           ['schema' a+(turn v |=(col=[name=@t t=@t] (pairs ~[['name' s+name.col] ['type' s+t.col]])))]
       ==
     ::
+    ++  en-formatted-text
+      |=  text=formatted-text:common
+      %-  pairs
+      :~  content-type+(ft-typeify text)
+          content-data+(ft-dataify text)
+      ==
+    ::
+    ++  ft-typeify
+      |=  =formatted-text:common
+      ^-  json
+      ?+  -.formatted-text
+        ::default here
+        [%s `@t`-.formatted-text]
+        %custom  [%s `@t`-.+.formatted-text]
+      ==
+    ::
+    ++  ft-dataify
+      |=  =formatted-text:common
+      ?+  -.formatted-text
+        ::default here
+        [%s +.formatted-text]
+        %ship     [%s `@t`(scot %p p.formatted-text)]
+        %break    ~
+        %custom   [%s +.+.formatted-text]
+      ==
+    ::
     ++  row-id-to-json
       |=  =id:common
       ^-  json
@@ -1927,6 +1969,27 @@
       |=  =id:common
       ^-  cord
       (spat ~[(scot %p ship.id) (scot %da t.id)])
+    ::
+    ++  reply-to-to-json
+      |=  reply-to=u-path-id:common
+      ^-  json
+      ?~  reply-to
+        ~
+      %-  pairs
+      :~  path+[%s (spat -.u.reply-to)]
+          id+(row-id-to-json +.u.reply-to)
+      ==
+    ::
+    ++  metadata-to-json
+      |=  m=(map cord cord)
+      ^-  json
+      o+(~(rut by m) |=([k=cord v=cord] s+v))
+    ::
+    ++  time-bunt-null
+      |=  t=@da
+      ?:  =(t *@da)
+        ~
+      (time t)
     ::
     ++  numbrd
       |=  a=@rd
