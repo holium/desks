@@ -53,6 +53,8 @@
       [%relay relay:common]
       [%react react:common]
       [%creds creds:common]
+      [%chat chat:common]
+      [%message message:common]
   ==
 +$  row-and-schema  [=row =schema] :: the row and the schema for the row
 

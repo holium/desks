@@ -9,6 +9,8 @@
       %relay
       %react
       %creds
+      %chat
+      %message
       @tas
   ==
 +$  id        [=ship t=@da] :: ship is who created the row, t is when it was created since that's inherently unique in one-at-a-time only creation fashion
@@ -107,5 +109,43 @@
     current-bucket=@t
     region=@t
   ==
---
 
+:: chat-db stuff
++$  chat
+  $:  metadata=(map cord cord)
+      type=@tas     :: not officially specified, up to user to interpret for maybe %dm vs %group or %chat vs %board or whatever
+      pins=(set id)
+      invites=@tas  :: must either match `peer-role` type or be keyword %anyone, or else no one will be able to invite
+      peers-get-backlog=?
+      max-expires-at-duration=@dr  :: optional chat-wide enforced expires-at on messages. 0 or *@dr means "not set"
+  ==
++$  message
+  $:  chat-id=id
+      reply-to=(unit (pair path id))
+      expires-at=@da  :: *@da is treated as "unset"
+      metadata=(map cord cord)
+      content=(list formatted-text)
+  ==
++$  formatted-text
+  $%  [%custom name=cord value=cord] :: general data type
+      [%markdown p=cord]
+      [%plain p=cord]
+      [%bold p=cord]
+      [%italics p=cord]
+      [%strike p=cord]
+      [%bold-italics p=cord]
+      [%bold-strike p=cord]
+      [%italics-strike p=cord]
+      [%bold-italics-strike p=cord]
+      [%blockquote p=cord]
+      [%inline-code p=cord]
+      [%ship p=ship]
+      [%code p=cord]
+      [%link p=cord]
+      [%image p=cord]
+      [%ur-link p=cord]      :: for links to places on the urbit network
+      [%react p=cord]        :: for emojii reactions to messages
+      [%status p=cord]       :: for automated messages like "X joined the chat"
+      [%break ~]
+  ==
+--

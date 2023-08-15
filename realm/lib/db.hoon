@@ -20,11 +20,13 @@
     %del-peer  =(path.v path)
     %del-path  =(path.v path)
   ==
+::
 ++  maybe-log
   |=  [hide-debug=? msg=tape]
   ?:  =(%.y hide-debug)  ~
   ~&  msg
   ~
+::
 ++  got-db
   |=  [=type:common =path =id:common state=state-0]
   ^-  row
@@ -743,6 +745,7 @@
   ==
 
   [cards state]
+::
 ++  remove-path
 ::bedrock &db-action [%remove-path /example]
   |=  [=path state=state-0 =bowl:gall]
@@ -1413,6 +1416,10 @@
             [%relay (de-relay (~(got by p.jon) 'data'))]
           %creds
             [%creds (de-creds (~(got by p.jon) 'data'))]
+          %chat
+            [%chat (de-chat (~(got by p.jon) 'data'))]
+          %message
+            [%message (de-message (~(got by p.jon) 'data'))]
         ==
       [
         (pa (~(got by p.jon) 'path'))
@@ -1487,6 +1494,50 @@
           [%deleted bo]
       ==
     ::
+    ++  de-chat
+      %-  ot
+      :~  [%metadata (om so)]
+          [%type (se %tas)]
+          [%pins (as de-id)]
+          [%invites (se %tas)]
+          [%peers-get-backlog bo]
+          [%max-expires-at-duration null-or-dri]
+      ==
+    ::
+    ++  de-message
+      %-  ot
+      :~  [%chat-id de-id]
+          [%reply-to (mu path-and-id)]
+          [%expires-at da-or-bunt-null]
+          [%metadata (om so)]
+          [%content (ar de-formatted-text)]
+      ==
+    ::
+    ++  de-formatted-text
+      %-  of
+      :~  
+          [%plain so]
+          [%markdown so]
+          [%bold so]
+          [%italics so]
+          [%strike so]
+          [%bold-italics so]
+          [%bold-strike so]
+          [%italics-strike so]
+          [%bold-italics-strike so]
+          [%blockquote so]
+          [%inline-code so]
+          [%code so]
+          [%image so]
+          [%ur-link so]
+          [%react so]
+          [%break ul]
+          [%ship de-ship]
+          [%link so]
+          [%custom (ot ~[[%name so] [%value so]])]
+          [%status so]
+      ==
+    ::
     ++  de-id
       %+  cu
         path-to-id
@@ -1496,6 +1547,13 @@
       |=  p=path
       ^-  id:common
       [`@p`(slav %p +2:p) `@da`(slav %da +6:p)]
+    ::
+    ++  path-and-id
+      %-  ot
+      :~  
+          [%path pa]
+          [%id de-id]
+      ==
     ::
     ++  de-space-path
       %+  cu
@@ -1538,8 +1596,28 @@
     ::
     ++  de-ship  (su ;~(pfix sig fed:ag))
     ::
+    ++  da-or-bunt-null   :: specify in integer milliseconds, returns a @dr
+      |=  jon=json
+      ^-  @da
+      ?+  jon   !!
+        [%n *]  (di jon)
+        ~       *@da
+      ==
+      (cu |=(t=@ud ^-(@dr (div (mul ~s1 t) 1.000))) null-or-ni)
+    ::
     ++  dri   :: specify in integer milliseconds, returns a @dr
       (cu |=(t=@ud ^-(@dr (div (mul ~s1 t) 1.000))) ni)
+    ::
+    ++  null-or-dri   :: specify in integer milliseconds, returns a @dr
+      (cu |=(t=@ud ^-(@dr (div (mul ~s1 t) 1.000))) null-or-ni)
+    ::
+    ++  null-or-ni  :: accepts either a null or a n+'123', and converts nulls to 0, non-null to the appropriate number
+      |=  jon=json
+      ^-  @ud
+      ?+  jon  !!
+        [%n *]  (rash p.jon dem)
+        ~       0
+      ==
     --
   --
 ::
