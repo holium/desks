@@ -143,6 +143,28 @@
   [%pass /dbpoke %agent [ship %chat-db] %poke %chat-db-action !>([%create-path row peers])]
   :: [%pass (weld /dbpoke path.row) %agent [ship %chat-db] %poke %chat-db-action !>([%create-path row peers])]
 ::
+++  create-path-bedrock-poke
+  |=  [=ship row=path-row:db peers=ship-roles:db]
+  ^-  card
+  [%pass /dbpoke %agent [ship %bedrock] %poke %db-action !>([%create-path path.row %host ~ ~ ~ peers])]
+::
+++  create-chat-bedrock-poke
+  |=  [=ship row=path-row:db peers=ship-roles:db]
+  ^-  card
+  =/  chat  [
+    metadata.row
+    type.row
+    (turn ~(tap in pins.row) swap-id-parts)
+    invites.row
+    peers-get-backlog.row
+    max-expires-at-duration.row
+  ]
+  [%pass /dbpoke %agent [ship %bedrock] %poke %db-action !>([%create [ship *@da] path.row %chat 0 [%chat chat] ~])]
+::
+++  swap-id-parts
+  |=  =msg-id:db
+  ^-  [=ship t=@da]
+  [sender.msg-id timestamp.msg-id]
 ++  into-add-peer-pokes
   |=  [s=ship peers=(list ship) =path]
   ^-  (list card)
@@ -234,10 +256,14 @@
     [s rl]
 
   =/  cards=(list card)
-    %+  turn
-      all-peers
-    |=  [s=ship role=@tas]
-    (create-path-db-poke s pathrow all-peers)
+    %+  snoc
+      %+  snoc
+        %+  turn
+          all-peers
+        |=  [s=ship role=@tas]
+        (create-path-db-poke s pathrow all-peers)
+      (create-path-bedrock-poke our.bowl pathrow all-peers)
+    (create-chat-bedrock-poke our.bowl pathrow all-peers)
   =/  send-status-message
     ?:  =(2 (lent all-ships)) :: if it's just two ships (and therefore a "dm")
       !>([%send-message chat-path ~[[[%status (crip "{(scow %p our.bowl)} created the chat")] ~ ~]] *@dr])
