@@ -97,6 +97,19 @@
     %paths  ~(val by paths-table.tbl)
   ==
 ::
+++  scry-bedrock-path-host
+  |=  [=path =bowl:gall]
+  ^-  ship
+  .^
+    ship
+    %gx
+    %+  weld
+      %+  weld
+        /(scot %p our.bowl)/bedrock/(scot %da now.bowl)/host/path
+      path
+    /noun
+  ==
+::
 ++  into-backlog-msg-poke
   |=  [m=message:db =ship]
   [%pass /dbpoke %agent [ship %chat-db] %poke %chat-db-action !>([%insert-backlog m])]
@@ -107,7 +120,6 @@
     *@da
   (add ts expires-in.act)
   [%pass /dbpoke %agent [patp.p %chat-db] %poke %chat-db-action !>([%insert ts path.act fragments.act exp-at])]
-  :: [%pass (weld /dbpoke path.p) %agent [patp.p %chat-db] %poke %chat-db-action !>([%insert ts path.act fragments.act exp-at])]
 ::
 ++  into-edit-message-poke
   |=  [p=peer-row:db act=edit-message-action:db]
@@ -154,12 +166,27 @@
   =/  chat  [
     metadata.row
     type.row
-    (turn ~(tap in pins.row) swap-id-parts)
+    (silt (turn ~(tap in pins.row) swap-id-parts))
     invites.row
     peers-get-backlog.row
     max-expires-at-duration.row
   ]
   [%pass /dbpoke %agent [ship %bedrock] %poke %db-action !>([%create [ship *@da] path.row %chat 0 [%chat chat] ~])]
+::
+++  create-bedrock-message-poke
+  |=  [=ship act=[=path fragments=(list minimal-fragment:db) expires-in=@dr] ts=@da]
+  =/  exp-at=@da  ?:  =(expires-in.act *@dr)
+    *@da
+  (add ts expires-in.act)
+  =/  first=minimal-fragment:db  (snag 0 fragments.act)
+  =/  msg  [
+    [~zod *@da]:: TODO figure out a way to be aware of the matching bedrock %chat row id and put it here
+    ?~(reply-to.first ~ (some [-.u.reply-to.first [sender.q.u.reply-to.first timestamp.q.u.reply-to.first]]))
+    exp-at
+    metadata.first
+    (turn fragments.act |=(f=minimal-fragment:db content.f))
+  ]
+  [%pass /dbpoke %agent [ship %bedrock] %poke %db-action !>([%create [ship *@da] path.act %message 0 [%message msg] ~])]
 ::
 ++  swap-id-parts
   |=  =msg-id:db
@@ -269,6 +296,7 @@
       !>([%send-message chat-path ~[[[%status (crip "{(scow %p our.bowl)} created the chat")] ~ ~]] *@dr])
     !>([%send-message chat-path ~[[[%status (crip "{(scow %p our.bowl)} added {(scow %ud (dec (lent all-ships)))} peers")] ~ ~]] *@dr])
   =.  cards  (snoc cards [%pass /selfpoke %agent [our.bowl %realm-chat] %poke %chat-action send-status-message])
+  ~&  cards
   [cards state]
 ::
 ++  edit-chat
@@ -406,11 +434,11 @@
   :: read the peers for the path
   =/  pathpeers  (scry-peers path.act bowl)
   =/  official-time  t.act
-  =/  cards  
-    %:  turn
+  =/  cards=(list card)
+    :-  (create-bedrock-message-poke (scry-bedrock-path-host path.act bowl) +.act official-time)
+    %+  turn
       pathpeers
-      |=(a=peer-row:db (into-insert-message-poke a +.act official-time))
-    ==
+    |=(a=peer-row:db (into-insert-message-poke a +.act official-time))
   :: then send pokes to all the peers about inserting a message
   [cards state]
 ::
