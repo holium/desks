@@ -113,15 +113,17 @@
 ++  scry-bedrock-message
   |=  [id=[=ship t=@da] =path =bowl:gall]
   ^-  row:bedrock
-  .^
-    [row:bedrock schemas:bedrock]
-    %gx
-    %+  weld
+  =/  rs=[=row:bedrock =schemas:bedrock]
+    .^
+      [row:bedrock schemas:bedrock]
+      %gx
       %+  weld
-        /(scot %p our.bowl)/bedrock/(scot %da now.bowl)/row/message/
-      path
-    /noun
-  ==
+        %+  weld
+          /(scot %p our.bowl)/bedrock/(scot %da now.bowl)
+        /row/message/(scot %p ship.id)/(scot %da t.id)
+      /noun
+    ==
+  row.rs
 ::
 ++  into-backlog-msg-poke
   |=  [m=message:db =ship]
@@ -199,16 +201,11 @@
     metadata.first
     (turn fragments.act |=(f=minimal-fragment:db content.f))
   ]
-  [%pass /dbpoke %agent [ship %bedrock] %poke %db-action !>([%create [ship *@da] path.act %message 0 [%message msg] ~])]
+  [%pass /dbpoke %agent [ship %bedrock] %poke %db-action !>([%create [ship ts] path.act %message 0 [%message msg] ~])]
 ::
-++  edit-bedrock-message-poke
-  |=  [host=ship act=edit-message-action:db]
-  =/  exp-at=@da  ?:  =(expires-in.act *@dr)
-    *@da
-  (add ts expires-in.act)
-  =/  first=minimal-fragment:db  (snag 0 fragments.act)
-  =/  msg
-  [%pass /dbpoke %agent [host %bedrock] %poke %db-action !>([%edit (swap-id-parts msg-id.act) path.act %message 0 [%message msg] ~])]
+::++  edit-bedrock-message-poke
+::  |=  [host=ship act=edit-message-action:db]
+::  [%pass /dbpoke %agent [host %bedrock] %poke %db-action !>([%edit (swap-id-parts msg-id.act) path.act %message 0 [%message msg] ~])]
 ::
 ++  swap-id-parts
   |=  =msg-id:db
@@ -452,6 +449,8 @@
   ^-  (quip card state-1)
   ?>  =(src.bowl our.bowl)
   ?>  (gth (lent fragments.act) 0)  :: no sending empty messages
+  ~&  %t-act
+  ~&  t.act
 
   :: read the peers for the path
   =/  pathpeers  (scry-peers path.act bowl)
@@ -474,7 +473,7 @@
   :: %chat-db will disallow invalid signals
   =/  pathpeers  (scry-peers path.act bowl)
   =/  cards=(list card)
-    :-  (edit-bedrock-message-poke (scry-bedrock-path-host path.act bowl) act)
+::    :-  (edit-bedrock-message-poke (scry-bedrock-path-host path.act bowl) act)
     %:  turn
       pathpeers
       |=(p=peer-row:db (into-edit-message-poke p act))
