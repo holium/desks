@@ -3,7 +3,7 @@
 ::  Chat message lib within Realm. Mostly handles [de]serialization
 ::    to/from json from types stored in realm-chat sur.
 ::
-/-  *realm-chat, db=chat-db, fr=friends
+/-  *realm-chat, db=chat-db, fr=friends, bedrock=db
 /+  chat-db
 |%
 ::
@@ -110,6 +110,19 @@
     /noun
   ==
 ::
+++  scry-bedrock-message
+  |=  [id=[=ship t=@da] =path =bowl:gall]
+  ^-  row:bedrock
+  .^
+    [row:bedrock schemas:bedrock]
+    %gx
+    %+  weld
+      %+  weld
+        /(scot %p our.bowl)/bedrock/(scot %da now.bowl)/row/message/
+      path
+    /noun
+  ==
+::
 ++  into-backlog-msg-poke
   |=  [m=message:db =ship]
   [%pass /dbpoke %agent [ship %chat-db] %poke %chat-db-action !>([%insert-backlog m])]
@@ -187,6 +200,15 @@
     (turn fragments.act |=(f=minimal-fragment:db content.f))
   ]
   [%pass /dbpoke %agent [ship %bedrock] %poke %db-action !>([%create [ship *@da] path.act %message 0 [%message msg] ~])]
+::
+++  edit-bedrock-message-poke
+  |=  [host=ship act=edit-message-action:db]
+  =/  exp-at=@da  ?:  =(expires-in.act *@dr)
+    *@da
+  (add ts expires-in.act)
+  =/  first=minimal-fragment:db  (snag 0 fragments.act)
+  =/  msg
+  [%pass /dbpoke %agent [host %bedrock] %poke %db-action !>([%edit (swap-id-parts msg-id.act) path.act %message 0 [%message msg] ~])]
 ::
 ++  swap-id-parts
   |=  =msg-id:db
@@ -451,7 +473,8 @@
   :: just pass along the edit-message-action to all the peers chat-db
   :: %chat-db will disallow invalid signals
   =/  pathpeers  (scry-peers path.act bowl)
-  =/  cards  
+  =/  cards=(list card)
+    :-  (edit-bedrock-message-poke (scry-bedrock-path-host path.act bowl) act)
     %:  turn
       pathpeers
       |=(p=peer-row:db (into-edit-message-poke p act))

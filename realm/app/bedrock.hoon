@@ -193,6 +193,15 @@
         =/  tblname=@tas  i.t.t.t.path
         ``db-table+!>([tblname (~(got by tables.state) tblname) schemas.state])
     ::
+    :: a specific row from a given table, by id
+    ::  /row/message/~zod/~2000.1.1.json
+      [%x %row @ @ @ ~]
+        =/  tblname=@tas  i.t.t.path
+        =/  ship=@p       `@p`(slav %p i.t.t.t.path)
+        =/  t=@da         `@da`(slav %da i.t.t.t.t.path)
+        =/  therow=row    (~(got by (ptbl-to-tbl:db (~(got by tables.state) tblname))) [ship t])
+        ``db-row+!>([therow schemas.state])
+    ::
     :: host of a given path
       [%x %host %path *]
         =/  thepath  t.t.t.path
