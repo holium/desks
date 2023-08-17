@@ -110,6 +110,22 @@
     /noun
   ==
 ::
+++  scry-first-bedrock-chat
+  |=  [=path =bowl:gall]
+  ^-  row:bedrock
+  =/  all-chats=[@tas pt=pathed-table:bedrock =schemas:bedrock]
+    .^
+      [@tas pt=pathed-table:bedrock =schemas:bedrock]
+      %gx
+      %+  weld
+        %+  weld
+          /(scot %p our.bowl)/bedrock/(scot %da now.bowl)/db/table-by-path/chat
+        path
+      /noun
+    ==
+  =/  rows=(list row:bedrock)  ~(val by (~(got by pt.all-chats) path))
+  (snag 0 rows)
+::
 ++  scry-bedrock-message
   |=  [id=[=ship t=@da] =path =bowl:gall]
   ^-  row:bedrock
@@ -189,28 +205,47 @@
   [%pass /dbpoke %agent [ship %bedrock] %poke %db-action !>([%create [ship *@da] path.row %chat 0 [%chat chat] ~])]
 ::
 ++  create-bedrock-message-poke
-  |=  [=ship act=[=path fragments=(list minimal-fragment:db) expires-in=@dr] ts=@da]
+  |=  [=ship act=[=path fragments=(list minimal-fragment:db) expires-in=@dr] ts=@da chat-id=[=ship t=@da]]
   =/  exp-at=@da  ?:  =(expires-in.act *@dr)
     *@da
   (add ts expires-in.act)
   =/  first=minimal-fragment:db  (snag 0 fragments.act)
   =/  msg  [
-    [~zod *@da]:: TODO figure out a way to be aware of the matching bedrock %chat row id and put it here
+    chat-id
     ?~(reply-to.first ~ (some [-.u.reply-to.first [sender.q.u.reply-to.first timestamp.q.u.reply-to.first]]))
     exp-at
-    metadata.first
-    (turn fragments.act |=(f=minimal-fragment:db content.f))
+    (turn fragments.act |=(f=minimal-fragment:db [content.f metadata.f]))
   ]
   [%pass /dbpoke %agent [ship %bedrock] %poke %db-action !>([%create [ship ts] path.act %message 0 [%message msg] ~])]
 ::
-::++  edit-bedrock-message-poke
-::  |=  [host=ship act=edit-message-action:db]
-::  [%pass /dbpoke %agent [host %bedrock] %poke %db-action !>([%edit (swap-id-parts msg-id.act) path.act %message 0 [%message msg] ~])]
+++  edit-bedrock-message-poke
+  |=  [host=ship act=edit-message-action:db =bowl:gall]
+  =/  first  (snag 0 fragments.act)
+  =/  current-bedrock-msg  (scry-bedrock-message (swap-id-parts msg-id.act) path.act bowl)
+  ?+  -.data.current-bedrock-msg  !!
+      %message
+    =/  msg  [
+      chat-id.data.current-bedrock-msg
+      ?~(reply-to.first ~ (some [-.u.reply-to.first [sender.q.u.reply-to.first timestamp.q.u.reply-to.first]]))
+      expires-at.data.current-bedrock-msg
+      (turn fragments.act |=(f=minimal-fragment:db [content.f metadata.f]))
+    ]
+    [
+      %pass
+      /dbpoke
+      %agent
+      [host %bedrock]
+      %poke
+      %db-action
+      !>([%edit (swap-id-parts msg-id.act) path.act %message 0 [%message msg] ~])
+    ]
+  ==
 ::
 ++  swap-id-parts
   |=  =msg-id:db
   ^-  [=ship t=@da]
   [sender.msg-id timestamp.msg-id]
+::
 ++  into-add-peer-pokes
   |=  [s=ship peers=(list ship) =path]
   ^-  (list card)
@@ -455,8 +490,9 @@
   :: read the peers for the path
   =/  pathpeers  (scry-peers path.act bowl)
   =/  official-time  t.act
+  =/  bedrock-chat=row:bedrock  (scry-first-bedrock-chat path.act bowl)
   =/  cards=(list card)
-    :-  (create-bedrock-message-poke (scry-bedrock-path-host path.act bowl) +.act official-time)
+    :-  (create-bedrock-message-poke (scry-bedrock-path-host path.act bowl) +.act official-time id.bedrock-chat)
     %+  turn
       pathpeers
     |=(a=peer-row:db (into-insert-message-poke a +.act official-time))
@@ -473,7 +509,7 @@
   :: %chat-db will disallow invalid signals
   =/  pathpeers  (scry-peers path.act bowl)
   =/  cards=(list card)
-::    :-  (edit-bedrock-message-poke (scry-bedrock-path-host path.act bowl) act)
+    :-  (edit-bedrock-message-poke (scry-bedrock-path-host path.act bowl) act bowl)
     %:  turn
       pathpeers
       |=(p=peer-row:db (into-edit-message-poke p act))

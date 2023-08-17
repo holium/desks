@@ -124,9 +124,9 @@
   $:  chat-id=id
       reply-to=u-path-id
       expires-at=@da  :: *@da is treated as "unset"
-      metadata=(map cord cord)
-      content=(list formatted-text)
+      content=(list msg-part)
   ==
++$  msg-part  [=formatted-text metadata=(map cord cord)]
 +$  formatted-text
   $%  [%custom name=cord value=cord] :: general data type
       [%markdown p=cord]

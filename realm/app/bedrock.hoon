@@ -193,6 +193,16 @@
         =/  tblname=@tas  i.t.t.t.path
         ``db-table+!>([tblname (~(got by tables.state) tblname) schemas.state])
     ::
+    :: all rows from a given table and path (as a pathed-table in noun form)
+    ::  /db/table-by-path/chat/<path>.json
+      [%x %db %table-by-path @ *]
+        =/  tblname=@tas  i.t.t.t.path
+        =/  dbpath        t.t.t.t.path
+        =/  tbl     (get-tbl:db tblname dbpath state)
+        ?~  tbl
+          ``db-table+!>([tblname *pathed-table schemas.state])
+        ``db-table+!>([tblname (~(put by *pathed-table) dbpath u.tbl) schemas.state])
+    ::
     :: a specific row from a given table, by id
     ::  /row/message/~zod/~2000.1.1.json
       [%x %row @ @ @ ~]

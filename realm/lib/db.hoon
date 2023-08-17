@@ -1513,8 +1513,13 @@
       :~  [%chat-id de-id]
           [%reply-to (mu path-and-id)]
           [%expires-at da-or-bunt-null]
+          [%content (ar de-msg-part)]
+      ==
+    ::
+    ++  de-msg-part
+      %-  ot
+      :~  [%formatted-text de-formatted-text]
           [%metadata (om so)]
-          [%content (ar de-formatted-text)]
       ==
     ::
     ++  de-formatted-text
@@ -1853,8 +1858,7 @@
             :~  ['chat-id' (row-id-to-json chat-id.data.row)]
                 reply-to+(reply-to-to-json reply-to.data.row)
                 expires-at+(time-bunt-null expires-at.data.row)
-                metadata+(metadata-to-json metadata.data.row)
-                ['content' a+(turn content.data.row en-formatted-text)]
+                ['content' a+(turn content.data.row en-msg-part)]
                 ['sender' s+(scot %p ship.id.row)]
             ==
         ==
@@ -1938,11 +1942,12 @@
           ['schema' a+(turn v |=(col=[name=@t t=@t] (pairs ~[['name' s+name.col] ['type' s+t.col]])))]
       ==
     ::
-    ++  en-formatted-text
-      |=  text=formatted-text:common
+    ++  en-msg-part
+      |=  =msg-part:common
       %-  pairs
-      :~  content-type+(ft-typeify text)
-          content-data+(ft-dataify text)
+      :~  content-type+(ft-typeify formatted-text.msg-part)
+          metadata+(metadata-to-json metadata.msg-part)
+          content-data+(ft-dataify formatted-text.msg-part)
       ==
     ::
     ++  ft-typeify
