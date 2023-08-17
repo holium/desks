@@ -1194,6 +1194,7 @@
   ==
 ::
 ++  toggle-hide-logs
+::bedrock &db-action [%toggle-hide-logs %.n]
   |=  [toggle=? state=state-0 =bowl:gall]
   ^-  (quip card state-0)
   =.  hide-logs.state  toggle
