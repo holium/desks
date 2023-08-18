@@ -466,6 +466,7 @@
     ^-  (quip card state-0)
     ::  only host can modify peers lists
     ?.  =(our.bowl ship.path)    `state
+    =/  log1  (maybe-log hide-logs.state "on-accepted, trying to add {<ship>} to relevant paths")
     ::  if we are here, we are the host
     =/  max-role
       ?:  (~(has in roles.member) %owner)   %host
@@ -496,6 +497,7 @@
               ==
           ==
         :: if they SHOULD be added, add them
+        =/  log2  (maybe-log hide-logs.state "on-accepted: adding {<ship>} to {<path.pr>}")
         =/  new  (add-peer [path.pr ship max-role] +.cs bowl)
         $(index +(index), cs [(weld -.cs -.new) +.new])
       :: else, move on
