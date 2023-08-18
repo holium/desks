@@ -123,6 +123,7 @@
         path
       /noun
     ==
+  ~&  all-chats
   =/  rows=(list row:bedrock)  ~(val by (~(got by pt.all-chats) path))
   (snag 0 rows)
 ::
@@ -240,6 +241,18 @@
       !>([%edit (swap-id-parts msg-id.act) path.act %message 0 [%message msg] ~])
     ]
   ==
+::
+++  delete-bedrock-message-poke
+  |=  [host=ship act=[=path =msg-id:db] =bowl:gall]
+  [
+    %pass
+    /dbpoke
+    %agent
+    [host %bedrock]
+    %poke
+    %db-action
+    !>([%remove %message path.act (swap-id-parts msg-id.act)])
+  ]
 ::
 ++  swap-id-parts
   |=  =msg-id:db
@@ -525,7 +538,8 @@
   :: just pass along the delete msg-id to all the peers chat-db
   :: %chat-db will disallow invalid signals
   =/  pathpeers  (scry-peers path.act bowl)
-  =/  cards  
+  =/  cards=(list card)
+    :-  (delete-bedrock-message-poke (scry-bedrock-path-host path.act bowl) act bowl)
     %:  turn
       pathpeers
       |=(p=peer-row:db (into-delete-message-poke p msg-id.act))

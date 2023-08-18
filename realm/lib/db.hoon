@@ -894,11 +894,13 @@
   =/  subs  :~
     [
       %pass
-      (weld /next/(scot %da updated-at.path-row) path.path-row)
+      :: always intentionally sub to ancient next path when we first
+      :: join, so that we are forced to get fully up to sync
+      (weld /next/(scot %da *@da) path.path-row)
       %agent
       [src.bowl dap.bowl]
       %watch
-      (weld /next/(scot %da updated-at.path-row) path.path-row)
+      (weld /next/(scot %da *@da) path.path-row)
     ]
   ==
   =/  log1  (maybe-log hide-logs.state "subbing to {<subs>}")
@@ -955,6 +957,8 @@
 ::~zod/bedrock &db-action [%create /example %vote 0 [%vote %.y our %foo [~zod now] /example] ~]
   |=  [[=req-id =input-row] state=state-0 =bowl:gall]
   ^-  (quip card state-0)
+  ~&  %create
+  ~&  type.input-row
   ~&  req-id
   ~&  now.bowl
   =/  vent-path=path  /vent/(scot %p src.req-id)/(scot %da now.req-id)
