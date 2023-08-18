@@ -22,7 +22,7 @@
       =/  members-scry      .^(view:mstore %gx /(scot %p our.bowl)/spaces/(scot %da now.bowl)/(scot %p ship.sk)/(scot %tas space.sk)/members/noun)
       ?>  ?=(%members -.members-scry)
       =/  members           members.members-scry
-      =/  chat-and-cards    (create-space-chat sv [%role %member] members now.bowl)
+      =/  chat-and-cards    (create-space-chat sv [%role %member] members now.bowl our.bowl)
       =/  chat              +.chat-and-cards
       =/  cards
         %+  weld
@@ -50,8 +50,9 @@
 :: the value of `chat-access`, instead of just always doing the logic
 :: for [%role %member]
 ++  create-space-chat
-  |=  [=space:sstore =chat-access:store =members:mstore t=@da]
+  |=  [=space:sstore =chat-access:store =members:mstore t=@da our=ship]
   ^-  (quip card:agent:gall chat:store)
+  ~&  %create-space-chat
   ::  spaces chats path format: /spaces/<space-path>/chats/<@uv>
   =/  chat-path  (weld /spaces (weld (pathify-space-path path.space) /chats/(scot %uv (sham path.space))))
   =/  metadata-settings
@@ -71,10 +72,14 @@
       [k.kv ?:(=(status.v.kv %host) %host %member)]
     :: TODO logic for peers lists for %admins %invited %whitelist and %blacklist
   =/  new-chat      [chat-path chat-access]
-  =/  cards  ::  poke %chat-db to create the chat
+  =/  cards=(list card:agent:gall)  ::  poke %chat-db to create the chat
+    :-  (create-path-bedrock-poke:rc-lib our pathrow all-peers)
+    :-  (create-chat-bedrock-poke:rc-lib our pathrow all-peers)
     %+  turn  all-peers
     |=  [s=ship role=@tas]
     (create-path-db-poke:rc-lib s pathrow all-peers)
+  ~&  (snag 0 cards)
+  ~&  (snag 1 cards)
   [cards new-chat]
 
 :: matching members are status %joined or %host AND have

@@ -254,6 +254,11 @@
     !>([%remove %message path.act (swap-id-parts msg-id.act)])
   ]
 ::
+++  add-bedrock-peer-poke
+  |=  [host=ship =path newship=ship]
+  ^-  card
+  [%pass /dbpoke %agent [host %bedrock] %poke %db-action !>([%add-peer path newship %member])]
+::
 ++  swap-id-parts
   |=  =msg-id:db
   ^-  [=ship t=@da]
@@ -448,7 +453,8 @@
     ?.  peers-get-backlog.pathrow  ~
     (limo [(into-backlog-msg-poke (turn (scry-messages-for-path path.act bowl) |=([k=uniq-id:db v=msg-part:db] v)) ship.act) ~])
 
-  =/  cards
+  =/  cards=(list card)
+    :-  (add-bedrock-peer-poke (scry-bedrock-path-host path.act bowl) path.act ship.act)
     %+  weld
       %+  snoc
         :: we poke all original peers db with add-peer (including ourselves)

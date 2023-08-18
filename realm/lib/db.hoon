@@ -787,10 +787,17 @@
   ^-  (quip card state-0)
   :: ensure the path actually exists
   =/  path-row=path-row    (~(got by paths.state) path)
-  :: and that we are the %host of it
-  ?>  =(host.path-row our.bowl)
-  :: ensure this came from our ship
-  ?>  =(our.bowl src.bowl)
+  =/  is-allowed=?
+    ?+  path
+      :: and that we are the %host of it
+      ?&  =(host.path-row our.bowl)
+      :: ensure this came from our ship
+          =(our.bowl src.bowl)
+      ==
+      [%spaces @ @ %chats @ ~]  %.y
+      [%realm-chat @ ~]         %.y
+    ==
+  ?>  is-allowed
 
   =/  path-sub-wire           (weld /next/(scot %da updated-at.path-row) path)
   =/  newpeer=peer  [path ship role now.bowl now.bowl now.bowl]
