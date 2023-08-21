@@ -420,7 +420,11 @@
                     state
                   $(index +(index), state (process-db-change:db dbpath change state bowl), result-cards (weld (weld result-cards new-scry) pokes))
               %db-path
+                :: TODO logging ~& to indicate that we are recieving a
+                :: fullpath instead of just a single change
+                :: |ames-cong 5 100.000
                 =/  full=fullpath   !<(fullpath +.+.sign)
+                ~&  "getting fullpath for {path.path-row.full}"
                 :: insert pathrow
                 =.  received-at.path-row.full  now.bowl
                 =.  paths.state     (~(put by paths.state) dbpath path-row.full)

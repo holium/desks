@@ -468,6 +468,7 @@
     ^-  (quip card state-0)
     ::  only host can modify peers lists
     ?.  =(our.bowl ship.path)    `state
+    =/  log1  (maybe-log hide-logs.state "on-accepted, trying to add {<ship>} to relevant paths")
     ::  if we are here, we are the host
     =/  max-role
       ?:  (~(has in roles.member) %owner)   %host
@@ -479,8 +480,11 @@
     =/  prs=(list path-row)
       %+  skim
         ~(val by paths.state)
-      |=(pr=path-row ?~(space.pr %.n =(path:(need space.pr) pathed)))
-
+      |=  pr=path-row
+      ^-  ?
+      ?&  ?~(space.pr %.n =(path:(need space.pr) pathed))
+          =(host.pr our.bowl)
+      ==
     =/  index=@ud  0
     =/  cs   [*(list card) state]
     |-
@@ -498,6 +502,7 @@
               ==
           ==
         :: if they SHOULD be added, add them
+        =/  log2  (maybe-log hide-logs.state "on-accepted: adding {<ship>} to {<path.pr>}")
         =/  new  (add-peer [path.pr ship max-role] +.cs bowl)
         $(index +(index), cs [(weld -.cs -.new) +.new])
       :: else, move on
@@ -901,9 +906,7 @@
   =/  subs  :~
     [
       %pass
-      :: always intentionally sub to ancient next path when we first
-      :: join, so that we are forced to get fully up to sync
-      (weld /next/(scot %da *@da) path.path-row)
+      (weld /next/(scot %da *@da) path.path-row) :: intentionally subscribe to an old timestamp to force-refresh on first init
       %agent
       [src.bowl dap.bowl]
       %watch
@@ -1269,6 +1272,7 @@
   ==
 ::
 ++  toggle-hide-logs
+::bedrock &db-action [%toggle-hide-logs %.n]
   |=  [toggle=? state=state-0 =bowl:gall]
   ^-  (quip card state-0)
   =.  hide-logs.state  toggle
