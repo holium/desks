@@ -478,8 +478,11 @@
     =/  prs=(list path-row)
       %+  skim
         ~(val by paths.state)
-      |=(pr=path-row ?~(space.pr %.n =(path:(need space.pr) pathed)))
-
+      |=  pr=path-row
+      ^-  ?
+      ?&  ?~(space.pr %.n =(path:(need space.pr) pathed))
+          =(host.pr our.bowl)
+      ==
     =/  index=@ud  0
     =/  cs   [*(list card) state]
     |-
@@ -893,11 +896,11 @@
   =/  subs  :~
     [
       %pass
-      (weld /next/(scot %da updated-at.path-row) path.path-row)
+      (weld /next/(scot %da *@da) path.path-row) :: intentionally subscribe to an old timestamp to force-refresh on first init
       %agent
       [src.bowl dap.bowl]
       %watch
-      (weld /next/(scot %da updated-at.path-row) path.path-row)
+      (weld /next/(scot %da *@da) path.path-row)
     ]
   ==
   =/  log1  (maybe-log hide-logs.state "subbing to {<subs>}")
