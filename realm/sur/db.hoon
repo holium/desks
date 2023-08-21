@@ -157,8 +157,9 @@
       :: if they have right permissions, host will propagate the data
       [%create =req-id =input-row]          :: sends %add-row to all subs
       [%edit =id:common =input-row] :: sends %upd-row to all subs
-      [%remove =type:common =path =id:common]      :: %host deleting the row, sends %delete to all peers
-      [%remove-many =type:common =path ids=(list id:common)]      :: %host deleting the row, sends %delete to all peers
+      [%remove =type:common =path =id:common]      :: %host deleting the row, updates subscribed peers
+      [%remove-many =type:common =path ids=(list id:common)]      :: %host deleting the rows, updates subscribed peers
+      [%remove-before =type:common =path t=@da]    :: similar to TRUNCATE, up to and including `t` the timestamp
       [%relay =req-id =input-row]          :: like %create, but for creating a %relay (relay:common)
       [%create-initial-spaces-paths ~]
 

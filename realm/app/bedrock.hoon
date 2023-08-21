@@ -100,6 +100,8 @@
         (remove:db +.act state bowl)
       %remove-many
         (remove-many:db +.act state bowl)
+      %remove-before
+        (remove-before:db +.act state bowl)
 
       %relay
         (relay:db +.act state bowl)

@@ -110,6 +110,20 @@
     /noun
   ==
 ::
+++  scry-bedrock-path
+  |=  [=path =bowl:gall]
+  ^-  path-row:bedrock
+  =/  fp
+    .^  fullpath:bedrock
+        %gx
+        %+  weld
+          %+  weld
+            /(scot %p our.bowl)/bedrock/(scot %da now.bowl)/db/path
+          path
+        /noun
+    ==
+  path-row.fp
+::
 ++  scry-first-bedrock-chat
   |=  [=path =bowl:gall]
   ^-  row:bedrock
@@ -123,7 +137,6 @@
         path
       /noun
     ==
-  ~&  all-chats
   =/  rows=(list row:bedrock)  ~(val by (~(got by pt.all-chats) path))
   (snag 0 rows)
 ::
@@ -205,6 +218,31 @@
   ]
   [%pass /dbpoke %agent [ship %bedrock] %poke %db-action !>([%create [ship *@da] path.row %chat 0 [%chat chat] ~])]
 ::
+++  edit-chat-bedrock-poke
+  |=  [host=ship act=[=path metadata=(map cord cord) peers-get-backlog=? invites=@tas max-expires-at-duration=@dr] =bowl:gall]
+  ^-  card
+  =/  bedrock-chat=row:bedrock  (scry-first-bedrock-chat path.act bowl)
+  ?+  -.data.bedrock-chat  !!
+      %chat
+    =/  chat  [
+      metadata.act
+      type.data.bedrock-chat
+      pins.data.bedrock-chat
+      invites.act
+      peers-get-backlog.act
+      max-expires-at-duration.act
+    ]
+    [
+      %pass
+      /dbpoke
+      %agent
+      [host %bedrock]
+      %poke
+      %db-action
+      !>([%edit id.bedrock-chat path.act %chat v.bedrock-chat [%chat chat] ~])
+    ]
+  ==
+::
 ++  create-bedrock-message-poke
   |=  [=ship act=[=path fragments=(list minimal-fragment:db) expires-in=@dr] ts=@da chat-id=[=ship t=@da]]
   =/  exp-at=@da  ?:  =(expires-in.act *@dr)
@@ -258,6 +296,11 @@
   |=  [host=ship =path newship=ship]
   ^-  card
   [%pass /dbpoke %agent [host %bedrock] %poke %db-action !>([%add-peer path newship %member])]
+::
+++  remove-before-bedrock-poke
+  |=  [host=ship =path t=@da]
+  ^-  card
+  [%pass /dbpoke %agent [host %bedrock] %poke %db-action !>([%remove-before %message path t])]
 ::
 ++  swap-id-parts
   |=  =msg-id:db
@@ -387,6 +430,8 @@
       :: so by relaying the request through the host-peer, since chat-db
       :: enforces the rule that only hosts can actually edit the path-row
       [%pass /selfpoke %agent [patp.host-peer %realm-chat] %poke %chat-action !>([%edit-chat act])]~
+
+    :-  (edit-chat-bedrock-poke (scry-bedrock-path-host path.act bowl) act bowl)
     :: we poke all peers/members' db with edit-path (including ourselves)
     %:  turn
       pathpeers
@@ -561,6 +606,7 @@
   :: %chat-db will disallow invalid signals
   =/  pathpeers  (scry-peers path.act bowl)
   =/  cards=(list card)
+    :-  (remove-before-bedrock-poke (scry-bedrock-path-host path.act bowl) path.act now.bowl)
     %:  turn
       pathpeers
       |=(p=peer-row:db (into-delete-backlog-poke p path.act now.bowl))

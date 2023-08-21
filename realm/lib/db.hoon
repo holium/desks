@@ -1176,6 +1176,63 @@
     =/  log=db-row-del-change    [%del-row path type (snag index ids) (add now.bowl index)]
     $(index +(index), tbl (~(del by tbl) (snag index ids)), del-log.state (~(put by del-log.state) (add now.bowl index) log), logs [log logs])
 ::
+++  remove-before :: similar to TRUNCATE, removes all rows of a given type and path up to and including a certain timestamp
+::bedrock &db-action [%remove-before %foo /example ~2023.5.22..19.22.29..d0f7]
+  |=  [[=type:common =path t=@da] state=state-0 =bowl:gall]
+  =/  log1  (maybe-log hide-logs.state "%remove-before")
+  ^-  (quip card state-0)
+
+  :: forward the request if we aren't the host
+  =/  path-row=path-row   (~(got by paths.state) path)
+  ?.  =(host.path-row our.bowl)
+    =/  log2  (maybe-log hide-logs.state "{<src.bowl>} tried to have us ({<our.bowl>}) %remove-before in {<path.path-row>} where we are not the host. forwarding the poke to the host: {<host.path-row>}")
+    :_  state
+    [%pass /dbpoke %agent [host.path-row dap.bowl] %poke %db-action !>([%remove-before type path t])]~
+  :: permissions
+  =/  pt          (~(got by tables.state) type)
+  =/  tbl         (~(got by pt) path)
+  =/  ids         (skim ~(tap in ~(key by tbl)) |=(k=id:common (lte t.k t)))
+  =/  index=@ud   0
+  =/  all-have-permission=?
+    |-
+      ?:  =(index (lent ids))
+        %.y
+      =/  id        (snag index ids)
+      =/  old-row   (~(got by tbl) id) :: old row must first exist
+      ?:  (has-delete-permissions path-row old-row state bowl)
+        $(index +(index))
+      %.n
+  ?.  all-have-permission
+    =/  log1  (maybe-log hide-logs.state "{(scow %p src.bowl)} tried to delete a %{(scow %tas type)} row where they didn't have permissions")
+    `state
+
+  :: update path
+  =/  foreign-ship-sub-wire   (weld /next/(scot %da updated-at.path-row) path)
+  =.  updated-at.path-row     now.bowl
+  =.  received-at.path-row    now.bowl
+  =.  paths.state             (~(put by paths.state) path path-row)
+
+  :: do the delete
+  =.  index    0
+  =/  logs=(list db-row-del-change)  ~
+  |-
+    ?:  =(index (lent ids))
+      =.  pt              (~(put by pt) path tbl)           :: update the pathed-table
+      =.  tables.state    (~(put by tables.state) type pt)  :: update the tables.state
+      :: TODO remove remote-scry paths for the row
+
+      :: emit the change to subscribers
+      =/  cards=(list card)  :~
+        :: tell subs about the new row
+        [%give %fact [/db (weld /path path) foreign-ship-sub-wire ~] db-changes+!>(logs)]
+        :: kick foreign ship subs to force them to re-sub for next update
+        [%give %kick [foreign-ship-sub-wire ~] ~]
+      ==
+
+      [cards state]
+    =/  log=db-row-del-change    [%del-row path type (snag index ids) (add now.bowl index)]
+    $(index +(index), tbl (~(del by tbl) (snag index ids)), del-log.state (~(put by del-log.state) (add now.bowl index) log), logs [log logs])
+::
 ++  relay
   :: supposed to be used by the sharer, poking their own ship,
   :: regardless of if they are the host of either original or target path
@@ -1274,6 +1331,7 @@
           [%edit (ot ~[[%id de-id] [%input-row de-input-row]])]
           [%remove remove]
           [%remove-many remove-many]
+          [%remove-before remove-before]
           [%relay de-create-input-row]
       ==
     ::
@@ -1311,6 +1369,13 @@
       :~  [%type (se %tas)]
           [%path pa]
           [%ids (ar de-id)]
+      ==
+    ::
+    ++  remove-before
+      %-  ot
+      :~  [%type (se %tas)]
+          [%path pa]
+          [%t di]
       ==
     ::
     ++  de-create-from-space
