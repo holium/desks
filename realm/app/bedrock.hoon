@@ -214,11 +214,31 @@
         =/  therow=row    (~(got by (ptbl-to-tbl:db (~(got by tables.state) tblname))) [ship t])
         ``db-row+!>([therow schemas.state])
     ::
+    :: test existence of specific row from a given table, by id
+    ::  /loobean/row/message/~zod/~2000.1.1/<path>.json
+      [%x %loobean %row @ @ @ *]
+        =/  tblname=@tas  i.t.t.t.path
+        =/  ship=@p       `@p`(slav %p i.t.t.t.t.path)
+        =/  t=@da         `@da`(slav %da i.t.t.t.t.t.path)
+        =/  dbpath                       t.t.t.t.t.t.path
+        =/  therow=(unit row)    (get-db:db tblname dbpath [ship t] state)
+        ?~  therow
+          ``ud+!>(1)  :: false
+        ``ud+!>(0)    :: true, because the pathrow exsits
+    ::
     :: host of a given path
       [%x %host %path *]
         =/  thepath  t.t.t.path
         =/  thepathrow  (~(got by paths.state) thepath)
         ``ship+!>(host.thepathrow)
+    ::
+    :: test existence of given path
+      [%x %loobean %path *]
+        =/  thepath  t.t.t.path
+        =/  thepathrow  (~(get by paths.state) thepath)
+        ?~  thepathrow
+          ``ud+!>(1)  :: false
+        ``ud+!>(0)    :: true, because the pathrow exsits
     ::
     :: /x/db/start-ms/[unix ms].json
     :: all tables, but only with received-at after <time>
@@ -424,7 +444,7 @@
                 :: fullpath instead of just a single change
                 :: |ames-cong 5 100.000
                 =/  full=fullpath   !<(fullpath +.+.sign)
-                ~&  "getting fullpath for {path.path-row.full}"
+                ~&  >>>  "getting fullpath for {<path.path-row.full>}"
                 :: insert pathrow
                 =.  received-at.path-row.full  now.bowl
                 =.  paths.state     (~(put by paths.state) dbpath path-row.full)

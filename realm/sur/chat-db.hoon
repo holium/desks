@@ -116,6 +116,8 @@
       [%delete-backlog =path before=time]
       [%add-peer =path patp=ship]
       [%kick-peer =path patp=ship]
+      [%dump-to-bedrock ~]
+      [%dump-to-bedrock-messages our-paths=(list path-row)]
   ==
 +$  minimal-fragment        [=content =reply-to metadata=(map cord cord)]
 +$  insert-message-action   [timestamp=@da =path fragments=(list minimal-fragment) expires-at=@da]

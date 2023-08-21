@@ -4,6 +4,7 @@
 ::    to/from json from types stored in courier sur.
 ::
 /-  *versioned-state, sur=chat-db
+/+  db-scry=bedrock-scries
 |%
 ::
 ::  random helpers
@@ -54,6 +55,11 @@
   [(gas:msgon:sur tbl key-vals) msg]
 ::
 ++  keys-from-kvs  |=(kvs=msg-kvs:sur (turn kvs |=(kv=[k=uniq-id:sur v=msg-part:sur] k.kv)))
+::
+++  swap-id-parts
+  |=  =msg-id:sur
+  ^-  [=ship t=@da]
+  [sender.msg-id timestamp.msg-id]
 ::
 ++  rm-msg-parts
   |=  [ids=(list uniq-id:sur) tbl=messages-table:sur]
@@ -507,6 +513,108 @@
     [%give %fact [/db (weld /db/path path.act) ~] thechange]
   ==
   [gives state]
+::
+++  dump-to-bedrock
+::  :chat-db &db-action [%dump-to-bedrock ~]
+  |=  [state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
+  ~&  %dump-to-bedrock
+  =/  our-paths=(list path-row:sur)  :: the list of paths we need to host in bedrock
+    %+  skim
+      ~(val by paths-table.state)
+    |=  =path-row:sur
+    ?:  =(type.path-row %dm)
+      ?:  (test-bedrock-path-existence:db-scry path.path-row bowl)
+        %.n
+      %.y
+    :: not a %dm
+    =/  peers=(list peer-row:sur)  (~(got by peers-table.state) path.path-row)
+    =/  host=ship  patp:(snag 0 (skim peers |=(p=peer-row:sur =(role.p %host))))
+    =(our.bowl host)
+
+  :: first, test bedrock to see if we have already dumped stuff there
+  ?:  %+  levy
+        our-paths
+      |=  =path-row:sur
+      (test-bedrock-path-existence:db-scry path.path-row bowl)
+    ~&  >>>  "already dumped our-paths to bedrock"
+    `state  :: since the path already exists in bedrock, assume we have already dumped
+
+  :: second, push everything into bedrock
+  ~&  >  "have not dumped to bedrock, dumping now"
+  =/  create-path-pokes=(list card)
+    %+  turn 
+      our-paths
+    |=  =path-row:sur
+    ^-  card
+    =/  peers=ship-roles:sur  (turn (~(got by peers-table.state) path.path-row) |=(p=peer-row:sur [patp.p role.p]))
+    [%pass /bedrockpoke %agent [our.bowl %bedrock] %poke %db-action !>([%create-path path.path-row %host ~ ~ ~ peers])]
+
+  =/  create-chat-pokes=(list card)
+    %+  turn 
+      our-paths
+    |=  =path-row:sur
+    ^-  card
+    =/  peers=ship-roles:sur  (turn (~(got by peers-table.state) path.path-row) |=(p=peer-row:sur [patp.p role.p]))
+    =/  chat  [
+      metadata.path-row
+      type.path-row
+      (silt (turn ~(tap in pins.path-row) swap-id-parts))
+      invites.path-row
+      peers-get-backlog.path-row
+      max-expires-at-duration.path-row
+    ]
+    [%pass /bedrockpoke %agent [our.bowl %bedrock] %poke %db-action !>([%create [our.bowl created-at.path-row] path.path-row %chat 0 [%chat chat] ~])]
+
+  =/  cards=(list card)
+   %+  snoc
+      %+  weld
+        create-path-pokes
+      create-chat-pokes
+    :: split into two parts because we need all these create-path and
+    :: create-chat pokes to be processed so we can connect messages with chat-id
+    [%pass /selfpoke %agent [our.bowl dap.bowl] %poke %chat-db-action !>([%dump-to-bedrock-messages our-paths])]
+  [cards state]
+::
+++  dump-to-bedrock-messages
+::  :chat-db &db-action [%dump-to-bedrock-messages ~]
+  |=  [our-paths=(list path-row:sur) state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
+  ~&  %dump-to-bedrock-messages
+  =/  messages-to-dump=(list msg-part:sur)  :: the list of initial msg-parts we need to host in bedrock
+    %+  turn
+      %+  skim
+        (tap:msgon:sur messages-table.state)
+      |=  [k=uniq-id:sur v=msg-part:sur]
+      ^-  ?
+      ?:  (gth msg-part-id.k 0)  %.n  :: only want the initial msg-parts
+      (lien our-paths |=(p=path-row:sur =(path.p path.v)))
+    |=([k=uniq-id:sur v=msg-part:sur] v)
+
+  :: first, test bedrock to see if we have already dumped stuff there
+  ?:  %+  levy
+        messages-to-dump
+      |=  =msg-part:sur
+      (test-bedrock-row-existence:db-scry path.msg-part %message [sender.msg-id.msg-part timestamp.msg-id.msg-part] bowl)
+    ~&  >>>  "already dumped to bedrock"
+    `state  :: since the path already exists in bedrock, assume we have already dumped
+
+  :: second, push everything into bedrock
+  =/  cards=(list card)
+    %+  turn 
+      messages-to-dump
+    |=  =msg-part:sur
+    ^-  card
+    =/  chat-id=[=ship t=@da]  id:(scry-first-bedrock-chat:db-scry path.msg-part bowl)
+    =/  msg  [
+      chat-id
+      ?~(reply-to.msg-part ~ (some [-.u.reply-to.msg-part [sender.q.u.reply-to.msg-part timestamp.q.u.reply-to.msg-part]]))
+      expires-at.msg-part
+      (turn (get-full-message messages-table.state msg-id.msg-part) |=(m=msg-part:sur [content.m metadata.m]))
+    ]
+    [%pass /dbpoke %agent [our.bowl %bedrock] %poke %db-action !>([%create [sender.msg-id.msg-part created-at.msg-part] path.msg-part %message 0 [%message msg] ~])]
+
+  [cards state]
 ::
 ::  mini helper lib
 ::

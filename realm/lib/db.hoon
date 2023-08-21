@@ -967,18 +967,19 @@
 ::~zod/bedrock &db-action [%create /example %vote 0 [%vote %.y our %foo [~zod now] /example] ~]
   |=  [[=req-id =input-row] state=state-0 =bowl:gall]
   ^-  (quip card state-0)
-  ~&  %create
-  ~&  type.input-row
-  ~&  req-id
-  ~&  now.bowl
+  ~&  "%create {<type.input-row>} {<req-id>} {<now.bowl>}"
   =/  vent-path=path  /vent/(scot %p src.req-id)/(scot %da now.req-id)
   =/  kickcard=card  [%give %kick ~[vent-path] ~]
   :: form row from input
   =/  created-time=@da  
     ?:(=(now.req-id *@da) now.bowl ?:((gth now.bowl now.req-id) now.req-id now.bowl))
+  =/  creator=ship
+    ?:  &(=(our.bowl src.bowl) ?!(=(src.req-id our.bowl)))
+      src.req-id
+    src.bowl
   =/  row=row  [
     path.input-row
-    [src.bowl created-time]
+    [creator created-time]
     type.input-row
     v.input-row
     data.input-row

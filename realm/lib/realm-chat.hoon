@@ -4,7 +4,7 @@
 ::    to/from json from types stored in realm-chat sur.
 ::
 /-  *realm-chat, db=chat-db, fr=friends, bedrock=db
-/+  chat-db
+/+  chat-db, db-scry=bedrock-scries
 |%
 ::
 :: helpers
@@ -97,64 +97,6 @@
     %paths  ~(val by paths-table.tbl)
   ==
 ::
-++  scry-bedrock-path-host
-  |=  [=path =bowl:gall]
-  ^-  ship
-  .^
-    ship
-    %gx
-    %+  weld
-      %+  weld
-        /(scot %p our.bowl)/bedrock/(scot %da now.bowl)/host/path
-      path
-    /noun
-  ==
-::
-++  scry-bedrock-path
-  |=  [=path =bowl:gall]
-  ^-  path-row:bedrock
-  =/  fp
-    .^  fullpath:bedrock
-        %gx
-        %+  weld
-          %+  weld
-            /(scot %p our.bowl)/bedrock/(scot %da now.bowl)/db/path
-          path
-        /noun
-    ==
-  path-row.fp
-::
-++  scry-first-bedrock-chat
-  |=  [=path =bowl:gall]
-  ^-  row:bedrock
-  =/  all-chats=[@tas pt=pathed-table:bedrock =schemas:bedrock]
-    .^
-      [@tas pt=pathed-table:bedrock =schemas:bedrock]
-      %gx
-      %+  weld
-        %+  weld
-          /(scot %p our.bowl)/bedrock/(scot %da now.bowl)/db/table-by-path/chat
-        path
-      /noun
-    ==
-  =/  rows=(list row:bedrock)  ~(val by (~(got by pt.all-chats) path))
-  (snag 0 rows)
-::
-++  scry-bedrock-message
-  |=  [id=[=ship t=@da] =path =bowl:gall]
-  ^-  row:bedrock
-  =/  rs=[=row:bedrock =schemas:bedrock]
-    .^
-      [row:bedrock schemas:bedrock]
-      %gx
-      %+  weld
-        %+  weld
-          /(scot %p our.bowl)/bedrock/(scot %da now.bowl)
-        /row/message/(scot %p ship.id)/(scot %da t.id)
-      /noun
-    ==
-  row.rs
-::
 ++  into-backlog-msg-poke
   |=  [m=message:db =ship]
   [%pass /dbpoke %agent [ship %chat-db] %poke %chat-db-action !>([%insert-backlog m])]
@@ -221,7 +163,7 @@
 ++  edit-chat-bedrock-poke
   |=  [host=ship act=[=path metadata=(map cord cord) peers-get-backlog=? invites=@tas max-expires-at-duration=@dr] =bowl:gall]
   ^-  card
-  =/  bedrock-chat=row:bedrock  (scry-first-bedrock-chat path.act bowl)
+  =/  bedrock-chat=row:bedrock  (scry-first-bedrock-chat:db-scry path.act bowl)
   ?+  -.data.bedrock-chat  !!
       %chat
     =/  chat  [
@@ -260,7 +202,7 @@
 ++  edit-bedrock-message-poke
   |=  [host=ship act=edit-message-action:db =bowl:gall]
   =/  first  (snag 0 fragments.act)
-  =/  current-bedrock-msg  (scry-bedrock-message (swap-id-parts msg-id.act) path.act bowl)
+  =/  current-bedrock-msg  (scry-bedrock-message:db-scry (swap-id-parts msg-id.act) path.act bowl)
   ?+  -.data.current-bedrock-msg  !!
       %message
     =/  msg  [
@@ -431,7 +373,7 @@
       :: enforces the rule that only hosts can actually edit the path-row
       [%pass /selfpoke %agent [patp.host-peer %realm-chat] %poke %chat-action !>([%edit-chat act])]~
 
-    :-  (edit-chat-bedrock-poke (scry-bedrock-path-host path.act bowl) act bowl)
+    :-  (edit-chat-bedrock-poke (scry-bedrock-path-host:db-scry path.act bowl) act bowl)
     :: we poke all peers/members' db with edit-path (including ourselves)
     %:  turn
       pathpeers
@@ -499,7 +441,7 @@
     (limo [(into-backlog-msg-poke (turn (scry-messages-for-path path.act bowl) |=([k=uniq-id:db v=msg-part:db] v)) ship.act) ~])
 
   =/  cards=(list card)
-    :-  (add-bedrock-peer-poke (scry-bedrock-path-host path.act bowl) path.act ship.act)
+    :-  (add-bedrock-peer-poke (scry-bedrock-path-host:db-scry path.act bowl) path.act ship.act)
     %+  weld
       %+  snoc
         :: we poke all original peers db with add-peer (including ourselves)
@@ -554,9 +496,9 @@
   :: read the peers for the path
   =/  pathpeers  (scry-peers path.act bowl)
   =/  official-time  t.act
-  =/  bedrock-chat=row:bedrock  (scry-first-bedrock-chat path.act bowl)
+  =/  bedrock-chat=row:bedrock  (scry-first-bedrock-chat:db-scry path.act bowl)
   =/  cards=(list card)
-    :-  (create-bedrock-message-poke (scry-bedrock-path-host path.act bowl) +.act official-time id.bedrock-chat)
+    :-  (create-bedrock-message-poke (scry-bedrock-path-host:db-scry path.act bowl) +.act official-time id.bedrock-chat)
     %+  turn
       pathpeers
     |=(a=peer-row:db (into-insert-message-poke a +.act official-time))
@@ -573,7 +515,7 @@
   :: %chat-db will disallow invalid signals
   =/  pathpeers  (scry-peers path.act bowl)
   =/  cards=(list card)
-    :-  (edit-bedrock-message-poke (scry-bedrock-path-host path.act bowl) act bowl)
+    :-  (edit-bedrock-message-poke (scry-bedrock-path-host:db-scry path.act bowl) act bowl)
     %:  turn
       pathpeers
       |=(p=peer-row:db (into-edit-message-poke p act))
@@ -590,7 +532,7 @@
   :: %chat-db will disallow invalid signals
   =/  pathpeers  (scry-peers path.act bowl)
   =/  cards=(list card)
-    :-  (delete-bedrock-message-poke (scry-bedrock-path-host path.act bowl) act bowl)
+    :-  (delete-bedrock-message-poke (scry-bedrock-path-host:db-scry path.act bowl) act bowl)
     %:  turn
       pathpeers
       |=(p=peer-row:db (into-delete-message-poke p msg-id.act))
@@ -606,7 +548,7 @@
   :: %chat-db will disallow invalid signals
   =/  pathpeers  (scry-peers path.act bowl)
   =/  cards=(list card)
-    :-  (remove-before-bedrock-poke (scry-bedrock-path-host path.act bowl) path.act now.bowl)
+    :-  (remove-before-bedrock-poke (scry-bedrock-path-host:db-scry path.act bowl) path.act now.bowl)
     %:  turn
       pathpeers
       |=(p=peer-row:db (into-delete-backlog-poke p path.act now.bowl))
