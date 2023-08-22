@@ -1,5 +1,5 @@
 |%
-+$  type 
++$  type-prefix
   $?  %vote
       %rating
       %comment
@@ -11,6 +11,7 @@
       %creds
       @tas
   ==
++$  type      [name=type-prefix hash=@uvH]  :: hash is (sham schema) for %general, and (sham *vote) for common types
 +$  id        [=ship t=@da] :: ship is who created the row, t is when it was created since that's inherently unique in one-at-a-time only creation fashion
 ::
 :: pre-built data-types
@@ -20,6 +21,12 @@
 +$  vote
   $:  up=?              :: true for like/upvote, false for dislike/downvote  0 -> 2
       parent-type=type  :: table name of the thing this vote is attached to  1 -> 6
+      parent-id=id      :: id of the thing this vote is attached to          2 -> 14
+      parent-path=path  ::                                                   3 -> 30
+  ==
++$  vote-0
+  $:  up=?              :: true for like/upvote, false for dislike/downvote  0 -> 2
+      parent-type=type-prefix  :: table name of the thing this vote is attached to  1 -> 6
       parent-id=id      :: id of the thing this vote is attached to          2 -> 14
       parent-path=path  ::                                                   3 -> 30
   ==
@@ -33,11 +40,25 @@
       parent-id=id      :: id of the thing being rated
       parent-path=path
   ==
++$  rating-0
+  $:  value=@rd         :: the rating. any real number. up to app to parse properly
+      max=@rd           :: the maximum rating the application allows. (useful for aggregating, and making display agnostic)
+      format=@tas       :: an app-specific code for indicating what "kind" of rating it is (5-star or 100% or 7/10 cats or whatever)
+      parent-type=type-prefix  :: table name of the thing being rated
+      parent-id=id      :: id of the thing being rated
+      parent-path=path
+  ==
 
 :: plain text snippet referencing some other object
 +$  comment
   $:  txt=@t            :: the comment
       parent-type=type  :: table name of the thing being commented on
+      parent-id=id      :: id of the thing being commented on
+      parent-path=path
+  ==
++$  comment-0
+  $:  txt=@t            :: the comment
+      parent-type=type-prefix  :: table name of the thing being commented on
       parent-id=id      :: id of the thing being commented on
       parent-path=path
   ==
@@ -49,11 +70,23 @@
       parent-id=id      :: id of the thing being commented on
       parent-path=path
   ==
++$  react-0
+  $:  react=@t          :: the emoji code
+      parent-type=type-prefix  :: table name of the thing being commented on
+      parent-id=id      :: id of the thing being commented on
+      parent-path=path
+  ==
 
 :: tag some <thing> with metadata (ex: 'funny' 'based' 'programming' etc)
 +$  tag
   $:  tag=@t            :: the tag (ex: 'based')
       parent-type=type  :: table name of the thing being tagged
+      parent-id=id      :: id of the thing being tagged
+      parent-path=path
+  ==
++$  tag-0
+  $:  tag=@t            :: the tag (ex: 'based')
+      parent-type=type-prefix  :: table name of the thing being tagged
       parent-id=id      :: id of the thing being tagged
       parent-path=path
   ==
@@ -69,6 +102,15 @@
       from-id=id        :: id of the thing being linked from
       from-path=path
       to-type=type      :: table name of the thing being linked to
+      to-id=id          :: id of the thing being linked to
+      to-path=path
+  ==
++$  link-0
+  $:  key=@t            :: the key of the link, what the computer uses to find (ex: 'based')
+      from-type=type-prefix    :: table name of the thing being linked from
+      from-id=id        :: id of the thing being linked from
+      from-path=path
+      to-type=type-prefix      :: table name of the thing being linked to
       to-id=id          :: id of the thing being linked to
       to-path=path
   ==
@@ -91,6 +133,14 @@
 +$  relay
   $:  =id   :: the id of what is being relayed
       =type :: type of what is being relayed
+      =path :: where the thing originally came from
+      revision=@ud
+      protocol=relay-protocol
+      deleted=?
+  ==
++$  relay-0
+  $:  =id   :: the id of what is being relayed
+      =type-prefix :: type of what is being relayed
       =path :: where the thing originally came from
       revision=@ud
       protocol=relay-protocol

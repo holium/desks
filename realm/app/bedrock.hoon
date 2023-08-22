@@ -24,7 +24,7 @@
 
 /-  *db, sstore=spaces-store, vstore=visas
 /+  dbug, db
-=|  state-0
+=|  state-1
 =*  state  -
 =<
   %-  agent:dbug
@@ -34,7 +34,7 @@
   ::
   ++  on-init
     ^-  (quip card _this)
-    =/  default-state=state-0   *state-0
+    =/  default-state=state-1   *state-1
     :: make sure the relay table exists on-init
     =.  tables.default-state
     (~(gas by *^tables) ~[[%relay *pathed-table] [%vote *pathed-table] [%react *pathed-table]])
@@ -49,21 +49,33 @@
     |=  old-state=vase
     ^-  (quip card _this)
     =/  old  !<(versioned-state old-state)
-    :: REMOVE WHEN YOU WANT DATA TO ACTUALLY STICK AROUND
-    ::=/  default-state=state-0   *state-0
-    :: make sure the relay table exists on-init
-    ::=.  tables.default-state
-    ::(~(gas by *^tables) ~[[%relay *pathed-table] [%vote *pathed-table] [%react *pathed-table]])
     :: do a quick check to make sure we are subbed to /updates in %spaces
     =/  cards
       :-  [%pass /timer %arvo %b %rest next-refresh-time:core]
       :-  [%pass /timer %arvo %b %wait next-refresh-time:core]
-      :: :-  [%pass /selfpoke %agent [our.bowl dap.bowl] %poke %db-action !>([%create-initial-spaces-paths ~])]
-      :: :-  [%pass /selfpoke %agent [our.bowl %api-store] %poke %api-store-action !>([%sync-to-bedrock ~])] :: ALSO REMOVE WHEN YOU STOP WIPING THE DATA EVERY TIME
+      :-  [%pass /selfpoke %agent [our.bowl dap.bowl] %poke %db-action !>([%create-initial-spaces-paths ~])]
       ?:  (~(has by wex.bowl) [/spaces our.bowl %spaces])
         ~
       [%pass /spaces %agent [our.bowl %spaces] %watch /updates]~
-    [cards this(state old)]
+    ?-  -.old
+        %0
+      =/  new-tables=tables  (transform-tables-0-to-tables tables.old schemas.old)
+      =/  new-schemas=schemas  (transform-schemas-0-to-schemas schemas.old)
+      =/  new-paths=paths  (transform-paths-0-to-paths paths.old)
+      =/  new-del-log=del-log  (transform-del-log-0-to-del-log del-log.old)
+        
+      =/  new-state=state-1  [
+        new-tables
+        new-schemas
+        new-paths
+        peers.old
+        new-del-log
+        hide-logs.old
+      ]
+      [cards this(state new-state)]
+        %1
+      [cards this(state old)]
+    ==
   ::
   ++  on-poke
     |=  [=mark =vase]
@@ -279,7 +291,7 @@
             :: handle the update by updating our local state and
             :: pushing db-changes out to our subscribers
             =^  cards  state
-            ^-  (quip card state-0)
+            ^-  (quip card state-1)
             =/  dbpath=path         +.+.wire
             =/  factmark  -.+.sign
             ::~&  >>  "%fact on {(spud wire)}: {<factmark>}"

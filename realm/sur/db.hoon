@@ -3,9 +3,19 @@
 +$  card  card:agent:gall
 +$  versioned-state
   $%  state-0
+      state-1
   ==
 +$  state-0
   $:  %0
+      tables=tables-0
+      schemas=schemas-0
+      paths=paths-0
+      =peers
+      del-log=del-log-0
+      hide-logs=?  :: default hidden %.y
+  ==
++$  state-1
+  $:  %1
       =tables
       =schemas
       =paths
@@ -14,11 +24,12 @@
       hide-logs=?  :: default hidden %.y
   ==
 
-+$  schemas   (map [=type:common v=@ud] schema)
++$  schemas   (map type:common schema)
 +$  schema    (list [name=@t t=@t])  :: list of [column-name type-code]
 :: allowable @t codes are:
 ::  @t @ud etc (any atom code)
 ::  id    (for a id:common type of [=ship t=@da], useful for referencing other rows from within your custom-type
+::  type  (for a type:common [@tas @uvH], useful for referencing other database types
 ::  unit  (for a (unit @t) only)
 ::  path
 ::  list  (for a list of @t)
@@ -36,7 +47,6 @@
                         :: is used to push data out to peers list for that path
       =id:common
       =type:common      :: MUST always be same as table type
-      v=@ud             :: data-type version
       data=columns      :: the actual content
       created-at=@da    :: when the source-ship originally created the row
       updated-at=@da    :: when the source-ship originally last updated the row
@@ -175,7 +185,6 @@
 +$  input-row
   $:  =path
       =type:common
-      v=@ud
       data=columns
       =schema
   ==
@@ -186,4 +195,57 @@
   $%  [%row =row =schema]
       [%ack ~]
   ==
+:: old types
++$  schemas-0         (map [type=type-prefix:common v=@ud] schema)
++$  tables-0          (map type-prefix:common pathed-table-0)
++$  pathed-table-0    (map path table-0)
++$  table-0           (map id:common row-0)
++$  row-0
+  $:  =path             :: application-specific logic about what this row is attached to (ie /space/space-path/app/app-name/thing)
+                        :: is used to push data out to peers list for that path
+      =id:common
+      type=type-prefix:common      :: MUST always be same as table type
+      v=@ud             :: data-type version
+      data=columns-0      :: the actual content
+      created-at=@da    :: when the source-ship originally created the row
+      updated-at=@da    :: when the source-ship originally last updated the row
+      received-at=@da   :: when this ship actually got the latest version of the row, regardless of when the row was originally created
+  ==
++$  columns-0
+  $%  [%general cols=(list @)]
+      [%vote vote-0:common]
+      [%rating rating-0:common]
+      [%comment comment-0:common]
+      [%tag tag-0:common]
+      [%link link-0:common]
+      [%follow follow:common]
+      [%relay relay-0:common]
+      [%react react-0:common]
+      [%creds creds:common]
+  ==
++$  paths-0     (map path path-row-0)
++$  path-row-0
+  $:  =path
+      host=ship
+      =replication
+      default-access=access-rules   :: for everything not found in the table-access
+      table-access=table-access-0   :: allows a path to specify role-based access rules on a per-table basis
+      constraints=constraints-0     :: if there is not a constraint rule for a given type, the default constraints for types will be applied
+      space=(unit [=path =role:membership])  :: if the path-row is created from a space, record the info
+      created-at=@da
+      updated-at=@da
+      received-at=@da
+  ==
++$  table-access-0  (map type-prefix:common access-rules)
++$  constraints-0   (map type-prefix:common constraint)
++$  constraint-0    [type=type-prefix:common =uniques =check]
++$  db-row-del-change-0    [%del-row =path type=type-prefix:common =id:common t=@da]
++$  db-peer-del-change-0   [%del-peer =path =ship t=@da]
++$  db-path-del-change-0   [%del-path =path t=@da]
++$  db-del-change-0
+  $%  db-row-del-change-0
+      db-peer-del-change
+      db-path-del-change
+  ==
++$  del-log  (map @da db-del-change-0)
 --
