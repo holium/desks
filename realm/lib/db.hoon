@@ -1082,7 +1082,7 @@
   ?.  =(host.path-row our.bowl)
     =/  log2  (maybe-log hide-logs.state "{<src.bowl>} tried to have us ({<our.bowl>}) remove a row in {<path.path-row>} where we are not the host. forwarding the poke to the host: {<host.path-row>}")
     :_  state
-    [%pass /dbpoke %agent [host.path-row dap.bowl] %poke %db-action !>([%remove type path id])]~
+    [%pass /dbpoke %agent [host.path-row dap.bowl] %poke %db-action !>([%remove req-id type path id])]~
 
   :: update path
   =/  foreign-ship-sub-wire   (weld /next/(scot %da updated-at.path-row) path)
@@ -1114,7 +1114,7 @@
 ::
 ++  remove-many :: only works on ids from same path
 ::bedrock &db-action [%remove-many %foo /example [[our ~2023.5.22..19.22.29..d0f7] [our ~2023.5.22..19.22.29..d0f7] ~]]
-  |=  [[=req-id =type:common =path ids=(list id:common)] state=state-1 =bowl:gall]
+  |=  [[=req-id =path ids=(list [=id:common =type:common])] state=state-1 =bowl:gall]
   =/  log3  (maybe-log hide-logs.state "%remove-many {<path>} {<ids>}")
   =/  vent-path=^path  /vent/(scot %p src.req-id)/(scot %da now.req-id)
   =/  kickcard=card  [%give %kick ~[vent-path] ~]
@@ -1125,22 +1125,22 @@
   ?.  =(host.path-row our.bowl)
     =/  log2  (maybe-log hide-logs.state "{<src.bowl>} tried to remove rows: {<ids>} in {<path.path-row>} where we are not the host. forwarding the poke to the host: {<host.path-row>}")
     :_  state
-    [%pass /dbpoke %agent [host.path-row dap.bowl] %poke %db-action !>([%remove-many type path ids])]~
+    [%pass /dbpoke %agent [host.path-row dap.bowl] %poke %db-action !>([%remove-many req-id path ids])]~
   :: permissions
-  =/  pt          (~(got by tables.state) type)
-  =/  tbl         (~(got by pt) path)
   =/  index=@ud   0
   =/  all-have-permission=?
     |-
       ?:  =(index (lent ids))
         %.y
       =/  id        (snag index ids)
-      =/  old-row   (~(got by tbl) id) :: old row must first exist
+      =/  pt        (~(got by tables.state) type.id)
+      =/  tbl       (~(got by pt) path)
+      =/  old-row   (~(got by tbl) id.id) :: old row must first exist
       ?:  (has-delete-permissions path-row old-row state bowl)
         $(index +(index))
       %.n
   ?.  all-have-permission
-    =/  log1  (maybe-log hide-logs.state "{(scow %p src.bowl)} tried to delete a %{(scow %tas name.type)} row where they didn't have permissions")
+    =/  log1  (maybe-log hide-logs.state "{(scow %p src.bowl)} tried to delete a row on {<path>} where they didn't have permissions")
     `state
 
   :: update path
@@ -1154,11 +1154,8 @@
   =/  logs=(list db-row-del-change)  ~
   |-
     ?:  =(index (lent ids))
-      =.  pt              (~(put by pt) path tbl)           :: update the pathed-table
-      =.  tables.state    (~(put by tables.state) type pt)  :: update the tables.state
       :: TODO remove remote-scry paths for the row
       =/  last  (snag (dec index) logs)
-
       :: emit the change to subscribers
       =/  cards=(list card)  :~
         :: tell subs about the new row
@@ -1171,8 +1168,17 @@
       ==
 
       [cards state]
-    =/  log=db-row-del-change    [%del-row path type (snag index ids) (add now.bowl index)]
-    $(index +(index), tbl (~(del by tbl) (snag index ids)), del-log.state (~(put by del-log.state) (add now.bowl index) log), logs [log logs])
+    =/  id        (snag index ids)
+    =/  pt        (~(got by tables.state) type.id)
+    =/  tbl       (~(del by (~(got by pt) path)) id.id)
+    =.  pt        (~(put by pt) path tbl)           :: update the pathed-table
+    =/  log=db-row-del-change    [%del-row path type.id id.id (add now.bowl index)]
+    %=  $
+      index           +(index)
+      tables.state    (~(put by tables.state) type.id pt)
+      del-log.state   (~(put by del-log.state) (add now.bowl index) log)
+      logs            [log logs]
+    ==
 ::
 ++  relay
   :: supposed to be used by the sharer, poking their own ship,
@@ -1316,7 +1322,7 @@
     ::
     ++  remove-many
       |=  jon=json
-      ^-  [req-id type:common path (list id:common)]
+      ^-  [req-id path (list [id:common type:common])]
       ?>  ?=([%o *] jon)
       =/  request-id=(unit json)  (~(get by p.jon) 'request-id')
       ?~  request-id
@@ -1325,9 +1331,8 @@
     ::
     ++  de-remove-many
       %-  ot
-      :~  [%type de-type]
-          [%path pa]
-          [%ids (ar de-id)]
+      :~  [%path pa]
+          [%ids (ar (ot [[%id de-id] [%type de-type] ~]))]
       ==
     ::
     ++  de-create-from-space

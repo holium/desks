@@ -166,7 +166,7 @@
       [%create =req-id =input-row]          :: sends %add-row to all subs
       [%edit =id:common =input-row] :: sends %upd-row to all subs
       [%remove =req-id =type:common =path =id:common]      :: %host deleting the row, sends %delete to all peers
-      [%remove-many =req-id =type:common =path ids=(list id:common)]      :: %host deleting the row, sends %delete to all peers
+      [%remove-many =req-id =path ids=(list [=id:common =type:common])]      :: delete many records at once
       [%relay =req-id =input-row]          :: like %create, but for creating a %relay (relay:common)
       [%create-initial-spaces-paths ~]
 
