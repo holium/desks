@@ -66,7 +66,7 @@
         (transform-schemas-0-to-schemas:db schemas.old)
         (transform-paths-0-to-paths:db paths.old)
         peers.old
-        (transform-del-log-0-to-del-log:db del-log.old schemas.old tables.old)
+        (transform-del-log-0-to-del-log:db del-log.old schemas.old)
         hide-logs.old
       ]
       [cards this(state new-state)]

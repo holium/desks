@@ -2054,7 +2054,7 @@
     $(kvs +.kvs, new (~(put by new) new-key v))
 ::
 ++  transform-del-log-0-to-del-log
-  |=  [old=del-log-0 schs=schemas-0 rows=tables-0]
+  |=  [old=del-log-0 schs=schemas-0]
   ^-  del-log
   =/  new=del-log  *del-log
   =/  kvs          ~(tap by old)
@@ -2068,11 +2068,8 @@
           %del-peer  v
           %del-path  v
           %del-row
-        =/  pt   (~(got by rows) type.v)
-        =/  tbl  (~(got by pt) path.v)
-        =/  rw   (~(got by tbl) id.v)
         =/  hash=@uvH
-          (hash-for-type type.v (~(get by schs) [type.v v.rw]))
+          (hash-for-type type.v (~(get by schs) [type.v 0])) :: only works assuming everything is still at v0
         [%del-row path.v [type.v hash] id.v t.v]
       ==
     $(kvs +.kvs, new (~(put by new) k new-val))
@@ -2094,7 +2091,7 @@
         replication.v
         default-access.v
         ~
-        default-constraints
+        ~
         space.v
         created-at.v
         updated-at.v
