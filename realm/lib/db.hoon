@@ -1128,20 +1128,19 @@
     [%pass /dbpoke %agent [host.path-row dap.bowl] %poke %db-action !>([%remove-many req-id path ids])]~
   :: permissions
   =/  index=@ud   0
-  =/  all-have-permission=?
+  =/  allowed-ids=(list [=id:common =type:common])   ~
+  =.  allowed-ids
     |-
       ?:  =(index (lent ids))
-        %.y
+        allowed-ids
       =/  id        (snag index ids)
       =/  pt        (~(got by tables.state) type.id)
       =/  tbl       (~(got by pt) path)
       =/  old-row   (~(got by tbl) id.id) :: old row must first exist
       ?:  (has-delete-permissions path-row old-row state bowl)
-        $(index +(index))
-      %.n
-  ?.  all-have-permission
-    =/  log1  (maybe-log hide-logs.state "{(scow %p src.bowl)} tried to delete a row on {<path>} where they didn't have permissions")
-    `state
+        $(index +(index), allowed-ids [id allowed-ids])
+      =/  log1  (maybe-log hide-logs.state "{(scow %p src.bowl)} tried to delete a row {<id.id>} on {<path>} where they didn't have permissions, skipping it")
+      $(index +(index))
 
   :: update path
   =/  foreign-ship-sub-wire   (weld /next/(scot %da updated-at.path-row) path)
@@ -1153,7 +1152,7 @@
   =.  index    0
   =/  logs=(list db-row-del-change)  ~
   |-
-    ?:  =(index (lent ids))
+    ?:  =(index (lent allowed-ids))
       :: TODO remove remote-scry paths for the row
       =/  last  (snag (dec index) logs)
       :: emit the change to subscribers
@@ -1168,7 +1167,7 @@
       ==
 
       [cards state]
-    =/  id        (snag index ids)
+    =/  id        (snag index allowed-ids)
     =/  pt        (~(got by tables.state) type.id)
     =/  tbl       (~(del by (~(got by pt) path)) id.id)
     =.  pt        (~(put by pt) path tbl)           :: update the pathed-table
