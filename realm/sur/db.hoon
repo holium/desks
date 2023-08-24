@@ -91,12 +91,12 @@
 +$  uniques       (set unique-columns)  :: the various uniqueness rules that must all be true
 +$  unique-columns  (set column-accessor)  :: names of columns that taken together must be unique in the table+path
 +$  check         ~  :: I want check to be the mold for a gate that takes in a row and produces %.y or %.n, which will allow applications to specify arbitrary check functions to constrain their data
-++  default-vote-constraint  [%vote (silt ~[(~(gas in *unique-columns) ~[1 2 3 "ship.id"])]) ~]
-++  default-rating-constraint  [%rating (silt ~[(~(gas in *unique-columns) ~[3 4 5 "ship.id" 2])]) ~]
+++  default-vote-constraint  [vote-type:common (silt ~[(~(gas in *unique-columns) ~[1 2 3 "ship.id"])]) ~]
+++  default-rating-constraint  [rating-type:common (silt ~[(~(gas in *unique-columns) ~[3 4 5 "ship.id" 2])]) ~]
 ++  default-constraints
   %-  ~(gas by *constraints)
-  :~  [%vote default-vote-constraint]
-      [%rating default-rating-constraint]
+  :~  [vote-type:common default-vote-constraint]
+      [rating-type:common default-rating-constraint]
   ==
 +$  column-accessor  ?(@ud tape)
 :: used for dumping the current state of every row on a given path
@@ -237,15 +237,13 @@
       received-at=@da
   ==
 +$  table-access-0  (map type-prefix:common access-rules)
-+$  constraints-0   (map type-prefix:common constraint)
++$  constraints-0   (map type-prefix:common constraint-0)
 +$  constraint-0    [type=type-prefix:common =uniques =check]
 +$  db-row-del-change-0    [%del-row =path type=type-prefix:common =id:common t=@da]
-+$  db-peer-del-change-0   [%del-peer =path =ship t=@da]
-+$  db-path-del-change-0   [%del-path =path t=@da]
 +$  db-del-change-0
   $%  db-row-del-change-0
       db-peer-del-change
       db-path-del-change
   ==
-+$  del-log  (map @da db-del-change-0)
++$  del-log-0  (map @da db-del-change-0)
 --

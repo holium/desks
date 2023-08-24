@@ -61,7 +61,7 @@
 ++  our-matching-relays
   |=  [r=row state=state-1 =bowl:gall]
   ^-  (list row)
-  =/  relays=(list row)  ~(val by (ptbl-to-tbl (~(got by tables.state) %relay)))
+  =/  relays=(list row)  ~(val by (ptbl-to-tbl (~(got by tables.state) relay-type:common)))
   %+  skim
     relays
   |=  rel=row
@@ -110,7 +110,6 @@
   ?@  i   (snag-by-index i +.data.r)
   ?:  =(i "ship.id")      ship.id.r
   ?:  =(i "t.id")         t.id.r
-  ?:  =(i "v")            v.r
   ?:  =(i "created-at")   created-at.r
   ?:  =(i "updated-at")   updated-at.r
   ?:  =(i "received-at")  received-at.r
@@ -1349,7 +1348,7 @@
           type-keys
         |=  k=@t
         ^-  [k=type:common v=access-rules]
-        [`@tas`k (de-access-rules (~(got by p.jon) k))]
+        [(de-type s+k) (de-access-rules (~(got by p.jon) k))]
       (~(gas by *table-access) kvs)
     ::
     ++  de-access-rules
@@ -1404,10 +1403,10 @@
       |=  jon=json
       ^-  input-row
       ?>  ?=([%o *] jon)
-      =/  data-type   (de-type (~(got by p.jon) 'type'))
+      =/  data-type=type:common   (de-type (~(got by p.jon) 'type'))
       =/  schema=schema     ((ar (at ~[so so])) (~(got by p.jon) 'schema'))
       =/  actual-data
-        ?+  data-type
+        ?+  name.data-type
             [%general ((de-cols schema) (~(got by p.jon) 'data'))]
           %vote
             [%vote (de-vote (~(got by p.jon) 'data'))]
@@ -1421,7 +1420,6 @@
       [
         (pa (~(got by p.jon) 'path'))
         data-type
-        (ni (~(got by p.jon) 'v'))
         actual-data
         schema
       ]
@@ -1447,6 +1445,7 @@
           ?:  =(type-key 'f')     (bo datatom)
           ?:  =(type-key 'p')     ((se %p) datatom)
           ?:  =(type-key 'id')    (jam (de-id datatom))
+          ?:  =(type-key 'type')  (jam (de-type datatom))
           ?:  =(type-key 'unit')  (jam (so:dejs-soft:format datatom))
           ?:  =(type-key 'path')  (jam (pa datatom))
           ?:  =(type-key 'list')  (jam ((ar so) datatom))
@@ -1492,10 +1491,15 @@
       ==
     ::
     ++  de-type
-      %-  ot
-      :~  [%name (se %tas)]
-          [%hash (se %uv)]
-      ==
+      %+  cu
+        path-to-type
+      pa
+    ::
+    ++  path-to-type
+      |=  p=path
+      ^-  type:common
+      [`@tas`(slav %tas +2:p) `@uvH`(slav %uv +6:p)]
+    ::
     ::
     ++  de-id
       %+  cu
@@ -1585,7 +1589,7 @@
           ~[['row' (en-row row.ch (~(put by *schemas) type.row.ch schema.ch))]]
         %del-row
           :~  ['path' s+(spat path.ch)]
-              ['type' a+[s+name.type.ch s+(scot %uv hash.type.ch)]~]
+              ['type' (en-db-type type.ch)]
               ['id' (row-id-to-json id.ch)]
               ['timestamp' (time t.ch)]
            ==
@@ -1611,13 +1615,16 @@
     ++  state
       |=  st=versioned-state
       ^-  json
-      %-  pairs
-      :~  ['state-version' (numb `@`-.st)]
-          ['data-tables' (en-tables tables.st schemas.st)]
-          ['schemas' (en-schemas schemas.st)]
-          ['paths' (en-paths paths.st)]
-          ['peers' (en-peers peers.st)]
-          ['del-log' (en-del-log del-log.st)]
+      ?+  -.st  !!
+          %1
+        %-  pairs
+        :~  ['state-version' (numb `@`-.st)]
+            ['data-tables' (en-tables tables.st schemas.st)]
+            ['schemas' (en-schemas schemas.st)]
+            ['paths' (en-paths paths.st)]
+            ['peers' (en-peers peers.st)]
+            ['del-log' (en-del-log del-log.st)]
+        ==
       ==
     ::
     ++  en-del-log
@@ -1644,7 +1651,7 @@
           ~[['path' s+(spat path.ch)] ['ship' s+(scot %p ship.ch)]]
         %del-row
           :~  ['path' s+(spat path.ch)]
-              ['type' a+[s+name.type.ch s+(scot %uv hash.type.ch)]~]
+              ['type' (en-db-type type.ch)]
               ['id' (row-id-to-json id.ch)]
           == 
       ==
@@ -1667,7 +1674,7 @@
       |=  [=type:common =table]
       =/  rows=(list row)  ~(val by table)
       %-  pairs
-      :~  ['type' a+[s+name.type s+(scot %uv hash.type)]~]
+      :~  ['type' (en-db-type type)]
           ['rows' a+(turn rows |=(=row (en-row row schemas)))]
       ==
     ::
@@ -1693,7 +1700,7 @@
         ^-  (list row)
         ~(val by table)
       %-  pairs
-      :~  ['type' a+[s+name.type s+(scot %uv hash.type)]~]
+      :~  ['type' (en-db-type type)]
           :-  'rows'
           :-  %a
           %+  turn
@@ -1709,8 +1716,7 @@
       =/  basekvs=(list [@t json])
         :~  path+s+(spat path.row)
             id+(row-id-to-json id.row)
-            ['type' a+[s+name.type.row s+(scot %uv hash.type.row)]~]
-            v+(numb v.row)
+            ['type' (en-db-type type.row)]
             creator+s+(scot %p ship.id.row)
             created-at+(time created-at.row)
             updated-at+(time updated-at.row)
@@ -1736,6 +1742,7 @@
                 ?:  =(t.sch 'da')  (time `@da`d)
                 ?:  =(t.sch 'dr')  (time-dr `@dr`d)
                 ?:  =(t.sch 'id')    (row-id-to-json ;;(id:common (cue d)))
+                ?:  =(t.sch 'type')  (en-db-type ;;(type:common (cue d)))
                 ?:  =(t.sch 'unit')  ?~(;;((unit @t) (cue d)) ~ s+(need ;;((unit @t) (cue d))))
                 ?:  =(t.sch 'path')  (path ;;(^path (cue d)))
                 ?:  =(t.sch 'list')  [%a (turn ;;((list @t) (cue d)) |=(i=@t s+i))]
@@ -1745,19 +1752,19 @@
               $(index +(index), result [[name.sch t] result])
           %vote
             :~  ['up' b+up.data.row]
-                ['parent-type' a+[s+name.parent-type.data.row s+(scot %uv hash.parent-type.data.row)]~]
+                ['parent-type' (en-db-type parent-type.data.row)]
                 ['parent-id' (row-id-to-json parent-id.data.row)]
                 ['parent-path' s+(spat parent-path.data.row)]
             ==
           %comment
             :~  ['txt' s+txt.data.row]
-                ['parent-type' a+[s+name.parent-type.data.row s+(scot %uv hash.parent-type.data.row)]~]
+                ['parent-type' (en-db-type parent-type.data.row)]
                 ['parent-id' (row-id-to-json parent-id.data.row)]
                 ['parent-path' s+(spat parent-path.data.row)]
             ==
           %relay
             :~  ['id' (row-id-to-json id.data.row)]
-                ['parent-type' a+[s+name.parent-type.data.row s+(scot %uv hash.parent-type.data.row)]~]
+                ['parent-type' (en-db-type type.data.row)]
                 ['path' s+(spat path.data.row)]
                 ['revision' (numb revision.data.row)]
             ==
@@ -1793,8 +1800,15 @@
     ++  en-table-access
       |=  =table-access
       ^-  json
+      =/  kvs
+        %+  turn
+          ~(tap by table-access)
+        |=  [k=type:common v=access-rules]
+        ^-  [k=@t v=json]
+        [(spat /(scot %tas name.k)/(scot %uv hash.k)) (en-access-rules v)]
+
       :-  %o
-      `(map @t json)`(~(run by table-access) en-access-rules)
+      `(map @t json)`(~(gas by *(map @t json)) kvs)
     ::
     ++  en-access-rules
       |=  =access-rules
@@ -1842,11 +1856,10 @@
       (turn ~(tap by schemas) en-schema-kv)
     ::
     ++  en-schema-kv
-      |=  [k=[=type:common v=@ud] v=schema]
+      |=  [=type:common v=schema]
       ^-  json
       %-  pairs
-      :~  ['type' a+[s+name.type.k s+(scot %uv hash.type.k)]~]
-          ['version' (numb v.k)]
+      :~  ['type' (en-db-type type)]
           ['schema' a+(turn v |=(col=[name=@t t=@t] (pairs ~[['name' s+name.col] ['type' s+t.col]])))]
       ==
     ::
@@ -1859,6 +1872,16 @@
       |=  =id:common
       ^-  cord
       (spat ~[(scot %p ship.id) (scot %da t.id)])
+    ::
+    ++  en-db-type
+      |=  =type:common
+      ^-  json
+      s+(db-type-to-cord type)
+    ::
+    ++  db-type-to-cord
+      |=  =type:common
+      ^-  cord
+      (spat ~[(scot %tas name.type) (scot %uv hash.type)])
     ::
     ++  numbrd
       |=  a=@rd
@@ -1894,12 +1917,12 @@
       ~(val by t)
     |=  r=row-0
     ^-  row
-    =/  sch=schema  (~(got by s) [type.r v.r])
+    =/  hash=@uvH   (hash-for-type type.r (~(get by s) [type.r v.r]))
     [
       path.r
       id.r
-      [type.r (sham sch)]
-      (cols-0-to-cols data.r sch)
+      [type.r hash]
+      (cols-0-to-cols data.r s)
       created-at.r
       updated-at.r
       received-at.r
@@ -1926,30 +1949,119 @@
       =/  ptbl    (~(put by *pathed-table) path.rw tbl)
       (~(put by new) type.rw ptbl)
 
-    $(i +(i), new new, all-rows +.all-rows)
+    $(new new, all-rows +.all-rows)
+::
+++  hash-for-type
+  |=  [name=type-prefix:common sch=(unit schema)]
+  ^-  @uvH
+  ?~  sch
+    ?+  name      (sham ~)
+        %vote     (sham -:!>(*vote:common))
+        %rating   (sham -:!>(*rating:common))
+        %comment  (sham -:!>(*comment:common))
+        %tag      (sham -:!>(*tag:common))
+        %link     (sham -:!>(*link:common))
+        %follow   (sham -:!>(*follow:common))
+        %relay    (sham -:!>(*relay:common))
+        %react    (sham -:!>(*react:common))
+        %creds    (sham -:!>(*creds:common))
+    ==
+  (sham u.sch)
+::
 ++  cols-0-to-cols
-  |=  [cols=columns-0 s=schema]
+  |=  [cols=columns-0 s=schemas-0]
   ^-  columns
   ?-  -.cols
       %general
     cols
       %vote
-    [%vote up.cols [parent-type.cols (sham s)] parent-id.cols parent-path.cols]
+    =/  hash=@uvH   (hash-for-type parent-type.cols (~(get by s) [parent-type.cols 0]))
+    [%vote up.cols [parent-type.cols hash] parent-id.cols parent-path.cols]
       %rating
-    [%rating value.cols max.cols format.cols [parent-type.cols (sham s)] parent-id.cols parent-path.cols]
+    =/  hash=@uvH   (hash-for-type parent-type.cols (~(get by s) [parent-type.cols 0]))
+    [%rating value.cols max.cols format.cols [parent-type.cols hash] parent-id.cols parent-path.cols]
       %comment
-    [%comment txt.cols [parent-type.cols (sham s)] parent-id.cols parent-path.cols]
+    =/  hash=@uvH   (hash-for-type parent-type.cols (~(get by s) [parent-type.cols 0]))
+    [%comment txt.cols [parent-type.cols hash] parent-id.cols parent-path.cols]
       %react
-    [%react react.cols [parent-type.cols (sham s)] parent-id.cols parent-path.cols]
+    =/  hash=@uvH   (hash-for-type parent-type.cols (~(get by s) [parent-type.cols 0]))
+    [%react react.cols [parent-type.cols hash] parent-id.cols parent-path.cols]
       %tag
-    [%tag tag.cols [parent-type.cols (sham s)] parent-id.cols parent-path.cols]
+    =/  hash=@uvH   (hash-for-type parent-type.cols (~(get by s) [parent-type.cols 0]))
+    [%tag tag.cols [parent-type.cols hash] parent-id.cols parent-path.cols]
       %link
-    [%link key.cols [from-type.cols (sham s)] from-id.cols from-path.cols [to-type.cols (sham s)] to-id.cols to-path.cols]
+    =/  hash1=@uvH   (hash-for-type from-type.cols (~(get by s) [from-type.cols 0]))
+    =/  hash2=@uvH   (hash-for-type to-type.cols (~(get by s) [to-type.cols 0]))
+    [%link key.cols [from-type.cols hash1] from-id.cols from-path.cols [to-type.cols hash2] to-id.cols to-path.cols]
       %follow
     cols
       %relay
-    [%relay id.cols [type.cols (sham s)] path.cols revision.cols protocol.cols deleted.cols]
+    =/  hash=@uvH   (hash-for-type type.cols (~(get by s) [type.cols 0]))
+    [%relay id.cols [type.cols hash] path.cols revision.cols protocol.cols deleted.cols]
       %creds
     cols
   ==
+::
+++  transform-schemas-0-to-schemas
+  |=  [old=schemas-0]
+  ^-  schemas
+  =/  new=schemas  *schemas
+  =/  kvs          ~(tap by old)
+  |-
+    ?:  =(0 (lent kvs))
+      new
+    =/  k=[type=type-prefix:common v=@ud]  -:(snag 0 kvs)
+    =/  v=schema  +:(snag 0 kvs)
+    =/  new-key=type:common  [type.k (sham v)]
+    $(kvs +.kvs, new (~(put by new) new-key v))
+::
+++  transform-del-log-0-to-del-log
+  |=  [old=del-log-0 schs=schemas-0 rows=tables-0]
+  ^-  del-log
+  =/  new=del-log  *del-log
+  =/  kvs          ~(tap by old)
+  |-
+    ?:  =(0 (lent kvs))
+      new
+    =/  k=@da               -:(snag 0 kvs)
+    =/  v=db-del-change-0   +:(snag 0 kvs)
+    =/  new-val=db-del-change
+      ?-  -.v
+          %del-peer  v
+          %del-path  v
+          %del-row
+        =/  pt   (~(got by rows) type.v)
+        =/  tbl  (~(got by pt) path.v)
+        =/  rw   (~(got by tbl) id.v)
+        =/  hash=@uvH
+          (hash-for-type type.v (~(get by schs) [type.v v.rw]))
+        [%del-row path.v [type.v hash] id.v t.v]
+      ==
+    $(kvs +.kvs, new (~(put by new) k new-val))
+::
+++  transform-paths-0-to-paths
+  |=  old=paths-0
+  ^-  paths
+  =/  new=paths  *paths
+  =/  kvs        ~(tap by old)
+  |-
+    ?:  =(0 (lent kvs))
+      new
+    =/  k=path         -:(snag 0 kvs)
+    =/  v=path-row-0   +:(snag 0 kvs)
+    =/  new-val=path-row
+      [
+        path.v
+        host.v
+        replication.v
+        default-access.v
+        ~
+        default-constraints
+        space.v
+        created-at.v
+        updated-at.v
+        received-at.v
+      ]
+    $(kvs +.kvs, new (~(put by new) k new-val))
+::
 --

@@ -37,7 +37,7 @@
     =/  default-state=state-1   *state-1
     :: make sure the relay table exists on-init
     =.  tables.default-state
-    (~(gas by *^tables) ~[[%relay *pathed-table] [%vote *pathed-table] [%react *pathed-table]])
+    (~(gas by *^tables) ~[[relay-type:common *pathed-table] [vote-type:common *pathed-table] [react-type:common *pathed-table]])
     =/  default-cards
       :~  [%pass /spaces %agent [our.bowl %spaces] %watch /updates]
           [%pass /selfpoke %agent [our.bowl dap.bowl] %poke %db-action !>([%create-initial-spaces-paths ~])]
@@ -59,17 +59,13 @@
       [%pass /spaces %agent [our.bowl %spaces] %watch /updates]~
     ?-  -.old
         %0
-      =/  new-tables=tables  (transform-tables-0-to-tables tables.old schemas.old)
-      =/  new-schemas=schemas  (transform-schemas-0-to-schemas schemas.old)
-      =/  new-paths=paths  (transform-paths-0-to-paths paths.old)
-      =/  new-del-log=del-log  (transform-del-log-0-to-del-log del-log.old)
-        
       =/  new-state=state-1  [
-        new-tables
-        new-schemas
-        new-paths
+        %1
+        (transform-tables-0-to-tables:db tables.old schemas.old)
+        (transform-schemas-0-to-schemas:db schemas.old)
+        (transform-paths-0-to-paths:db paths.old)
         peers.old
-        new-del-log
+        (transform-del-log-0-to-del-log:db del-log.old schemas.old tables.old)
         hide-logs.old
       ]
       [cards this(state new-state)]
@@ -200,10 +196,11 @@
         ``db-path+!>([thepathrow thepeers tbls schemas.state dels])
     ::
     :: all rows from a given table
-    ::  /db/table/realm-note.json
-      [%x %db %table @ ~]
-        =/  tblname=@tas  i.t.t.t.path
-        ``db-table+!>([tblname (~(got by tables.state) tblname) schemas.state])
+    ::  /db/table/realm-note/0v6.539qr.dv1ns.thh70.fnqol.fb2us.json
+      [%x %db %table *]
+        =/  tblname=^path  t.t.t.path
+        =/  typ=type:common  (path-to-type:core tblname)
+        ``db-table+!>([typ (~(got by tables.state) typ) schemas.state])
     ::
     :: host of a given path
       [%x %host %path *]
@@ -317,7 +314,7 @@
                   =/  new-scry=(list card)
                     ?+  -.change  ~
                       %add-row
-                        ?.  ?=(%relay type.row.change)  ~
+                        ?.  ?=(%relay name.type.row.change)  ~
                         ?>  ?=(%relay -.data.row.change)
                         =/  uobj=(unit row)  (get-db:db type.data.row.change path.data.row.change id.data.row.change state)
                         ?~  uobj :: if we DONT have the obj already, remote-scry it
@@ -334,7 +331,7 @@
                           ==
                         ~ :: otherwise, don't emit any cards
                       %upd-row
-                        ?.  ?=(%relay type.row.change)  ~
+                        ?.  ?=(%relay name.type.row.change)  ~
                         ?>  ?=(%relay -.data.row.change)
                         ?:  deleted.data.row.change  ~  :: if the root-obj is deleted, don't remote-scry it
                         ::~&  >>>  "asking for remote-scry"
@@ -352,7 +349,7 @@
                   =/  pokes=(list card)
                     ?+  -.change  ~
                       %upd-row
-                        ?:  ?=(%relay type.row.change)  ~
+                        ?:  ?=(%relay name.type.row.change)  ~
                         :: if it's NOT a relay, we might have to poke ourselves to update the relay
                         =/  our-relays=(list row)  (our-matching-relays:db row.change state bowl)
                         ?~  our-relays  ~
@@ -371,10 +368,10 @@
                             :: that we host for this changed row
                             =/  dat  data.rela
                             =.  revision.dat  +(revision.dat)
-                            [%pass /selfpoke %agent [our.bowl dap.bowl] %poke %db-action !>([%edit id.rela path.rela type.rela v.rela dat ~])]~
+                            [%pass /selfpoke %agent [our.bowl dap.bowl] %poke %db-action !>([%edit id.rela path.rela type.rela dat ~])]~
                         ==
                       %del-row
-                        ?:  ?=(%relay type.change)  ~
+                        ?:  ?=(%relay name.type.change)  ~
                         :: if it's NOT a relay, we might have to poke ourselves to update the relay
                         =/  fakerow=row  *row
                         =.  id.fakerow   id.change
@@ -397,12 +394,12 @@
                             :: signal that the relayed object was deleted
                             =/  dat  data.rela
                             =.  deleted.dat  %.y
-                            [%pass /selfpoke %agent [our.bowl dap.bowl] %poke %db-action !>([%edit id.rela path.rela type.rela v.rela dat ~])]~
+                            [%pass /selfpoke %agent [our.bowl dap.bowl] %poke %db-action !>([%edit id.rela path.rela type.rela dat ~])]~
                         ==
                     ==
                   =.  state
                     ?:  ?&  ?=(%upd-row -.change)
-                            ?=(%relay type.row.change)
+                            ?=(%relay name.type.row.change)
                             ?=(%relay -.data.row.change)
                             =(%.y deleted.data.row.change)
                         ==
@@ -415,7 +412,7 @@
                 :: fullpath instead of just a single change
                 :: |ames-cong 5 100.000
                 =/  full=fullpath   !<(fullpath +.+.sign)
-                ~&  "getting fullpath for {path.path-row.full}"
+                ~&  "getting fullpath for {<path.path-row.full>}"
                 :: insert pathrow
                 =.  received-at.path-row.full  now.bowl
                 =.  paths.state     (~(put by paths.state) dbpath path-row.full)
@@ -542,4 +539,8 @@
 ++  this  .
 ++  core  .
 ++  next-refresh-time  `@da`(add (mul (div now.bowl ~h8) ~h8) ~h8)  :: TODO decide on actual timer interval
+++  path-to-type
+  |=  p=path
+  ^-  type:common
+  [`@tas`(slav %tas +2:p) `@uvH`(slav %uv +6:p)]
 --
