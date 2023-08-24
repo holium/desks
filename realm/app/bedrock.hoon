@@ -49,6 +49,7 @@
     |=  old-state=vase
     ^-  (quip card _this)
     =/  old  !<(versioned-state old-state)
+    ~&  vote-type:common
     :: do a quick check to make sure we are subbed to /updates in %spaces
     =/  cards
       :-  [%pass /timer %arvo %b %rest next-refresh-time:core]
@@ -151,7 +152,7 @@
           =/  thepathrow    (~(got by paths.state) t.t.path)
           :: if the @da they passed was behind, %give them the current version, and %kick them
           ?:  (gth updated-at.thepathrow t)
-            ::~&  >>>  "{<src.bowl>} tried to sub on old @da {<t>}, %kicking them"
+            ~&  >>>  "{<src.bowl>} tried to sub on old @da {<t>}, %kicking them"
             =/  thepeers    (~(got by peers.state) t.t.path)
             =/  tbls        (tables-by-path:db tables.state t.t.path)
             =/  dels=(list [@da db-del-change])
@@ -279,7 +280,7 @@
               ::~&  >>>  "got a %kick on {(spud +.+.wire)} that we are ignoring because that path is not in our state"
               `this
             =/  newpath  (weld /next/(scot %da updated-at:(need pathrow)) path:(need pathrow))
-            ::~&  >  "{<dap.bowl>}: /next/[path] kicked us, resubbing {(spud newpath)}"
+            ~&  >>>  "{<dap.bowl>}: /next/[path] kicked us, resubbing {(spud newpath)}"
             :_  this
             :~
               [%pass newpath %agent [src.bowl dap.bowl] %watch newpath]
@@ -291,7 +292,7 @@
             ^-  (quip card state-1)
             =/  dbpath=path         +.+.wire
             =/  factmark  -.+.sign
-            ::~&  >>  "%fact on {(spud wire)}: {<factmark>}"
+            ~&  >>>  "%fact on {(spud wire)}: {<factmark>}"
             ?+  factmark
               :: default case:
                 ~&  >>>  "UNHANDLED FACT type"

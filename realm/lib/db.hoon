@@ -61,7 +61,9 @@
 ++  our-matching-relays
   |=  [r=row state=state-1 =bowl:gall]
   ^-  (list row)
-  =/  relays=(list row)  ~(val by (ptbl-to-tbl (~(got by tables.state) relay-type:common)))
+  =/  uptbl=(unit pathed-table)  (~(get by tables.state) relay-type:common)
+  ?~  uptbl  `(list row)`~
+  =/  relays=(list row)  ~(val by (ptbl-to-tbl u.uptbl))
   %+  skim
     relays
   |=  rel=row
@@ -238,6 +240,7 @@
       ::TODO handle the schema has changed situation
       !!
     %del-row
+      ~&  >>>  "processing %del-row t.ch = {<t.ch>} now.bowl = {<now.bowl>} id = {<id.ch>}  path = {<path.ch>}"
       =.  updated-at.path-row   t.ch
       =.  paths.state           (~(put by paths.state) path.ch path-row)
       =/  pt              (~(got by tables.state) type.ch)
@@ -1062,9 +1065,11 @@
   [cards state]
 ::
 ++  remove
-::bedrock &db-action [%remove %foo /example [our ~2023.5.22..19.22.29..d0f7]]
-  |=  [[=type:common =path =id:common] state=state-1 =bowl:gall]
+::bedrock &db-action [%remove [~zod now] %foo /example [our ~2023.5.22..19.22.29..d0f7]]
+  |=  [[=req-id =type:common =path =id:common] state=state-1 =bowl:gall]
   ^-  (quip card state-1)
+  =/  vent-path=^path  /vent/(scot %p src.req-id)/(scot %da now.req-id)
+  =/  kickcard=card  [%give %kick ~[vent-path] ~]
   :: permissions
   =/  pt                  (~(got by tables.state) type)
   =/  tbl                 (~(got by pt) path)
@@ -1099,6 +1104,9 @@
     [%give %fact [/db (weld /path path) foreign-ship-sub-wire ~] db-changes+!>(~[log])]
     :: kick foreign ship subs to force them to re-sub for next update
     [%give %kick [foreign-ship-sub-wire ~] ~]
+    :: give vent response
+    [%give %fact ~[vent-path] db-vent+!>([%del-row id type path])]
+    kickcard
   ==
   =/  log3  (maybe-log hide-logs.state "publishing %del-row type: {<type>} id: {<id>} to {(spud foreign-ship-sub-wire)} + kicking those subs")
 
@@ -1106,14 +1114,16 @@
 ::
 ++  remove-many :: only works on ids from same path
 ::bedrock &db-action [%remove-many %foo /example [[our ~2023.5.22..19.22.29..d0f7] [our ~2023.5.22..19.22.29..d0f7] ~]]
-  |=  [[=type:common =path ids=(list id:common)] state=state-1 =bowl:gall]
-  =/  log3  (maybe-log hide-logs.state "%remove-many")
+  |=  [[=req-id =type:common =path ids=(list id:common)] state=state-1 =bowl:gall]
+  =/  log3  (maybe-log hide-logs.state "%remove-many {<path>} {<ids>}")
+  =/  vent-path=^path  /vent/(scot %p src.req-id)/(scot %da now.req-id)
+  =/  kickcard=card  [%give %kick ~[vent-path] ~]
   ^-  (quip card state-1)
 
   :: forward the request if we aren't the host
   =/  path-row=path-row   (~(got by paths.state) path)
   ?.  =(host.path-row our.bowl)
-    =/  log2  (maybe-log hide-logs.state "{<src.bowl>} tried to have us ({<our.bowl>}) remove a row in {<path.path-row>} where we are not the host. forwarding the poke to the host: {<host.path-row>}")
+    =/  log2  (maybe-log hide-logs.state "{<src.bowl>} tried to remove rows: {<ids>} in {<path.path-row>} where we are not the host. forwarding the poke to the host: {<host.path-row>}")
     :_  state
     [%pass /dbpoke %agent [host.path-row dap.bowl] %poke %db-action !>([%remove-many type path ids])]~
   :: permissions
@@ -1147,6 +1157,7 @@
       =.  pt              (~(put by pt) path tbl)           :: update the pathed-table
       =.  tables.state    (~(put by tables.state) type pt)  :: update the tables.state
       :: TODO remove remote-scry paths for the row
+      =/  last  (snag (dec index) logs)
 
       :: emit the change to subscribers
       =/  cards=(list card)  :~
@@ -1154,6 +1165,9 @@
         [%give %fact [/db (weld /path path) foreign-ship-sub-wire ~] db-changes+!>(logs)]
         :: kick foreign ship subs to force them to re-sub for next update
         [%give %kick [foreign-ship-sub-wire ~] ~]
+        :: give vent response
+        [%give %fact ~[vent-path] db-vent+!>([%del-row id.last type.last path.last])]
+        kickcard
       ==
 
       [cards state]
@@ -1285,6 +1299,15 @@
       ==
     ::
     ++  remove
+      |=  jon=json
+      ^-  [req-id type:common path id:common]
+      ?>  ?=([%o *] jon)
+      =/  request-id=(unit json)  (~(get by p.jon) 'request-id')
+      ?~  request-id
+        [[~zod ~2000.1.1] (de-remove jon)]  :: if the poke-sender didn't care enough to pass a request id, just use a fake one
+      [(de-id u.request-id) (de-remove jon)]
+    ::
+    ++  de-remove
       %-  ot
       :~  [%type de-type]
           [%path pa]
@@ -1292,6 +1315,15 @@
       ==
     ::
     ++  remove-many
+      |=  jon=json
+      ^-  [req-id type:common path (list id:common)]
+      ?>  ?=([%o *] jon)
+      =/  request-id=(unit json)  (~(get by p.jon) 'request-id')
+      ?~  request-id
+        [[~zod ~2000.1.1] (de-remove-many jon)]  :: if the poke-sender didn't care enough to pass a request id, just use a fake one
+      [(de-id u.request-id) (de-remove-many jon)]
+    ::
+    ++  de-remove-many
       %-  ot
       :~  [%type de-type]
           [%path pa]
@@ -1566,6 +1598,12 @@
       ?-  -.vent
         %ack   s/%ack
         %row   (en-row row.vent (~(put by *schemas) type.row.vent schema.vent))
+        %del-row
+          %-  pairs
+          :~  ['id' (row-id-to-json id.vent)]
+              ['type' (en-db-type type.vent)]
+              ['path' s+(spat path.vent)]
+          ==
       ==
     ::
     ++  en-db-changes

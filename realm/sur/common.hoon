@@ -24,7 +24,7 @@
       parent-id=id      :: id of the thing this vote is attached to          2 -> 14
       parent-path=path  ::                                                   3 -> 30
   ==
-++  vote-type  [%vote (sham -:!>(*vote))]
+++  vote-type  [%vote (sham -:!>(*vote))]  :: [%vote 0v3.hirga.bspbd.edlma.dfk59.gtu38]
 +$  vote-0
   $:  up=?              :: true for like/upvote, false for dislike/downvote  0 -> 2
       parent-type=type-prefix  :: table name of the thing this vote is attached to  1 -> 6
