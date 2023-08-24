@@ -54,6 +54,12 @@
     =/  old=(unit state-0)
       (mole |.(!<(state-0 vase)))
     ?^  old  ::  `this(state u.old)
+      =|  notes-app=native-app:store
+        =.  title.notes-app            'Notes'
+        =.  info.notes-app             'Realm\'s collaborative notes app.'
+        =.  color.notes-app            '#F2CA00'
+        =.  icon.notes-app             'AppIconNotes'
+        =.  config.notes-app           [size=[0 0] titlebar-border=%.n show-titlebar=%.y]
       =|  lexicon-app=native-app:store
         =.  title.lexicon-app            'Lexicon'
         =.  color.lexicon-app            '#EEDFC9'
@@ -68,8 +74,9 @@
       =.  catalog.u.old  (~(del by catalog.u.old) %lexicon)
       =.  catalog.u.old  (~(del by catalog.u.old) %trove)
       :_  this(state u.old)
-      :: add two new app entries for Realm's new "native" apps: %trove, and %lexicon
-      :~  [%pass / %agent [our.bowl %bazaar] %poke bazaar-action+!>([%add-catalog-entry [%os-lexicon lexicon-app]])]
+      :: add three new app entries for Realm's new "native" apps: %notes, %trove, and %lexicon
+      :~  [%pass / %agent [our.bowl %bazaar] %poke bazaar-action+!>([%add-catalog-entry [%os-notes notes-app]])]
+          [%pass / %agent [our.bowl %bazaar] %poke bazaar-action+!>([%add-catalog-entry [%os-lexicon lexicon-app]])]
           [%pass / %agent [our.bowl %bazaar] %poke bazaar-action+!>([%add-catalog-entry [%os-trove trove-app]])]
       ==
     %-  (slog leaf+"nuking old %bazaar state" ~) ::  temporarily doing this for making development easier
