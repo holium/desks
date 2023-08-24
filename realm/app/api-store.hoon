@@ -1,5 +1,5 @@
 ::  app/api-store.hoon
-/-  *api-store, db
+/-  *api-store, db, common
 /+  dbug
 =|  state-0
 =*  state  -
@@ -50,7 +50,7 @@
     ::
       [%x %configuration ~]
         =/  fp=fullpath:db  .^(fullpath:db %gx /(scot %p our.bowl)/bedrock/(scot %da now.bowl)/db/path/private/noun)
-        =/  ucreds=(unit table:db)  (~(get by tables.fp) %creds)
+        =/  ucreds=(unit table:db)  (~(get by tables.fp) creds-type:common)
         ?~  ucreds
           ``api-store-configuration+!>([%configuration ~ '' ''])
         =/  creds=row:db  (snag 0 (sort ~(val by u.ucreds) |=([a=row:db b=row:db] (gth t.id.a t.id.b))))
@@ -61,7 +61,7 @@
     ::
       [%x %credentials ~]
         =/  fp=fullpath:db  .^(fullpath:db %gx /(scot %p our.bowl)/bedrock/(scot %da now.bowl)/db/path/private/noun)
-        =/  ucreds=(unit table:db)  (~(get by tables.fp) %creds)
+        =/  ucreds=(unit table:db)  (~(get by tables.fp) creds-type:common)
         ?~  ucreds
           ``api-store-credentials+!>(['credentials' '' '' ''])
         =/  creds=row:db  (snag 0 (sort ~(val by u.ucreds) |=([a=row:db b=row:db] (gth t.id.a t.id.b))))
@@ -120,7 +120,7 @@
         ?:(=('' region.s3-conf) region.stoconf region.s3-conf)
       ]
   =/  private-path  [%create-path /private %host ~ ~ ~ [our.bowl %host]~]
-  =/  creds  [%create [our.bowl now.bowl] [/private %creds 0 merged ~]]
+  =/  creds  [%create [our.bowl now.bowl] [/private creds-type:common merged ~]]
   =/  cards=(list card)  
   :~  [%pass /dbpoke %agent [our.bowl %bedrock] %poke %db-action !>(private-path)]
       [%pass /dbpoke %agent [our.bowl %bedrock] %poke %db-action !>(creds)]
