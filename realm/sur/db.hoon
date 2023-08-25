@@ -152,22 +152,28 @@
       :: only from our.bowl
       [%create-path =input-path-row]       :: create a new peers list, sends %get-path to all peers
       [%create-from-space =path space-path=[=ship space=cord] sr=role:membership]  :: create a new peers list based on space members, automatically keeps peers list in sync, sends %get-path to all peers
-      [%edit-path =input-path-row]         :: edit a new peers list
+      [%edit-path =input-path-row]            :: edit a path's metadata
       [%remove-path =path]                    :: remove a peers list and all attached objects in tables, sends %delete-path to all peers
       [%add-peer =path =ship =role]           :: add a peer to an existing peers list, sends %get-path to that peer
       [%kick-peer =path =ship]                :: remove a peer from an existing peers list, sends %delete-path to that peer
       :: only from host foreign ship
       [%get-path =path-row peers=ship-roles]  :: when we are being informed that we were added to a peers list. we don't know the list, only the host (which is who sent it to us)
       [%delete-path =path]                    :: when we are being informed that we got kicked (or host deleted the path entirely). also deletes all attached objects
+      [%put-path =path-row]                       :: when we are being informed about a new version of the path metadata
       [%refresh-path t=@da =path]             :: we are being informed of the current `updated-at` for a path, so that we can refresh if needed
+      :: only from our ship to host foreign ship
+      [%keep-alive =path]
 
       :: any peer in the path can send these pokes to the %host
       :: if they have right permissions, host will propagate the data
       [%create =req-id =input-row]          :: sends %add-row to all subs
-      [%edit =id:common =input-row] :: sends %upd-row to all subs
+      [%edit =req-id =id:common =input-row] :: sends %upd-row to all subs
       [%remove =req-id =type:common =path =id:common]      :: %host deleting the row, sends %delete to all peers
       [%remove-many =req-id =path ids=(list [=id:common =type:common])]      :: delete many records at once
       [%relay =req-id =input-row]          :: like %create, but for creating a %relay (relay:common)
+
+      [%handle-changes =db-changes =path]
+
       [%create-initial-spaces-paths ~]
 
       [%toggle-hide-logs toggle=?]
