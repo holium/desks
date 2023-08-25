@@ -11,6 +11,7 @@
 ++  living-peers
 :: filter for peers who ARE NOT `our` AND have an updated-at within the
 :: %keep-alive window (on a 2hr cadence)
+:: WARNING keep logic in sync with `keep-alive` method
   |=  [peers=(list peer) now=@da our=ship]
   ^-  (list peer)
   :: ~h5 because it means they missed 2 %keep-alives (on a 2hr cadence)
@@ -1012,9 +1013,27 @@
   =/  log1  (maybe-log hide-logs.state "%keep-alive {<src.bowl>} {(spud path)}")
   :: sanity checking
   =/  path-row=path-row   (~(got by paths.state) path)
+  =/  old-peers=(list peer)  (~(got by peers.state) path)
+
+  :: send %refresh-path to the peer if he was NOT alive
+  =/  behind-peers=(list peer)
+    %+  skim
+      old-peers
+    |=  p=peer
+    ^-  ?
+    :: WARNING keep logic in sync with `living-peers` method
+    ?&  =(ship.p src.bowl)
+        (gth (sub now.bowl ~h4) updated-at.p) :: he was >4hrs out of date
+    ==
+  =/  cards=(list card)
+    ?:  =(0 (lent behind-peers))  ~
+    ~&  >>>  "{<src.bowl>} was behind, sending %refresh-path"
+    [%pass /dbpoke %agent [src.bowl dap.bowl] %poke %db-action !>([%refresh-path updated-at.path-row path])]~
+
+  :: update the updated-at on the peer
   =/  peers=(list peer)
     %+  turn
-      (~(got by peers.state) path)
+      old-peers
     |=  p=peer
     ^-  peer
     ?.  =(ship.p src.bowl)
@@ -1022,7 +1041,7 @@
     =.  updated-at.p  now.bowl
     p
   =.  peers.state  (~(put by peers.state) path peers)
-  `state
+  [cards state]
 ::
 ++  handle-changes
 ::  subs receive this from host when database changes
