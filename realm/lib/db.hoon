@@ -8,6 +8,20 @@
 ::
 :: helpers
 ::
+++  living-peers
+:: filter for peers who ARE NOT `our` AND have an updated-at within the
+:: %keep-alive window (on a 2hr cadence)
+:: WARNING keep logic in sync with `keep-alive` method
+  |=  [peers=(list peer) now=@da our=ship]
+  ^-  (list peer)
+  :: ~h5 because it means they missed 2 %keep-alives (on a 2hr cadence)
+  %+  skim
+    peers
+  |=  p=peer
+  ?&  (gth updated-at.p (sub now ~h5))
+      ?!(=(ship.p our))
+  ==
+::
 ++  dels-by-path
   |=  [=path state=state-1]
   ^-  (list [@da db-del-change])
@@ -20,11 +34,13 @@
     %del-peer  =(path.v path)
     %del-path  =(path.v path)
   ==
+::
 ++  maybe-log
   |=  [hide-debug=? msg=tape]
   ?:  =(%.y hide-debug)  ~
   ~&  msg
   ~
+::
 ++  got-db
   |=  [=type:common =path =id:common state=state-1]
   ^-  row
@@ -196,6 +212,11 @@
   |=  [=ship =path]
   ^-  card
   [%pass /dbpoke %agent [ship %bedrock] %poke %db-action !>([%delete-path path])]
+::
+++  handle-changes-card
+  |=  [=ship =db-changes =path]
+  ^-  card
+  [%pass /dbpoke %agent [ship %bedrock] %poke %db-action !>([%handle-changes db-changes path])]
 ::
 ++  del-path-in-tables
   |=  [state=state-1 =path]
@@ -627,7 +648,7 @@
 ::   %initiate, every ship in the members list, regardless of role or joined status
   |=  [[=path sp=[=ship space=cord] sr=role:mstore] state=state-1 =bowl:gall]
   ^-  (quip card state-1)
-  =/  log1  (maybe-log hide-logs.state "create-from-space")
+  =/  log1  (maybe-log hide-logs.state "%create-from-space")
   =/  members     .^(view:mstore %gx /(scot %p our.bowl)/spaces/(scot %da now.bowl)/(scot %p ship.sp)/(scot %tas space.sp)/members/noun)
   ?>  ?=(%members -.members)
   =/  filtered-members
@@ -696,11 +717,11 @@
     (get-path-card ship.peer path-row (turn peers |=(p=^peer [ship.p role.p])))
   :: emit the change to self-subscriptions (our clients)
   =/  thechange  db-changes+!>([[%add-path path-row] (turn peers |=(p=peer [%add-peer p]))])
-  =/  subscription-facts=(list card)  :~
+  =/  client-facts=(list card)  :~
     [%give %fact [/db (weld /path path.path-row) ~] thechange]
   ==
 
-  =/  cards  (weld peer-pokes subscription-facts)
+  =/  cards  (weld peer-pokes client-facts)
   [cards state]
 ::
 ++  edit-path
@@ -714,8 +735,6 @@
   ?>  =(our.bowl src.bowl)
   :: ensure we are the host (ONLY HOST CAN EDIT)
   ?>  =(our.bowl host.path-row)
-
-  =/  path-sub-wire       (weld /next/(scot %da updated-at.path-row) path.path-row)
 
   :: only editable fields are:
   ::  replication
@@ -739,17 +758,45 @@
 
   :: emit the change to /next and self-subscriptions (our clients)
   =/  prs=(list peer)   (~(got by peers.state) path.path-row)
+  =/  pokes=(list card)
+    %+  turn
+      (living-peers prs now.bowl our.bowl)
+    |=  p=peer
+    ^-  card
+    [%pass /dbpoke %agent [ship.p %bedrock] %poke %db-action !>([%put-path path-row])]
+
   =/  tbls              (tables-by-path tables.state path.path-row)
   =/  dels              (dels-by-path path.path-row state)
   =/  full=fullpath     [path-row prs tbls schemas.state dels]
   =/  thechange         db-path+!>(full)
-  =/  cards=(list card)  :~
-    [%give %fact [/db (weld /path path.path-row) path-sub-wire ~] thechange]
-    :: kick subs to force them to re-sub for next update
-    [%give %kick [path-sub-wire ~] ~]
-  ==
+
+  =/  cards=(list card)
+    :-  [%give %fact [/db (weld /path path.path-row) ~] thechange]
+    pokes
 
   [cards state]
+::
+++  put-path
+::  called by host to tell subs that the path metadata has changed
+  |=  [new=path-row state=state-1 =bowl:gall]
+  ^-  (quip card state-1)
+  :: ensure the path actually exists
+  =/  original=path-row    (~(got by paths.state) path.new)
+  :: ensure this came from host ship
+  ?>  =(host.original src.bowl)
+  :: ensure new path is same as old path
+  ?>  =(path.original path.new)
+  =/  log1  (maybe-log hide-logs.state "%put-path: updating {<path.new>} metadata")
+
+  :: update paths table
+  =.  received-at.new  now.bowl
+  =.  paths.state  (~(put by paths.state) path.new new)
+
+  :: emit the change to clients
+  =/  cards=(list card)
+    [%give %fact [/db (weld /path path.new) ~] db-changes+!>([%upd-path new]~)]~
+  [cards state]
+::
 ++  remove-path
 ::bedrock &db-action [%remove-path /example]
   |=  [=path state=state-1 =bowl:gall]
@@ -795,8 +842,8 @@
   ?>  =(host.path-row our.bowl)
   :: ensure this came from our ship
   ?>  =(our.bowl src.bowl)
+  =/  log1  (maybe-log hide-logs.state "%add-peer: {<ship>} to {(spud path)} as {<role>}")
 
-  =/  path-sub-wire           (weld /next/(scot %da updated-at.path-row) path)
   =/  newpeer=peer  [path ship role now.bowl now.bowl now.bowl]
 
   :: local state updates
@@ -805,19 +852,23 @@
   =.  received-at.path-row    now.bowl
   =.  paths.state             (~(put by paths.state) path path-row)
   :: update peers table
-  =/  newlist=(list peer)     [newpeer (skip (~(got by peers.state) path) |=(p=peer =(ship.p ship)))]
+  =/  original-peers=(list peer)    (~(got by peers.state) path)
+  =/  newlist=(list peer)     [newpeer (skip original-peers |=(p=peer =(ship.p ship)))]
   =.  peers.state             (~(put by peers.state) path newlist)
 
+  =/  thechange=db-changes    [%add-peer newpeer]~
   :: emit the change to subscribers
-  =/  cards=(list card)  :~
+  =/  cards=(list card)
     :: poke `ship` with %get path
-    (get-path-card ship path-row (peers-to-ship-roles (~(got by peers.state) path)))
+    :-  (get-path-card ship path-row (peers-to-ship-roles (~(got by peers.state) path)))
+    :: tell clients about the new peer
+    :-  [%give %fact [/db (weld /path path) ~] db-changes+!>(thechange)]
     :: tell subs about the new peer
-    [%give %fact [/db (weld /path path) path-sub-wire ~] db-changes+!>([%add-peer newpeer]~)]
-    :: kick subs to force them to re-sub for next update
-    [%give %kick [path-sub-wire ~] ~]
-  ==
-  =/  log1  (maybe-log hide-logs.state "publishing to {(spud path-sub-wire)} (and also kicking)")
+    %+  turn
+      (living-peers original-peers now.bowl our.bowl)
+    |=  p=peer
+    ^-  card
+    (handle-changes-card ship.p thechange path)
 
   [cards state]
 ::
@@ -831,19 +882,7 @@
   ?>  =(host.path-row our.bowl)
   :: ensure this came from our ship
   ?>  =(our.bowl src.bowl)
-
-  :: emit the change to subscribers
-  =/  path-sub-wire           (weld /next/(scot %da updated-at.path-row) path)
-  =/  cards=(list card)  :~
-    :: poke %delete-path to the ship we are kicking
-    [%pass /dbpoke %agent [ship %bedrock] %poke %db-action !>([%delete-path path])]
-    :: tell subs that we deleted `ship`
-    [%give %fact [/db (weld /path path) path-sub-wire ~] db-changes+!>([%del-peer path ship now.bowl]~)]
-    :: kick subs to force them to re-sub for next update
-    [%give %kick [path-sub-wire ~] ~]
-  ==
-  =/  log1  (maybe-log hide-logs.state "poking %delete-path to {(scow %p ship)}")
-  =/  log2  (maybe-log hide-logs.state "publishing to {(spud path-sub-wire)} (and also kicking those subs)")
+  =/  log1  (maybe-log hide-logs.state "%kick-peer: {(scow %p ship)} from {<path>}")
 
   :: local state updates
   :: update paths table
@@ -853,6 +892,20 @@
   :: update peers table
   =/  newlist=(list peer)     (skip (~(got by peers.state) path) |=(=peer =(ship.peer ship)))
   =.  peers.state             (~(put by peers.state) path newlist)
+
+  :: emit the changes
+  =/  thechange=db-changes    [%del-peer path ship now.bowl]~
+  =/  cards=(list card)
+    :: poke %delete-path to the ship we are kicking
+    :-  [%pass /dbpoke %agent [ship %bedrock] %poke %db-action !>([%delete-path path])]
+    :: tell clients about the new peer
+    :-  [%give %fact [/db (weld /path path) ~] db-changes+!>(thechange)]
+    :: tell subs about the new peer
+    %+  turn
+      (living-peers newlist now.bowl our.bowl)
+    |=  p=peer
+    ^-  card
+    (handle-changes-card ship.p thechange path)
 
   [cards state]
 ::
@@ -905,11 +958,12 @@
       (weld /next/(scot %da *@da) path.path-row)
     ]
   ==
-  =/  log1  (maybe-log hide-logs.state "subbing to {<subs>}")
+  =/  log2  (maybe-log hide-logs.state "subbing to {<subs>}")
   =/  cards=(list card)  (weld subs sub-facts)
   [cards state]
 ::
 ++  delete-path
+::  incoming from host, just need to forward to clients
   |=  [=path state=state-1 =bowl:gall]
   ^-  (quip card state-1)
   :: ensure the path actually exists
@@ -952,6 +1006,169 @@
   =/  cards=(list card)  [%pass newpath %agent [host.path-row dap.bowl] %watch newpath]~
   [cards state]
 ::
+++  keep-alive
+::  subs send this to host on a heartbeat to prevent from being skipped
+  |=  [=path state=state-1 =bowl:gall]
+  ^-  (quip card state-1)
+  =/  log1  (maybe-log hide-logs.state "%keep-alive {<src.bowl>} {(spud path)}")
+  :: sanity checking
+  =/  path-row=path-row   (~(got by paths.state) path)
+  =/  old-peers=(list peer)  (~(got by peers.state) path)
+
+  :: send %refresh-path to the peer if he was NOT alive
+  =/  behind-peers=(list peer)
+    %+  skim
+      old-peers
+    |=  p=peer
+    ^-  ?
+    :: WARNING keep logic in sync with `living-peers` method
+    ?&  =(ship.p src.bowl)
+        (gth (sub now.bowl ~h4) updated-at.p) :: he was >4hrs out of date
+    ==
+  =/  cards=(list card)
+    ?:  =(0 (lent behind-peers))  ~
+    ~&  >>>  "{<src.bowl>} was behind, sending %refresh-path"
+    [%pass /dbpoke %agent [src.bowl dap.bowl] %poke %db-action !>([%refresh-path updated-at.path-row path])]~
+
+  :: update the updated-at on the peer
+  =/  peers=(list peer)
+    %+  turn
+      old-peers
+    |=  p=peer
+    ^-  peer
+    ?.  =(ship.p src.bowl)
+      p
+    =.  updated-at.p  now.bowl
+    p
+  =.  peers.state  (~(put by peers.state) path peers)
+  [cards state]
+::
+++  handle-changes
+::  subs receive this from host when database changes
+  |=  [[changes=db-changes =path] state=state-1 =bowl:gall]
+  ^-  (quip card state-1)
+  =/  path-row=path-row   (~(got by paths.state) path)
+  ?>  =(host.path-row src.bowl)  :: only accept changes from host for now
+
+  =/  log1  (maybe-log hide-logs.state "%handle-changes: on {<path>} => {<changes>}")
+
+  =/  index=@ud           0
+  =/  result-cards   *(list card)
+  |-
+    ?:  =(index (lent changes))
+      :: RETURN FINAL RESULT HERE
+      :_  state
+      :: echo the changes out to our client subs
+      ^-  (list card)
+      %+  weld
+        result-cards
+      ^-  (list card)
+      [%give %fact [/db (weld /path path) ~] db-changes+!>(changes)]~
+    :: main iterator
+    =/  change   (snag index changes)
+    :: dependent cards to emit for when %relay stuff happens
+    =/  new-scry=(list card)
+      ?+  -.change  ~
+        %add-row
+          ?.  ?=(%relay name.type.row.change)  ~
+          ?>  ?=(%relay -.data.row.change)
+          =/  uobj=(unit row)  (get-db type.data.row.change path.data.row.change id.data.row.change state)
+          ?~  uobj :: if we DONT have the obj already, remote-scry it
+            ::~&  >>>  "asking for remote-scry"
+            :~  [
+              %pass
+              /remote-scry/callback
+              %arvo
+              %a
+              %keen
+              ship.id.row.change
+              /g/x/(scot %ud revision.data.row.change)/(scot %tas dap.bowl)//(scot %p ship.id.data.row.change)/(scot %da t.id.data.row.change)
+            ]
+            ==
+          ~ :: otherwise, don't emit any cards
+        %upd-row
+          ?.  ?=(%relay name.type.row.change)  ~
+          ?>  ?=(%relay -.data.row.change)
+          ?:  deleted.data.row.change  ~  :: if the root-obj is deleted, don't remote-scry it
+          ::~&  >>>  "asking for remote-scry"
+          :~  [
+            %pass
+            /remote-scry/callback
+            %arvo
+            %a
+            %keen
+            ship.id.row.change
+            /g/x/(scot %ud revision.data.row.change)/(scot %tas dap.bowl)//(scot %p ship.id.data.row.change)/(scot %da t.id.data.row.change)
+          ]
+          ==
+      ==
+    =/  pokes=(list card)
+      ?+  -.change  ~
+        %upd-row
+          ?:  ?=(%relay name.type.row.change)  ~
+          :: if it's NOT a relay, we might have to poke ourselves to update the relay
+          =/  our-relays=(list row)  (our-matching-relays row.change state bowl)
+          ?~  our-relays  ~
+          :-
+            :: remote-scry-publish the new row version
+            [%pass /remote-scry/callback %grow /(scot %p ship.id.row.change)/(scot %da t.id.row.change) row-and-schema+[row.change schema.change]]
+          ^-  (list card)
+          %-  zing
+          %+  turn
+            our-relays
+          |=  rela=row
+          ^-  (list card)
+          ?+  -.data.rela  ~
+            %relay
+              :: increment the revision of all the relays
+              :: that we host for this changed row
+              =/  dat  data.rela
+              =.  revision.dat  +(revision.dat)
+              [%pass /selfpoke %agent [our.bowl dap.bowl] %poke %db-action !>([%edit id.rela path.rela type.rela dat ~])]~
+          ==
+        %del-row
+          ?:  ?=(%relay name.type.change)  ~
+          :: if it's NOT a relay, we might have to poke ourselves to update the relay
+          =/  fakerow=row  *row
+          =.  id.fakerow   id.change
+          =/  our-relays=(list row)  (our-matching-relays fakerow state bowl)
+          ?~  our-relays  ~
+          =/  snagged-first=row  (snag 0 `(list row)`our-relays)
+          ?>  ?=(%relay -.data.snagged-first)
+          :-
+            :: remote-scry-cull all the revisions of this
+            :: deleted object
+            [%pass /remote-scry/cullback %cull [%ud revision.data.snagged-first] /(scot %p ship.id.change)/(scot %da t.id.change)]
+          ^-  (list card)
+          %-  zing
+          %+  turn
+            our-relays
+          |=  rela=row
+          ^-  (list card)
+          ?+  -.data.rela  ~
+            %relay
+              :: signal that the relayed object was deleted
+              =/  dat  data.rela
+              =.  deleted.dat  %.y
+              [%pass /selfpoke %agent [our.bowl dap.bowl] %poke %db-action !>([%edit id.rela path.rela type.rela dat ~])]~
+          ==
+      ==
+    :: update state if the change was a relay marking its child deleted
+    =.  state
+      ?:  ?&  ?=(%upd-row -.change)
+              ?=(%relay name.type.row.change)
+              ?=(%relay -.data.row.change)
+              =(%.y deleted.data.row.change)
+          ==
+        (del-db type.data.row.change path.data.row.change id.data.row.change state (add now.bowl index))
+      state
+    :: recur
+    %=  $
+      index         +(index)
+      state         (process-db-change path change state bowl)
+      result-cards  (weld (weld result-cards new-scry) pokes)
+    ==
+::
 ++  create
 ::bedrock &db-action [%create [~zod now] /example %foo 0 [%general ~[1 'a']] ~[['num' 'ud'] ['str' 't']]]
 ::bedrock &db-action [%create /example %vote 0 [%vote [%.y our %foo [~zod now] /example]] ~]
@@ -959,6 +1176,7 @@
 ::~zod/bedrock &db-action [%create /example %vote 0 [%vote %.y our %foo [~zod now] /example] ~]
   |=  [[=req-id =input-row] state=state-1 =bowl:gall]
   ^-  (quip card state-1)
+  =/  log4  (maybe-log hide-logs.state "%create: {<req-id>} {<input-row>}")
   =/  vent-path=path  /vent/(scot %p src.req-id)/(scot %da now.req-id)
   =/  kickcard=card  [%give %kick ~[vent-path] ~]
   :: form row from input
@@ -988,7 +1206,6 @@
     [~[kickcard] state]
 
   :: update path
-  =/  path-sub-wire           (weld /next/(scot %da updated-at.path-row) path.row)
   =.  updated-at.path-row     now.bowl
   =.  received-at.path-row    now.bowl
   =.  paths.state             (~(put by paths.state) path.row path-row)
@@ -996,25 +1213,32 @@
   =.  state             (add-row-to-db row schema.input-row state)
 
   :: emit the change to subscribers
-  =/  cards=(list card)  :~
-    :: tell subs about the new row
-    [%give %fact [/db (weld /path path.row) path-sub-wire ~] db-changes+!>([%add-row row schema.input-row]~)]
-    :: kick subs to force them to re-sub for next update
-    [%give %kick [path-sub-wire ~] ~]
+  =/  thechange=db-changes    [%add-row row schema.input-row]~
+  =/  peers=(list peer)       (~(got by peers.state) path.row)
+  =/  cards=(list card)
     :: give vent response
-    [%give %fact ~[vent-path] db-vent+!>([%row row schema.input-row])]
-    kickcard
-  ==
-  =/  log4  (maybe-log hide-logs.state "publishing new row to {(spud path-sub-wire)} (and also kicking)")
+    :-  [%give %fact ~[vent-path] db-vent+!>([%row row schema.input-row])]
+    :-  kickcard
+    :: tell clients about the new peer
+    :-  [%give %fact [/db (weld /path path.row) ~] db-changes+!>(thechange)]
+    :: tell subs about the new peer
+    %+  turn
+      (living-peers peers now.bowl our.bowl)
+    |=  p=peer
+    ^-  card
+    (handle-changes-card ship.p thechange path.row)
 
   [cards state]
 ::
 ++  edit  :: falls back to existing db schema if schema from poke input is null
 :: generally, you'd only bother passing the schema if you are changing the version of the row
 ::db &db-action [%edit [our ~2023.5.22..17.21.47..9d73] /example %foo 0 [%general ~[2 'b']] ~]
-  |=  [[=id:common =input-row] state=state-1 =bowl:gall]
-  =/  log1  (maybe-log hide-logs.state "%bedrock agent - %edit poke")
+  |=  [[=req-id =id:common =input-row] state=state-1 =bowl:gall]
   ^-  (quip card state-1)
+  =/  log1  (maybe-log hide-logs.state "%edit: {<req-id>} {<id>} {<input-row>}")
+  =/  vent-path=path  /vent/(scot %p src.req-id)/(scot %da now.req-id)
+  =/  kickcard=card  [%give %kick ~[vent-path] ~]
+
   :: permissions
   =/  old-row              (~(got by (~(got by (~(got by tables.state) type.input-row)) path.input-row)) id) :: old row must first exist
   =/  path-row=path-row    (~(got by paths.state) path.input-row)
@@ -1025,7 +1249,7 @@
   ?.  =(host.path-row our.bowl)
     =/  log3  (maybe-log hide-logs.state "{<src.bowl>} tried to have us ({<our.bowl>}) edit a row in {<path.path-row>} where we are not the host. forwarding the poke to the host: {<host.path-row>}")
     :_  state
-    [%pass /dbpoke %agent [host.path-row dap.bowl] %poke %db-action !>([%edit id input-row])]~
+    [%pass /dbpoke %agent [host.path-row dap.bowl] %poke %db-action !>([%edit req-id id input-row])]~
 
   :: schema checking
   =/  sch=schema
@@ -1035,7 +1259,6 @@
   :: TODO check that new version doesn't violate constraints
 
   :: update path
-  =/  path-sub-wire           (weld /next/(scot %da updated-at.path-row) path.path-row)
   =.  updated-at.path-row     now.bowl
   =.  received-at.path-row    now.bowl
   =.  paths.state             (~(put by paths.state) path.path-row path-row)
@@ -1054,13 +1277,20 @@
   =.  state             (add-row-to-db row sch state)
 
   :: emit the change to subscribers
-  =/  cards=(list card)  :~
-    :: tell subs about the new row
-    [%give %fact [/db (weld /path path.row) path-sub-wire ~] db-changes+!>([%upd-row row sch]~)]
-    :: kick subs to force them to re-sub for next update
-    [%give %kick [path-sub-wire ~] ~]
-  ==
-  =/  log4  (maybe-log hide-logs.state "publishing edited row to {(spud path-sub-wire)} and kicking everyone there")
+  =/  thechange=db-changes    [%upd-row row sch]~
+  =/  peers=(list peer)       (~(got by peers.state) path.row)
+  =/  cards=(list card)
+    :: give vent response
+    :-  [%give %fact ~[vent-path] db-vent+!>([%row row sch])]
+    :-  kickcard
+    :: tell clients about the new peer
+    :-  [%give %fact [/db (weld /path path.row) ~] db-changes+!>(thechange)]
+    :: tell subs about the new peer
+    %+  turn
+      (living-peers peers now.bowl our.bowl)
+    |=  p=peer
+    ^-  card
+    (handle-changes-card ship.p thechange path.row)
 
   [cards state]
 ::
@@ -1070,6 +1300,7 @@
   ^-  (quip card state-1)
   =/  vent-path=^path  /vent/(scot %p src.req-id)/(scot %da now.req-id)
   =/  kickcard=card  [%give %kick ~[vent-path] ~]
+  =/  log3  (maybe-log hide-logs.state "%remove: {<req-id>} {<type>} {<path>} {<id>}")
   :: permissions
   =/  pt                  (~(got by tables.state) type)
   =/  tbl                 (~(got by pt) path)
@@ -1085,7 +1316,6 @@
     [%pass /dbpoke %agent [host.path-row dap.bowl] %poke %db-action !>([%remove req-id type path id])]~
 
   :: update path
-  =/  foreign-ship-sub-wire   (weld /next/(scot %da updated-at.path-row) path)
   =.  updated-at.path-row     now.bowl
   =.  received-at.path-row    now.bowl
   =.  paths.state             (~(put by paths.state) path path-row)
@@ -1098,27 +1328,31 @@
   =.  del-log.state   (~(put by del-log.state) now.bowl log)  :: record the fact that we deleted
   :: TODO remove remote-scry paths for the row
 
-  :: emit the change to subscribers
-  =/  cards=(list card)  :~
-    :: tell subs about the new row
-    [%give %fact [/db (weld /path path) foreign-ship-sub-wire ~] db-changes+!>(~[log])]
-    :: kick foreign ship subs to force them to re-sub for next update
-    [%give %kick [foreign-ship-sub-wire ~] ~]
+  :: emit the change
+  =/  thechange=db-changes    ~[log]
+  =/  peers=(list peer)       (~(got by peers.state) path)
+  =/  cards=(list card)
     :: give vent response
-    [%give %fact ~[vent-path] db-vent+!>([%del-row id type path])]
-    kickcard
-  ==
-  =/  log3  (maybe-log hide-logs.state "publishing %del-row type: {<type>} id: {<id>} to {(spud foreign-ship-sub-wire)} + kicking those subs")
+    :-  [%give %fact ~[vent-path] db-vent+!>([%del-row id type path])]
+    :-  kickcard
+    :: tell clients about the new peer
+    :-  [%give %fact [/db (weld /path path) ~] db-changes+!>(thechange)]
+    :: tell subs about the new peer
+    %+  turn
+      (living-peers peers now.bowl our.bowl)
+    |=  p=peer
+    ^-  card
+    (handle-changes-card ship.p thechange path)
 
   [cards state]
 ::
 ++  remove-many :: only works on ids from same path
 ::bedrock &db-action [%remove-many %foo /example [[our ~2023.5.22..19.22.29..d0f7] [our ~2023.5.22..19.22.29..d0f7] ~]]
   |=  [[=req-id =path ids=(list [=id:common =type:common])] state=state-1 =bowl:gall]
+  ^-  (quip card state-1)
   =/  log3  (maybe-log hide-logs.state "%remove-many {<path>} {<ids>}")
   =/  vent-path=^path  /vent/(scot %p src.req-id)/(scot %da now.req-id)
   =/  kickcard=card  [%give %kick ~[vent-path] ~]
-  ^-  (quip card state-1)
 
   :: forward the request if we aren't the host
   =/  path-row=path-row   (~(got by paths.state) path)
@@ -1143,7 +1377,6 @@
       $(index +(index))
 
   :: update path
-  =/  foreign-ship-sub-wire   (weld /next/(scot %da updated-at.path-row) path)
   =.  updated-at.path-row     now.bowl
   =.  received-at.path-row    now.bowl
   =.  paths.state             (~(put by paths.state) path path-row)
@@ -1155,16 +1388,20 @@
     ?:  =(index (lent allowed-ids))
       :: TODO remove remote-scry paths for the row
       =/  last  (snag (dec index) logs)
-      :: emit the change to subscribers
-      =/  cards=(list card)  :~
-        :: tell subs about the new row
-        [%give %fact [/db (weld /path path) foreign-ship-sub-wire ~] db-changes+!>(logs)]
-        :: kick foreign ship subs to force them to re-sub for next update
-        [%give %kick [foreign-ship-sub-wire ~] ~]
+      :: emit the change
+      =/  peers=(list peer)       (~(got by peers.state) path)
+      =/  cards=(list card)
         :: give vent response
-        [%give %fact ~[vent-path] db-vent+!>([%del-row id.last type.last path.last])]
-        kickcard
-      ==
+        :-  [%give %fact ~[vent-path] db-vent+!>([%del-row id.last type.last path.last])]
+        :-  kickcard
+        :: tell clients about the new peer
+        :-  [%give %fact [/db (weld /path path) ~] db-changes+!>(logs)]
+        :: tell subs about the new peer
+        %+  turn
+          (living-peers peers now.bowl our.bowl)
+        |=  p=peer
+        ^-  card
+        (handle-changes-card ship.p logs path)
 
       [cards state]
     =/  id        (snag index allowed-ids)
@@ -1185,7 +1422,7 @@
 ::bedrock &db-action [%relay [~bus now] /target %relay 0 [%relay [~zod ~2023.6.13..15.57.34..aa97] %foo /example 0 %all %.n] ~]
   |=  [[=req-id =input-row] state=state-1 =bowl:gall]
   ^-  (quip card state-1)
-  =/  log1  (maybe-log hide-logs.state "relay")
+  =/  log1  (maybe-log hide-logs.state "%relay: {<req-id>} {<input-row>}")
   :: first check that the input is actually a %relay
   ?+  -.data.input-row   !!
     %relay 
@@ -1220,8 +1457,9 @@
   ^-  (quip card state-1)
   =.  hide-logs.state  toggle
   `state
-::  on-init selfpoke
+::
 ++  create-initial-spaces-paths
+::  on-init selfpoke
   |=  [state=state-1 =bowl:gall]
   ^-  (quip card state-1)
   =/  spaces-scry   .^(view:sstore %gx /(scot %p our.bowl)/spaces/(scot %da now.bowl)/all/noun)
@@ -1275,7 +1513,7 @@
           [%edit-path create-path]
           [%remove-path pa]
           [%create de-create-input-row]
-          [%edit (ot ~[[%id de-id] [%input-row de-input-row]])]
+          [%edit de-edit-poke]
           [%remove remove]
           [%remove-many remove-many]
           [%relay de-create-input-row]
@@ -1289,6 +1527,15 @@
       ?~  request-id
         [[~zod ~2000.1.1] (de-input-row jon)]  :: if the poke-sender didn't care enough to pass a request id, just use a fake one
       [(de-id u.request-id) (de-input-row jon)]
+    ::
+    ++  de-edit-poke
+      |=  jon=json
+      ^-  [req-id id:common input-row]
+      ?>  ?=([%o *] jon)
+      =/  request-id=(unit json)  (~(get by p.jon) 'request-id')
+      ?~  request-id
+        [[~zod ~2000.1.1] ((ot ~[[%id de-id] [%input-row de-input-row]]) jon)]  :: if the poke-sender didn't care enough to pass a request id, just use a fake one
+      [(de-id u.request-id) ((ot ~[[%id de-id] [%input-row de-input-row]]) jon)]
     ::
     ++  add-peer
       %-  ot

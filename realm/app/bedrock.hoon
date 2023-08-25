@@ -42,6 +42,7 @@
       :~  [%pass /spaces %agent [our.bowl %spaces] %watch /updates]
           [%pass /selfpoke %agent [our.bowl dap.bowl] %poke %db-action !>([%create-initial-spaces-paths ~])]
           [%pass /timer %arvo %b %wait next-refresh-time:core]
+          [%pass /keep-alive-timer %arvo %b %wait next-keep-alive-time:core]
       ==
     [default-cards this(state default-state)]
   ++  on-save   !>(state)
@@ -54,6 +55,10 @@
     =/  cards
       :-  [%pass /timer %arvo %b %rest next-refresh-time:core]
       :-  [%pass /timer %arvo %b %wait next-refresh-time:core]
+      :-  [%pass /keep-alive-timer %arvo %b %rest next-keep-alive-time:core]
+      :: keep-alive every time we on-load. it'll go back to normal
+      :: cadence on its own
+      :-  [%pass /keep-alive-timer %arvo %b %wait s1-from-now:core]
       :-  [%pass /selfpoke %agent [our.bowl dap.bowl] %poke %db-action !>([%create-initial-spaces-paths ~])]
       ?:  (~(has by wex.bowl) [/spaces our.bowl %spaces])
         ~
@@ -93,11 +98,15 @@
         (add-peer:db +.act state bowl)
       %kick-peer
         (kick-peer:db +.act state bowl)
+      %keep-alive
+        (keep-alive:db +.act state bowl)
 
       %get-path
         (get-path:db +.act state bowl)
       %delete-path
         (delete-path:db +.act state bowl)
+      %put-path
+        (put-path:db +.act state bowl)
       %refresh-path
         (refresh-path:db +.act state bowl)
 
@@ -109,9 +118,11 @@
         (remove:db +.act state bowl)
       %remove-many
         (remove-many:db +.act state bowl)
-
       %relay
         (relay:db +.act state bowl)
+
+      %handle-changes
+        (handle-changes:db +.act state bowl)
 
       %create-initial-spaces-paths
         (create-initial-spaces-paths:db state bowl)
@@ -528,6 +539,23 @@
           refresh-pokes
           this
         ]
+      [%keep-alive-timer ~]
+        =/  paths-we-dont-host  (skim ~(val by paths.state) |=(p=path-row ?!(=(our.bowl host.p))))
+        =/  pokes=(list card)
+          %+  turn
+            paths-we-dont-host
+          |=  p=path-row
+          ^-  card
+          [%pass /dbpoke %agent [host.p dap.bowl] %poke %db-action !>([%keep-alive path.p])]
+        [
+          :: we remove the old timer (if any) and add the new one, so that
+          :: we don't get an increasing number of timers associated with
+          :: this agent every time the agent gets updated
+          :-  [%pass /keep-alive-timer %arvo %b %rest next-keep-alive-time:core]
+          :-  [%pass /keep-alive-timer %arvo %b %wait next-keep-alive-time:core]
+          pokes
+          this
+        ]
     ==
   ::
   ++  on-fail
@@ -539,7 +567,9 @@
 ::
 ++  this  .
 ++  core  .
-++  next-refresh-time  `@da`(add (mul (div now.bowl ~h8) ~h8) ~h8)  :: TODO decide on actual timer interval
+++  next-refresh-time  `@da`(add (mul (div now.bowl ~h24) ~h24) ~h24)  :: TODO decide on actual timer interval
+++  next-keep-alive-time  `@da`(add (mul (div now.bowl ~h2) ~h2) ~h2)  :: TODO decide on actual timer interval
+++  s1-from-now  `@da`(add (mul (div now.bowl ~s1) ~s1) ~s1)
 ++  path-to-type
   |=  p=path
   ^-  type:common
