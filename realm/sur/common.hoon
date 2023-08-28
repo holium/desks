@@ -165,5 +165,40 @@
     region=@t
   ==
 ++  creds-type  [%creds (sham -:!>(*creds))]
+
++$  passport-chain  (list passport-link)
++$  passport-link
+  $%  [%edge-add from-link-hash=@t to-link-hash=@t key=@t value=@t]
+      [%edge-remove link-hash=@t]
+      [%entity-add public-key=@t public-key-type=@t name=@t]
+      [%entity-remove name=@t]
+      [%key-add public-key=@t public-key-type=@t name=@t]
+      [%key-remove name=@t]
+      [%post-add type=@t data=json]
+      [%post-edit link-hash=@t type=@t data=json]
+      [%post-remove link-hash=@t]
+      [%name-record-set name=@t record=@t]
+      [%token-burn from-entity=@t amount=@rd]
+      [%token-mint to-entity=@t amount=@rd]
+      [%token-transfer to-entity=@t amount=@rd]
+  ==
++$  pki-state
+  $:  chain-owner-entities=(list @p)
+      entity-to-public-keys(map @p @t)
+      public-key-to-nonce=(map @t @ud)
+      entity-to-value=(map @p @ud)
+      public-key-to-entity=(map @t @p)
+  ==
++$  passport
+  $:  link-id=@t
+      epoch-block=@ud
+      data-block=@ud
+      timestamp=@da
+      previous-epoch-hash=@t
+      =pki-state
+      transaction-types=[link-names=(list @t) link-structs=@t]
+      data-structs=[struct-names=(list @t) struct-types=@t]
+      sig-chain-settings=[new-entity-balance=@ud epoch-length=@ud signing-key=@t]
+  ==
 --
 
