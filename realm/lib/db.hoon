@@ -576,17 +576,27 @@
 ::bedrock &db-action [%create-path /target %host ~ ~ ~ ~[[~bus %host] [~fed %member]]]
   |=  [=input-path-row state=state-1 =bowl:gall]
   ^-  (quip card state-1)
+  ~&  >  "%create-path {<path.input-path-row>} {<peers.input-path-row>}"
   :: ensure the path doesn't already exist
   =/  pre-existing    (~(get by paths.state) path.input-path-row)
   ?>  =(~ pre-existing)
   :: ensure this came from our ship
   ?>  =(our.bowl src.bowl)
 
+  =/  sorted-peers=ship-roles
+    (sort peers.input-path-row |=([a=[s=@p =role] b=[s=@p =role]] (gth s.a s.b)))
+  =/  requested-hosts=ship-roles
+    (skim sorted-peers |=(p=[s=@p =role] =(role.p %host)))
+  ?>  (gth (lent requested-hosts) 0)  :: ensure there is at least one requested host
+  :: ensure our ship is in the peers list
+  =/  our-role  (snag 0 (skim sorted-peers |=(a=[s=@p =role] =(s.a our.bowl))))
+  =/  true-host=ship   s:(snag 0 requested-hosts)
+
   :: local state updates
   :: create the path-row
   =/  path-row=path-row  [
     path.input-path-row
-    our.bowl
+    true-host
     replication.input-path-row
     default-access.input-path-row
     table-access.input-path-row
@@ -603,19 +613,15 @@
     default-access.path-row
   =.  paths.state     (~(put by paths.state) path.path-row path-row)
   :: create the peers list
-  =/  peers :: ensure [our.bowl %host] is in the peers list
-    ?~  (find [[our.bowl %host]]~ peers.input-path-row)
-      [[our.bowl %host] peers.input-path-row]
-    peers.input-path-row
   =/  peerslist
     %+  turn
-      peers
+      sorted-peers
     |=  [s=@p =role]
     ^-  peer
     [
       path.path-row
       s
-      ?:(=(s our.bowl) %host role)  :: our is always the %host
+      role
       now.bowl
       now.bowl
       now.bowl
@@ -628,7 +634,7 @@
       (skip peerslist |=(p=peer =(ship.p our.bowl))) :: skip ourselves though, since that poke will just fail
     |=  =peer
     ^-  card
-    (get-path-card ship.peer path-row peers)
+    (get-path-card ship.peer path-row sorted-peers)
   :: emit the change to self-subscriptions (our clients)
   =/  thechange  db-changes+!>([[%add-path path-row] (turn peerslist |=(p=peer [%add-peer p]))])
   =/  subscription-facts=(list card)  :~
@@ -1770,27 +1776,27 @@
         ?+  name.data-type
             [%general ((de-cols schema) (~(got by p.jon) 'data'))]
           %vote
-            ?:  =(hash.data-type hash.vote-type:common)
+            ?:  =(hash.data-type hash:vote-type:common)
               [%vote (de-vote (~(got by p.jon) 'data'))]
             [%general ((de-cols schema) (~(got by p.jon) 'data'))]
           %comment
-            ?:  =(hash.data-type hash.comment-type:common)
+            ?:  =(hash.data-type hash:comment-type:common)
               [%comment (de-comment (~(got by p.jon) 'data'))]
             [%general ((de-cols schema) (~(got by p.jon) 'data'))]
           %relay
-            ?:  =(hash.data-type hash.relay-type:common)
+            ?:  =(hash.data-type hash:relay-type:common)
               [%relay (de-relay (~(got by p.jon) 'data'))]
             [%general ((de-cols schema) (~(got by p.jon) 'data'))]
           %creds
-            ?:  =(hash.data-type hash.creds-type:common)
+            ?:  =(hash.data-type hash:creds-type:common)
               [%creds (de-creds (~(got by p.jon) 'data'))]
             [%general ((de-cols schema) (~(got by p.jon) 'data'))]
           %chat
-            ?:  =(hash.data-type hash.chat-type:common)
+            ?:  =(hash.data-type hash:chat-type:common)
               [%chat (de-chat (~(got by p.jon) 'data'))]
             [%general ((de-cols schema) (~(got by p.jon) 'data'))]
           %message
-            ?:  =(hash.data-type hash.message-type:common)
+            ?:  =(hash.data-type hash:message-type:common)
               [%message (de-message (~(got by p.jon) 'data'))]
             [%general ((de-cols schema) (~(got by p.jon) 'data'))]
         ==
@@ -2201,7 +2207,7 @@
                 ?:  =(t.sch 'id')    (row-id-to-json ;;(id:common (cue d)))
                 ?:  =(t.sch 'type')  (en-db-type ;;(type:common (cue d)))
                 ?:  =(t.sch 'unit')  ?~(;;((unit @t) (cue d)) ~ s+(need ;;((unit @t) (cue d))))
-                ?:  =(t.sch 'path')  (spat ;;(^path (cue d)))
+                ?:  =(t.sch 'path')  (path ;;(^path (cue d)))
                 ?:  =(t.sch 'list')  [%a (turn ;;((list @t) (cue d)) |=(i=@t s+i))]
                 ?:  =(t.sch 'set')   [%a (turn ~(tap in ;;((set @t) (cue d))) |=(i=@t s+i))]
                 ?:  =(t.sch 'map')   [%o (~(run by ;;((map @t @t) (cue d))) |=(i=@t s+i))]

@@ -27,7 +27,7 @@
       parent-id=id      :: id of the thing this vote is attached to          2 -> 14
       parent-path=path  ::                                                   3 -> 30
   ==
-++  vote-type  [%vote 0v0]
+++  vote-type  `type`[%vote 0v0]
 +$  vote-0
   $:  up=?              :: true for like/upvote, false for dislike/downvote  0 -> 2
       parent-type=type-prefix  :: table name of the thing this vote is attached to  1 -> 6
@@ -44,7 +44,7 @@
       parent-id=id      :: id of the thing being rated
       parent-path=path
   ==
-++  rating-type  [%rating 0v0]
+++  rating-type  `type`[%rating 0v0]
 +$  rating-0
   $:  value=@rd         :: the rating. any real number. up to app to parse properly
       max=@rd           :: the maximum rating the application allows. (useful for aggregating, and making display agnostic)
@@ -61,7 +61,7 @@
       parent-id=id      :: id of the thing being commented on
       parent-path=path
   ==
-++  comment-type  [%comment 0v0]
+++  comment-type  `type`[%comment 0v0]
 +$  comment-0
   $:  txt=@t            :: the comment
       parent-type=type-prefix  :: table name of the thing being commented on
@@ -76,7 +76,7 @@
       parent-id=id      :: id of the thing being commented on
       parent-path=path
   ==
-++  react-type  [%react 0v0]
+++  react-type  `type`[%react 0v0]
 +$  react-0
   $:  react=@t          :: the emoji code
       parent-type=type-prefix  :: table name of the thing being reacted to
@@ -91,7 +91,7 @@
       parent-id=id      :: id of the thing being tagged
       parent-path=path
   ==
-++  tag-type  [%tag 0v0]
+++  tag-type  `type`[%tag 0v0]
 +$  tag-0
   $:  tag=@t            :: the tag (ex: 'based')
       parent-type=type-prefix  :: table name of the thing being tagged
@@ -113,7 +113,7 @@
       to-id=id          :: id of the thing being linked to
       to-path=path
   ==
-++  link-type  [%link 0v0]
+++  link-type  `type`[%link 0v0]
 +$  link-0
   $:  key=@t            :: the key of the link, what the computer uses to find (ex: 'based')
       from-type=type-prefix    :: table name of the thing being linked from
@@ -147,7 +147,7 @@
       protocol=relay-protocol
       deleted=?
   ==
-++  relay-type  [%relay 0v0]
+++  relay-type  `type`[%relay 0v0]
 +$  relay-0
   $:  =id   :: the id of what is being relayed
       type=type-prefix :: type of what is being relayed
@@ -167,7 +167,7 @@
     current-bucket=@t
     region=@t
   ==
-++  creds-type  [name=%creds hash=0v0]
+++  creds-type  `type`[name=%creds hash=0v0]
 
 :: chat-db stuff
 +$  chat
