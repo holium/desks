@@ -1234,6 +1234,7 @@
   :: emit the change to subscribers
   =/  thechange=db-changes    [%add-row row schema.input-row]~
   =/  peers=(list peer)       (~(got by peers.state) path.row)
+  ~&  >>>  "living-peers {<(living-peers peers now.bowl our.bowl)>}"
   =/  cards=(list card)
     :: give vent response
     :-  [%give %fact ~[vent-path] db-vent+!>([%row row schema.input-row])]
