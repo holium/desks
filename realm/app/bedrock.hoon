@@ -44,6 +44,13 @@
     ^-  (quip card _this)
     =/  old  !<(versioned-state old-state)
     ~&  vote-type:common
+    ~&  rating-type:common
+    ~&  comment-type:common
+    ~&  react-type:common
+    ~&  relay-type:common
+    ~&  creds-type:common
+    ~&  chat-type:common
+    ~&  message-type:common
     :: do a quick check to make sure we are subbed to /updates in %spaces
     =/  cards
       :-  [%pass /timer %arvo %b %rest next-refresh-time:core]

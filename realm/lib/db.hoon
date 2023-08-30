@@ -1770,17 +1770,29 @@
         ?+  name.data-type
             [%general ((de-cols schema) (~(got by p.jon) 'data'))]
           %vote
-            [%vote (de-vote (~(got by p.jon) 'data'))]
+            ?:  =(hash.data-type hash.vote-type:common)
+              [%vote (de-vote (~(got by p.jon) 'data'))]
+            [%general ((de-cols schema) (~(got by p.jon) 'data'))]
           %comment
-            [%comment (de-comment (~(got by p.jon) 'data'))]
+            ?:  =(hash.data-type hash.comment-type:common)
+              [%comment (de-comment (~(got by p.jon) 'data'))]
+            [%general ((de-cols schema) (~(got by p.jon) 'data'))]
           %relay
-            [%relay (de-relay (~(got by p.jon) 'data'))]
+            ?:  =(hash.data-type hash.relay-type:common)
+              [%relay (de-relay (~(got by p.jon) 'data'))]
+            [%general ((de-cols schema) (~(got by p.jon) 'data'))]
           %creds
-            [%creds (de-creds (~(got by p.jon) 'data'))]
+            ?:  =(hash.data-type hash.creds-type:common)
+              [%creds (de-creds (~(got by p.jon) 'data'))]
+            [%general ((de-cols schema) (~(got by p.jon) 'data'))]
           %chat
-            [%chat (de-chat (~(got by p.jon) 'data'))]
+            ?:  =(hash.data-type hash.chat-type:common)
+              [%chat (de-chat (~(got by p.jon) 'data'))]
+            [%general ((de-cols schema) (~(got by p.jon) 'data'))]
           %message
-            [%message (de-message (~(got by p.jon) 'data'))]
+            ?:  =(hash.data-type hash.message-type:common)
+              [%message (de-message (~(got by p.jon) 'data'))]
+            [%general ((de-cols schema) (~(got by p.jon) 'data'))]
         ==
       [
         (pa (~(got by p.jon) 'path'))
@@ -2189,7 +2201,7 @@
                 ?:  =(t.sch 'id')    (row-id-to-json ;;(id:common (cue d)))
                 ?:  =(t.sch 'type')  (en-db-type ;;(type:common (cue d)))
                 ?:  =(t.sch 'unit')  ?~(;;((unit @t) (cue d)) ~ s+(need ;;((unit @t) (cue d))))
-                ?:  =(t.sch 'path')  (path ;;(^path (cue d)))
+                ?:  =(t.sch 'path')  (spat ;;(^path (cue d)))
                 ?:  =(t.sch 'list')  [%a (turn ;;((list @t) (cue d)) |=(i=@t s+i))]
                 ?:  =(t.sch 'set')   [%a (turn ~(tap in ;;((set @t) (cue d))) |=(i=@t s+i))]
                 ?:  =(t.sch 'map')   [%o (~(run by ;;((map @t @t) (cue d))) |=(i=@t s+i))]
