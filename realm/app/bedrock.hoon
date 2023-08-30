@@ -24,7 +24,7 @@
 
 /-  *db, sstore=spaces-store, vstore=visas
 /+  dbug, db
-=|  state-0
+=|  state-1
 =*  state  -
 =<
   %-  agent:dbug
@@ -34,14 +34,15 @@
   ::
   ++  on-init
     ^-  (quip card _this)
-    =/  default-state=state-0   *state-0
+    =/  default-state=state-1   *state-1
     :: make sure the relay table exists on-init
     =.  tables.default-state
-    (~(gas by *^tables) ~[[%relay *pathed-table] [%vote *pathed-table] [%react *pathed-table]])
+    (~(gas by *^tables) ~[[relay-type:common *pathed-table] [vote-type:common *pathed-table] [react-type:common *pathed-table]])
     =/  default-cards
       :~  [%pass /spaces %agent [our.bowl %spaces] %watch /updates]
           [%pass /selfpoke %agent [our.bowl dap.bowl] %poke %db-action !>([%create-initial-spaces-paths ~])]
           [%pass /timer %arvo %b %wait next-refresh-time:core]
+          [%pass /keep-alive-timer %arvo %b %wait next-keep-alive-time:core]
       ==
     [default-cards this(state default-state)]
   ++  on-save   !>(state)
@@ -49,21 +50,34 @@
     |=  old-state=vase
     ^-  (quip card _this)
     =/  old  !<(versioned-state old-state)
-    :: REMOVE WHEN YOU WANT DATA TO ACTUALLY STICK AROUND
-    ::=/  default-state=state-0   *state-0
-    :: make sure the relay table exists on-init
-    ::=.  tables.default-state
-    ::(~(gas by *^tables) ~[[%relay *pathed-table] [%vote *pathed-table] [%react *pathed-table]])
+    ~&  vote-type:common
     :: do a quick check to make sure we are subbed to /updates in %spaces
     =/  cards
       :-  [%pass /timer %arvo %b %rest next-refresh-time:core]
       :-  [%pass /timer %arvo %b %wait next-refresh-time:core]
-      :: :-  [%pass /selfpoke %agent [our.bowl dap.bowl] %poke %db-action !>([%create-initial-spaces-paths ~])]
-      :: :-  [%pass /selfpoke %agent [our.bowl %api-store] %poke %api-store-action !>([%sync-to-bedrock ~])] :: ALSO REMOVE WHEN YOU STOP WIPING THE DATA EVERY TIME
+      :-  [%pass /keep-alive-timer %arvo %b %rest next-keep-alive-time:core]
+      :: keep-alive every time we on-load. it'll go back to normal
+      :: cadence on its own
+      :-  [%pass /keep-alive-timer %arvo %b %wait s1-from-now:core]
+      :-  [%pass /selfpoke %agent [our.bowl dap.bowl] %poke %db-action !>([%create-initial-spaces-paths ~])]
       ?:  (~(has by wex.bowl) [/spaces our.bowl %spaces])
         ~
       [%pass /spaces %agent [our.bowl %spaces] %watch /updates]~
-    [cards this(state old)]
+    ?-  -.old
+        %0
+      =/  new-state=state-1  [
+        %1
+        (transform-tables-0-to-tables:db tables.old schemas.old)
+        (transform-schemas-0-to-schemas:db schemas.old)
+        (transform-paths-0-to-paths:db paths.old)
+        peers.old
+        (transform-del-log-0-to-del-log:db del-log.old schemas.old)
+        hide-logs.old
+      ]
+      [cards this(state new-state)]
+        %1
+      [cards this(state old)]
+    ==
   ::
   ++  on-poke
     |=  [=mark =vase]
@@ -84,11 +98,15 @@
         (add-peer:db +.act state bowl)
       %kick-peer
         (kick-peer:db +.act state bowl)
+      %keep-alive
+        (keep-alive:db +.act state bowl)
 
       %get-path
         (get-path:db +.act state bowl)
       %delete-path
         (delete-path:db +.act state bowl)
+      %put-path
+        (put-path:db +.act state bowl)
       %refresh-path
         (refresh-path:db +.act state bowl)
 
@@ -105,6 +123,9 @@
 
       %relay
         (relay:db +.act state bowl)
+
+      %handle-changes
+        (handle-changes:db +.act state bowl)
 
       %create-initial-spaces-paths
         (create-initial-spaces-paths:db state bowl)
@@ -145,7 +166,7 @@
           =/  thepathrow    (~(got by paths.state) t.t.path)
           :: if the @da they passed was behind, %give them the current version, and %kick them
           ?:  (gth updated-at.thepathrow t)
-            ::~&  >>>  "{<src.bowl>} tried to sub on old @da {<t>}, %kicking them"
+            ~&  >>>  "{<src.bowl>} tried to sub on old @da {<t>}, %kicking them"
             =/  thepeers    (~(got by peers.state) t.t.path)
             =/  tbls        (tables-by-path:db tables.state t.t.path)
             =/  dels=(list [@da db-del-change])
@@ -190,10 +211,11 @@
         ``db-path+!>([thepathrow thepeers tbls schemas.state dels])
     ::
     :: all rows from a given table
-    ::  /db/table/realm-note.json
-      [%x %db %table @ ~]
-        =/  tblname=@tas  i.t.t.t.path
-        ``db-table+!>([tblname (~(got by tables.state) tblname) schemas.state])
+    ::  /db/table/realm-note/0v6.539qr.dv1ns.thh70.fnqol.fb2us.json
+      [%x %db %table *]
+        =/  tblname=^path  t.t.t.path
+        =/  typ=type:common  (path-to-type:core tblname)
+        ``db-table+!>([typ (~(got by tables.state) typ) schemas.state])
     ::
     :: all rows from a given table and path (as a pathed-table in noun form)
     ::  /db/table-by-path/chat/<path>.json
@@ -311,7 +333,7 @@
               ::~&  >>>  "got a %kick on {(spud +.+.wire)} that we are ignoring because that path is not in our state"
               `this
             =/  newpath  (weld /next/(scot %da updated-at:(need pathrow)) path:(need pathrow))
-            ::~&  >  "{<dap.bowl>}: /next/[path] kicked us, resubbing {(spud newpath)}"
+            ~&  >>>  "{<dap.bowl>}: /next/[path] kicked us, resubbing {(spud newpath)}"
             :_  this
             :~
               [%pass newpath %agent [src.bowl dap.bowl] %watch newpath]
@@ -320,10 +342,10 @@
             :: handle the update by updating our local state and
             :: pushing db-changes out to our subscribers
             =^  cards  state
-            ^-  (quip card state-0)
+            ^-  (quip card state-1)
             =/  dbpath=path         +.+.wire
             =/  factmark  -.+.sign
-            ::~&  >>  "%fact on {(spud wire)}: {<factmark>}"
+            ~&  >>>  "%fact on {(spud wire)}: {<factmark>}"
             ?+  factmark
               :: default case:
                 ~&  >>>  "UNHANDLED FACT type"
@@ -346,7 +368,7 @@
                   =/  new-scry=(list card)
                     ?+  -.change  ~
                       %add-row
-                        ?.  ?=(%relay type.row.change)  ~
+                        ?.  ?=(%relay name.type.row.change)  ~
                         ?>  ?=(%relay -.data.row.change)
                         =/  uobj=(unit row)  (get-db:db type.data.row.change path.data.row.change id.data.row.change state)
                         ?~  uobj :: if we DONT have the obj already, remote-scry it
@@ -363,7 +385,7 @@
                           ==
                         ~ :: otherwise, don't emit any cards
                       %upd-row
-                        ?.  ?=(%relay type.row.change)  ~
+                        ?.  ?=(%relay name.type.row.change)  ~
                         ?>  ?=(%relay -.data.row.change)
                         ?:  deleted.data.row.change  ~  :: if the root-obj is deleted, don't remote-scry it
                         ::~&  >>>  "asking for remote-scry"
@@ -381,7 +403,7 @@
                   =/  pokes=(list card)
                     ?+  -.change  ~
                       %upd-row
-                        ?:  ?=(%relay type.row.change)  ~
+                        ?:  ?=(%relay name.type.row.change)  ~
                         :: if it's NOT a relay, we might have to poke ourselves to update the relay
                         =/  our-relays=(list row)  (our-matching-relays:db row.change state bowl)
                         ?~  our-relays  ~
@@ -400,10 +422,10 @@
                             :: that we host for this changed row
                             =/  dat  data.rela
                             =.  revision.dat  +(revision.dat)
-                            [%pass /selfpoke %agent [our.bowl dap.bowl] %poke %db-action !>([%edit id.rela path.rela type.rela v.rela dat ~])]~
+                            [%pass /selfpoke %agent [our.bowl dap.bowl] %poke %db-action !>([%edit id.rela path.rela type.rela dat ~])]~
                         ==
                       %del-row
-                        ?:  ?=(%relay type.change)  ~
+                        ?:  ?=(%relay name.type.change)  ~
                         :: if it's NOT a relay, we might have to poke ourselves to update the relay
                         =/  fakerow=row  *row
                         =.  id.fakerow   id.change
@@ -426,12 +448,12 @@
                             :: signal that the relayed object was deleted
                             =/  dat  data.rela
                             =.  deleted.dat  %.y
-                            [%pass /selfpoke %agent [our.bowl dap.bowl] %poke %db-action !>([%edit id.rela path.rela type.rela v.rela dat ~])]~
+                            [%pass /selfpoke %agent [our.bowl dap.bowl] %poke %db-action !>([%edit id.rela path.rela type.rela dat ~])]~
                         ==
                     ==
                   =.  state
                     ?:  ?&  ?=(%upd-row -.change)
-                            ?=(%relay type.row.change)
+                            ?=(%relay name.type.row.change)
                             ?=(%relay -.data.row.change)
                             =(%.y deleted.data.row.change)
                         ==
@@ -559,6 +581,23 @@
           refresh-pokes
           this
         ]
+      [%keep-alive-timer ~]
+        =/  paths-we-dont-host  (skim ~(val by paths.state) |=(p=path-row ?!(=(our.bowl host.p))))
+        =/  pokes=(list card)
+          %+  turn
+            paths-we-dont-host
+          |=  p=path-row
+          ^-  card
+          [%pass /dbpoke %agent [host.p dap.bowl] %poke %db-action !>([%keep-alive path.p])]
+        [
+          :: we remove the old timer (if any) and add the new one, so that
+          :: we don't get an increasing number of timers associated with
+          :: this agent every time the agent gets updated
+          :-  [%pass /keep-alive-timer %arvo %b %rest next-keep-alive-time:core]
+          :-  [%pass /keep-alive-timer %arvo %b %wait next-keep-alive-time:core]
+          pokes
+          this
+        ]
     ==
   ::
   ++  on-fail
@@ -570,5 +609,11 @@
 ::
 ++  this  .
 ++  core  .
-++  next-refresh-time  `@da`(add (mul (div now.bowl ~h8) ~h8) ~h8)  :: TODO decide on actual timer interval
+++  next-refresh-time  `@da`(add (mul (div now.bowl ~h24) ~h24) ~h24)  :: TODO decide on actual timer interval
+++  next-keep-alive-time  `@da`(add (mul (div now.bowl ~h2) ~h2) ~h2)  :: TODO decide on actual timer interval
+++  s1-from-now  `@da`(add (mul (div now.bowl ~s1) ~s1) ~s1)
+++  path-to-type
+  |=  p=path
+  ^-  type:common
+  [`@tas`(slav %tas +2:p) `@uvH`(slav %uv +6:p)]
 --
