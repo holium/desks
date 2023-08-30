@@ -591,11 +591,14 @@
       (lien our-paths |=(p=path-row:sur =(path.p path.v)))
     |=([k=uniq-id:sur v=msg-part:sur] v)
 
+  ~&  >  messages-to-dump
   :: first, test bedrock to see if we have already dumped stuff there
   ?:  %+  levy
         messages-to-dump
       |=  =msg-part:sur
-      (test-bedrock-row-existence:db-scry path.msg-part message-type:common (swap-id-parts msg-id.msg-part) bowl)
+      =/  ex=?  (test-bedrock-row-existence:db-scry path.msg-part message-type:common (swap-id-parts msg-id.msg-part) bowl)
+      ~&  ex
+      ex
     ~&  >>>  "already dumped to bedrock"
     `state  :: since the path already exists in bedrock, assume we have already dumped
 
@@ -606,6 +609,7 @@
     |=  =msg-part:sur
     ^-  card
     =/  chat-id=[=ship t=@da]  id:(scry-first-bedrock-chat:db-scry path.msg-part bowl)
+    ~&  >  chat-id
     =/  msg  [
       chat-id
       ?~(reply-to.msg-part ~ (some [-.u.reply-to.msg-part (swap-id-parts q.u.reply-to.msg-part)]))

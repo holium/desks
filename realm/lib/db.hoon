@@ -1002,6 +1002,7 @@
   [cards state]
 ::
 ++  refresh-path
+::~bus/bedrock &db-action [%refresh-path now /path]
   |=  [[t=@da =path] state=state-1 =bowl:gall]
   ^-  (quip card state-1)
   =/  log1  (maybe-log hide-logs.state "%refresh-path {(spud path)}")
