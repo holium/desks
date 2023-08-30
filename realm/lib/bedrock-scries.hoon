@@ -59,9 +59,9 @@
 ++  scry-first-bedrock-chat
   |=  [=path =bowl:gall]
   ^-  row:bedrock
-  =/  all-chats=[@tas pt=pathed-table:bedrock =schemas:bedrock]
+  =/  all-chats=[=type:common pt=pathed-table:bedrock =schemas:bedrock]
     .^
-      [@tas pt=pathed-table:bedrock =schemas:bedrock]
+      [=type:common pt=pathed-table:bedrock =schemas:bedrock]
       %gx
       %+  weld
         %+  weld

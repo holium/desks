@@ -216,10 +216,10 @@
         =/  tblname=@tas  i.t.t.t.path
         =/  typ=type:common   [tblname (slav %uv i.t.t.t.t.path)]
         =/  dbpath        t.t.t.t.t.path
-        =/  tbl     (get-tbl:db tblname dbpath state)
+        =/  tbl     (get-tbl:db typ dbpath state)
         ?~  tbl
-          ``db-table+!>([tblname *pathed-table schemas.state])
-        ``db-table+!>([tblname (~(put by *pathed-table) dbpath u.tbl) schemas.state])
+          ``db-table+!>([typ *pathed-table schemas.state])
+        ``db-table+!>([typ (~(put by *pathed-table) dbpath u.tbl) schemas.state])
     ::
     :: a specific row from a given table, by id
     ::  /row/message/0v12jdlk.asdf.12e.s/~zod/~2000.1.1.json

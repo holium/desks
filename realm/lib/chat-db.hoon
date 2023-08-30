@@ -484,7 +484,7 @@
   [gives state]
 ::
 ++  kick-peer
-::  :chat-db &db-action [%kick-peer /a/path/to/a/chat ~bus]
+::  :chat-db &chat-db-action [%kick-peer /a/path/to/a/chat ~bus]
   |=  [act=[=path patp=ship] state=state-2 =bowl:gall]
   ^-  (quip card state-2)
   ?.  (~(has by paths-table.state) path.act)
@@ -515,7 +515,7 @@
   [gives state]
 ::
 ++  dump-to-bedrock
-::  :chat-db &db-action [%dump-to-bedrock ~]
+::  :chat-db &chat-db-action [%dump-to-bedrock ~]
   |=  [state=state-2 =bowl:gall]
   ^-  (quip card state-2)
   ~&  %dump-to-bedrock
@@ -564,7 +564,7 @@
       peers-get-backlog.path-row
       max-expires-at-duration.path-row
     ]
-    [%pass /bedrockpoke %agent [our.bowl %bedrock] %poke %db-action !>([%create [our.bowl created-at.path-row] path.path-row chat-type:common 0 [%chat chat] ~])]
+    [%pass /bedrockpoke %agent [our.bowl %bedrock] %poke %db-action !>([%create [our.bowl created-at.path-row] path.path-row chat-type:common [%chat chat] ~])]
 
   =/  cards=(list card)
    %+  snoc
@@ -595,7 +595,7 @@
   ?:  %+  levy
         messages-to-dump
       |=  =msg-part:sur
-      (test-bedrock-row-existence:db-scry path.msg-part message-type:common [sender.msg-id.msg-part timestamp.msg-id.msg-part] bowl)
+      (test-bedrock-row-existence:db-scry path.msg-part message-type:common (swap-id-parts msg-id.msg-part) bowl)
     ~&  >>>  "already dumped to bedrock"
     `state  :: since the path already exists in bedrock, assume we have already dumped
 
@@ -608,7 +608,7 @@
     =/  chat-id=[=ship t=@da]  id:(scry-first-bedrock-chat:db-scry path.msg-part bowl)
     =/  msg  [
       chat-id
-      ?~(reply-to.msg-part ~ (some [-.u.reply-to.msg-part [sender.q.u.reply-to.msg-part timestamp.q.u.reply-to.msg-part]]))
+      ?~(reply-to.msg-part ~ (some [-.u.reply-to.msg-part (swap-id-parts q.u.reply-to.msg-part)]))
       expires-at.msg-part
       (turn (get-full-message messages-table.state msg-id.msg-part) |=(m=msg-part:sur [content.m metadata.m]))
     ]
@@ -619,7 +619,7 @@
       [our.bowl %bedrock]
       %poke
       %db-action
-      !>([%create [sender.msg-id.msg-part created-at.msg-part] path.msg-part message-type:common 0 [%message msg] ~])
+      !>([%create [sender.msg-id.msg-part created-at.msg-part] path.msg-part message-type:common [%message msg] ~])
     ]
 
   [cards state]
