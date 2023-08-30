@@ -223,10 +223,7 @@
         =/  tblname=@tas  i.t.t.t.path
         =/  typ=type:common   [tblname (slav %uv i.t.t.t.t.path)]
         =/  dbpath        t.t.t.t.t.path
-        ~&  typ
-        ~&  dbpath
         =/  tbl     (get-tbl:db typ dbpath state)
-        ~&  tbl
         ?~  tbl
           ``db-table+!>([typ *pathed-table schemas.state])
         ``db-table+!>([typ (~(put by *pathed-table) dbpath u.tbl) schemas.state])

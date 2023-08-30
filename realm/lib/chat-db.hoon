@@ -523,12 +523,12 @@
     %+  skim
       ~(val by paths-table.state)
     |=  =path-row:sur
-    ?:  =(type.path-row %dm)
-      ?:  (test-bedrock-path-existence:db-scry path.path-row bowl)
-        %.n
-      %.y
-    :: not a %dm
     =/  peers=(list peer-row:sur)  (~(got by peers-table.state) path.path-row)
+    ?:  =(type.path-row %dm)
+      =/  first-peer=peer-row:sur  (snag 0 (sort peers |=([a=peer-row:sur b=peer-row:sur] (gth patp.a patp.b))))
+      :: if we're the "first-peer" then we'll be the bedrock host of %dm
+      =(patp.first-peer our.bowl)
+    :: not a %dm
     =/  host=ship  patp:(snag 0 (skim peers |=(p=peer-row:sur =(role.p %host))))
     =(our.bowl host)
 
@@ -609,7 +609,7 @@
     |=  =msg-part:sur
     ^-  card
     =/  chat-id=[=ship t=@da]  id:(scry-first-bedrock-chat:db-scry path.msg-part bowl)
-    ~&  >  chat-id
+    ~&  >  "chat-id {<chat-id>} msg-id {<msg-id.msg-part>}"
     =/  msg  [
       chat-id
       ?~(reply-to.msg-part ~ (some [-.u.reply-to.msg-part (swap-id-parts q.u.reply-to.msg-part)]))
@@ -626,6 +626,7 @@
       !>([%create [sender.msg-id.msg-part created-at.msg-part] path.msg-part message-type:common [%message msg] ~])
     ]
 
+  ~&  >  "made {<(lent cards)>} %create %message cards"
   [cards state]
 ::
 ::  mini helper lib
