@@ -3,7 +3,7 @@
 ::  Chat message lib within Realm. Mostly handles [de]serialization
 ::    to/from json from types stored in courier sur.
 ::
-/-  *versioned-state, sur=chat-db
+/-  *versioned-state, sur=chat-db, common
 /+  db-scry=bedrock-scries
 |%
 ::
@@ -564,7 +564,7 @@
       peers-get-backlog.path-row
       max-expires-at-duration.path-row
     ]
-    [%pass /bedrockpoke %agent [our.bowl %bedrock] %poke %db-action !>([%create [our.bowl created-at.path-row] path.path-row %chat 0 [%chat chat] ~])]
+    [%pass /bedrockpoke %agent [our.bowl %bedrock] %poke %db-action !>([%create [our.bowl created-at.path-row] path.path-row chat-type:common 0 [%chat chat] ~])]
 
   =/  cards=(list card)
    %+  snoc
@@ -595,7 +595,7 @@
   ?:  %+  levy
         messages-to-dump
       |=  =msg-part:sur
-      (test-bedrock-row-existence:db-scry path.msg-part %message [sender.msg-id.msg-part timestamp.msg-id.msg-part] bowl)
+      (test-bedrock-row-existence:db-scry path.msg-part message-type:common [sender.msg-id.msg-part timestamp.msg-id.msg-part] bowl)
     ~&  >>>  "already dumped to bedrock"
     `state  :: since the path already exists in bedrock, assume we have already dumped
 
@@ -612,7 +612,15 @@
       expires-at.msg-part
       (turn (get-full-message messages-table.state msg-id.msg-part) |=(m=msg-part:sur [content.m metadata.m]))
     ]
-    [%pass /dbpoke %agent [our.bowl %bedrock] %poke %db-action !>([%create [sender.msg-id.msg-part created-at.msg-part] path.msg-part %message 0 [%message msg] ~])]
+    [
+      %pass
+      /dbpoke
+      %agent
+      [our.bowl %bedrock]
+      %poke
+      %db-action
+      !>([%create [sender.msg-id.msg-part created-at.msg-part] path.msg-part message-type:common 0 [%message msg] ~])
+    ]
 
   [cards state]
 ::

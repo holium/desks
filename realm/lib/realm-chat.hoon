@@ -3,7 +3,7 @@
 ::  Chat message lib within Realm. Mostly handles [de]serialization
 ::    to/from json from types stored in realm-chat sur.
 ::
-/-  *realm-chat, db=chat-db, fr=friends, bedrock=db
+/-  *realm-chat, db=chat-db, fr=friends, bedrock=db, common
 /+  chat-db, db-scry=bedrock-scries
 |%
 ::
@@ -111,17 +111,14 @@
 ++  into-edit-message-poke
   |=  [p=peer-row:db act=edit-message-action:db]
   [%pass /dbpoke %agent [patp.p %chat-db] %poke %chat-db-action !>([%edit act])]
-  :: [%pass (weld /dbpoke path.p) %agent [patp.p %chat-db] %poke %chat-db-action !>([%edit act])]
 ::
 ++  into-delete-backlog-poke
   |=  [p=peer-row:db =path now=time]
   [%pass /dbpoke %agent [patp.p %chat-db] %poke %chat-db-action !>([%delete-backlog path now])]
-  :: [%pass (weld /dbpoke path.p) %agent [patp.p %chat-db] %poke %chat-db-action !>([%delete-backlog path now])]
 ::
 ++  into-delete-message-poke
   |=  [p=peer-row:db =msg-id:db]
   [%pass /dbpoke %agent [patp.p %chat-db] %poke %chat-db-action !>([%delete msg-id])]
-  :: [%pass (weld /dbpoke path.p) %agent [patp.p %chat-db] %poke %chat-db-action !>([%delete msg-id])]
 ::
 ++  into-all-peers-kick-pokes
   |=  [kickee=ship peers=(list peer-row:db)]
@@ -134,13 +131,11 @@
   |=  [target=ship kickee=ship =path]
   ^-  card
   [%pass /dbpoke %agent [target %chat-db] %poke %chat-db-action !>([%kick-peer path kickee])]
-  :: [%pass (weld /dbpoke path) %agent [target %chat-db] %poke %chat-db-action !>([%kick-peer path kickee])]
 ::
 ++  create-path-db-poke
   |=  [=ship row=path-row:db peers=ship-roles:db]
   ^-  card
   [%pass /dbpoke %agent [ship %chat-db] %poke %chat-db-action !>([%create-path row peers])]
-  :: [%pass (weld /dbpoke path.row) %agent [ship %chat-db] %poke %chat-db-action !>([%create-path row peers])]
 ::
 ++  create-path-bedrock-poke
   |=  [=ship row=path-row:db peers=ship-roles:db]
@@ -158,7 +153,7 @@
     peers-get-backlog.row
     max-expires-at-duration.row
   ]
-  [%pass /dbpoke %agent [ship %bedrock] %poke %db-action !>([%create [ship *@da] path.row %chat 0 [%chat chat] ~])]
+  [%pass /dbpoke %agent [ship %bedrock] %poke %db-action !>([%create [ship *@da] path.row chat-type:common [%chat chat] ~])]
 ::
 ++  edit-chat-bedrock-poke
   |=  [host=ship act=[=path metadata=(map cord cord) peers-get-backlog=? invites=@tas max-expires-at-duration=@dr] =bowl:gall]
@@ -181,7 +176,7 @@
       [host %bedrock]
       %poke
       %db-action
-      !>([%edit id.bedrock-chat path.act %chat v.bedrock-chat [%chat chat] ~])
+      !>([%edit id.bedrock-chat path.act chat-type:common [%chat chat] ~])
     ]
   ==
 ::
@@ -197,7 +192,7 @@
     exp-at
     (turn fragments.act |=(f=minimal-fragment:db [content.f metadata.f]))
   ]
-  [%pass /dbpoke %agent [ship %bedrock] %poke %db-action !>([%create [ship ts] path.act %message 0 [%message msg] ~])]
+  [%pass /dbpoke %agent [ship %bedrock] %poke %db-action !>([%create [ship ts] path.act message-type:common [%message msg] ~])]
 ::
 ++  edit-bedrock-message-poke
   |=  [host=ship act=edit-message-action:db =bowl:gall]
@@ -218,7 +213,7 @@
       [host %bedrock]
       %poke
       %db-action
-      !>([%edit (swap-id-parts msg-id.act) path.act %message 0 [%message msg] ~])
+      !>([%edit (swap-id-parts msg-id.act) path.act message-type:common [%message msg] ~])
     ]
   ==
 ::
@@ -231,7 +226,7 @@
     [host %bedrock]
     %poke
     %db-action
-    !>([%remove %message path.act (swap-id-parts msg-id.act)])
+    !>([%remove message-type:common path.act (swap-id-parts msg-id.act)])
   ]
 ::
 ++  add-bedrock-peer-poke
@@ -242,7 +237,7 @@
 ++  remove-before-bedrock-poke
   |=  [host=ship =path t=@da]
   ^-  card
-  [%pass /dbpoke %agent [host %bedrock] %poke %db-action !>([%remove-before %message path t])]
+  [%pass /dbpoke %agent [host %bedrock] %poke %db-action !>([%remove-before message-type:common path t])]
 ::
 ++  swap-id-parts
   |=  =msg-id:db

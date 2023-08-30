@@ -167,7 +167,7 @@
     current-bucket=@t
     region=@t
   ==
-++  creds-type  [%creds (sham -:!>(*creds))]
+++  creds-type  [name=%creds hash=(sham -:!>(*creds))]
 
 :: chat-db stuff
 +$  chat
@@ -178,12 +178,14 @@
       peers-get-backlog=?
       max-expires-at-duration=@dr  :: optional chat-wide enforced expires-at on messages. 0 or *@dr means "not set"
   ==
+++  chat-type  `type`[name=%chat hash=(sham -:!>(*chat))]
 +$  message
   $:  chat-id=id
       reply-to=u-path-id
       expires-at=@da  :: *@da is treated as "unset"
       content=(list msg-part)
   ==
+++  message-type  `type`[name=%message hash=(sham -:!>(*message))]
 +$  msg-part  [=formatted-text metadata=(map cord cord)]
 +$  formatted-text
   $%  [%custom name=cord value=cord] :: general data type

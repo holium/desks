@@ -1430,10 +1430,10 @@
     ==
 ::
 ++  remove-before :: similar to TRUNCATE, removes all rows of a given type and path up to and including a certain timestamp
-::bedrock &db-action [%remove-before %foo /example ~2023.5.22..19.22.29..d0f7]
-  |=  [[=type:common =path t=@da] state=state-0 =bowl:gall]
+::bedrock &db-action [%remove-before [%foo *@uvH] /example ~2023.5.22..19.22.29..d0f7]
+  |=  [[=type:common =path t=@da] state=state-1 =bowl:gall]
   =/  log1  (maybe-log hide-logs.state "%remove-before")
-  ^-  (quip card state-0)
+  ^-  (quip card state-1)
 
   :: forward the request if we aren't the host
   =/  path-row=path-row   (~(got by paths.state) path)
@@ -1456,7 +1456,7 @@
         $(index +(index))
       %.n
   ?.  all-have-permission
-    =/  log1  (maybe-log hide-logs.state "{(scow %p src.bowl)} tried to delete a %{(scow %tas type)} row where they didn't have permissions")
+    =/  log1  (maybe-log hide-logs.state "{(scow %p src.bowl)} tried to delete a %{(scow %tas name.type)} row where they didn't have permissions")
     `state
 
   :: update path
@@ -1654,7 +1654,7 @@
     ::
     ++  remove-before
       %-  ot
-      :~  [%type (se %tas)]
+      :~  [%type de-type]
           [%path pa]
           [%t di]
       ==

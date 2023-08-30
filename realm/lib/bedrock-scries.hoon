@@ -1,4 +1,4 @@
-/-  bedrock=db
+/-  bedrock=db, common
 |%
 
 ++  test-bedrock-path-existence
@@ -16,7 +16,7 @@
   ==
 ::
 ++  test-bedrock-row-existence
-  |=  [=path type=@tas id=[s=ship t=@da] =bowl:gall]
+  |=  [=path =type:common id=[s=ship t=@da] =bowl:gall]
   ^-  ?
   .=  %.y
   .^
@@ -24,7 +24,7 @@
     %gx
     %+  weld
       %+  weld
-        /(scot %p our.bowl)/bedrock/(scot %da now.bowl)/loobean/row/(scot %t type)/(scot %p s.id)/(scot %da t.id)
+        /(scot %p our.bowl)/bedrock/(scot %da now.bowl)/loobean/row/(scot %t name.type)/(scot %uv hash.type)/(scot %p s.id)/(scot %da t.id)
       path
     /noun
   ==
@@ -65,7 +65,7 @@
       %gx
       %+  weld
         %+  weld
-          /(scot %p our.bowl)/bedrock/(scot %da now.bowl)/db/table-by-path/chat
+          /(scot %p our.bowl)/bedrock/(scot %da now.bowl)/db/table-by-path/chat/(scot %uv hash:chat-type:common)
         path
       /noun
     ==
@@ -82,7 +82,7 @@
       %+  weld
         %+  weld
           /(scot %p our.bowl)/bedrock/(scot %da now.bowl)
-        /row/message/(scot %p ship.id)/(scot %da t.id)
+        /row/message/(scot %uv hash:message-type:common)/(scot %p ship.id)/(scot %da t.id)
       /noun
     ==
   row.rs

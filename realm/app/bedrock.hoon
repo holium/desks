@@ -1,7 +1,5 @@
 ::  app/bedrock.hoon
 ::  - all data is scoped by /path, with a corresponding peers list
-::  - ship-to-ship replication of data uses one-at-a-time subscriptions
-::    described here: https://developers.urbit.org/reference/arvo/concepts/subscriptions#one-at-a-time
 ::  - ship-to-frontend syncing of data uses chat-db model of /db
 ::    subscribe wire and /x/db/start-ms/[unix ms].json
 ::  - %db provides a data layer only. business logic and permissioning
@@ -14,13 +12,8 @@
 ::    ex: :db &db-action [%create-path /example %host ~ ~ ~ ~[[~zod %host] [~bus %member]]]
 ::  - create a data-row of a custom or pre-defined type
 ::    you are required to provide a schema when you first create a row of a new custom-type
-::    but if the schema is already there for that type/version combo,
+::    but if the schema is already there for that type,
 ::    you can just pass ~ in that spot
-::    schemas are versionable
-::    ex: :db &db-action [%create /example %foo 0 [%general ~[1 'a']] ~[['num' 'ud'] ['str' 't']]]
-::        :db &db-action [%create /example %vote 0 [%vote [%.y our %foo [~zod now] /example]] ~]
-::        :db &db-action [%create /example %foo 1 [%general ~[1 'd' (jam /hello/goodbye)]] ~[['num' 'ud'] ['str' 't'] ['mypath' 'path']]]
-::        :~zod/db &db-action [%create /example %vote 0 [%vote %.y our %foo [~zod now] /example] ~]
 
 /-  *db, sstore=spaces-store, vstore=visas
 /+  dbug, db
@@ -218,32 +211,35 @@
         ``db-table+!>([typ (~(got by tables.state) typ) schemas.state])
     ::
     :: all rows from a given table and path (as a pathed-table in noun form)
-    ::  /db/table-by-path/chat/<path>.json
-      [%x %db %table-by-path @ *]
+    ::  /db/table-by-path/chat/<hash>/<path>.json
+      [%x %db %table-by-path @ @ *]
         =/  tblname=@tas  i.t.t.t.path
-        =/  dbpath        t.t.t.t.path
+        =/  typ=type:common   [tblname (slav %uv i.t.t.t.t.path)]
+        =/  dbpath        t.t.t.t.t.path
         =/  tbl     (get-tbl:db tblname dbpath state)
         ?~  tbl
           ``db-table+!>([tblname *pathed-table schemas.state])
         ``db-table+!>([tblname (~(put by *pathed-table) dbpath u.tbl) schemas.state])
     ::
     :: a specific row from a given table, by id
-    ::  /row/message/~zod/~2000.1.1.json
-      [%x %row @ @ @ ~]
+    ::  /row/message/0v12jdlk.asdf.12e.s/~zod/~2000.1.1.json
+      [%x %row @ @ @ @ ~]
         =/  tblname=@tas  i.t.t.path
-        =/  ship=@p       `@p`(slav %p i.t.t.t.path)
-        =/  t=@da         `@da`(slav %da i.t.t.t.t.path)
-        =/  therow=row    (~(got by (ptbl-to-tbl:db (~(got by tables.state) tblname))) [ship t])
+        =/  typ=type:common   [tblname (slav %uv i.t.t.t.path)]
+        =/  ship=@p       `@p`(slav %p i.t.t.t.t.path)
+        =/  t=@da         `@da`(slav %da i.t.t.t.t.t.path)
+        =/  therow=row    (~(got by (ptbl-to-tbl:db (~(got by tables.state) typ))) [ship t])
         ``db-row+!>([therow schemas.state])
     ::
     :: test existence of specific row from a given table, by id
     ::  /loobean/row/message/~zod/~2000.1.1/<path>.json
-      [%x %loobean %row @ @ @ *]
-        =/  tblname=@tas  i.t.t.t.path
-        =/  ship=@p       `@p`(slav %p i.t.t.t.t.path)
-        =/  t=@da         `@da`(slav %da i.t.t.t.t.t.path)
-        =/  dbpath                       t.t.t.t.t.t.path
-        =/  therow=(unit row)    (get-db:db tblname dbpath [ship t] state)
+      [%x %loobean %row @ @ @ @ *]
+        =/  tblname=@tas      i.t.t.t.path
+        =/  typ=type:common   [tblname (slav %uv i.t.t.t.t.path)]
+        =/  ship=@p     `@p`(slav %p i.t.t.t.t.t.path)
+        =/  t=@da       `@da`(slav %da i.t.t.t.t.t.t.path)
+        =/  dbpath                       t.t.t.t.t.t.t.path
+        =/  therow=(unit row)    (get-db:db typ dbpath [ship t] state)
         ?~  therow
           ``ud+!>(1)  :: false
         ``ud+!>(0)    :: true, because the pathrow exsits
