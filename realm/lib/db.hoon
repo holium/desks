@@ -1571,6 +1571,27 @@
       $(index +(index), cs [(weld -.cs -.owr) +.owr])
     $(index +(index))
 ::
+++  refresh-chat-paths
+::  macro for chat-db to force bedrock to refresh all the chat-paths
+  |=  [state=state-1 =bowl:gall]
+  ^-  (quip card state-1)
+  ~&  >>>  %refresh-chat-paths
+  =/  paths=(list path-row)
+    %+  skim
+      ~(val by paths.state)
+    |=  p=path-row
+    ?+  path.p  %.n
+      [%spaces @ @ %chats @ ~]  %.y
+      [%realm-chat @ ~]         %.y
+    ==
+  =/  cards=(list card)
+    %+  turn
+      paths
+    |=  p=path-row
+    ^-  card
+    [%pass (weld /next/~2000.1.1 path.p) %agent [host.p dap.bowl] %watch (weld /next/~2000.1.1 path.p)]
+  [cards state]
+::
 ::
 ::  JSON
 ::

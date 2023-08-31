@@ -178,6 +178,7 @@
       [%handle-changes =db-changes =path]
 
       [%create-initial-spaces-paths ~]
+      [%refresh-chat-paths ~]
 
       [%toggle-hide-logs toggle=?]
   ==

@@ -604,7 +604,8 @@
 
   :: second, push everything into bedrock
   =/  cards=(list card)
-    %+  weld
+    :-  [%pass /dbpoke %agent [our.bowl %bedrock] %poke %db-action !>([%refresh-chat-paths ~])]
+::    %+  weld
     %+  turn 
       messages-to-dump
     |=  =msg-part:sur
@@ -626,18 +627,18 @@
       %db-action
       !>([%create [sender.msg-id.msg-part created-at.msg-part] path.msg-part message-type:common [%message msg] ~])
     ]
-    ^-  (list card)
-    %-  zing
-    %+  turn
-      our-paths
-    |=  pat=path-row:sur
-    ^-  (list card)
-    =/  peers=(list peer-row:sur)  (~(got by peers-table.state) path.pat)
-    %+  turn
-      peers
-    |=  p=peer-row:sur
-    ^-  card
-    [%pass /dbpoke %agent [patp.p %bedrock] %poke %db-action !>([%refresh-path `@da`+(now.bowl) path.p])]
+::    ^-  (list card)
+::    %-  zing
+::    %+  turn
+::      our-paths
+::    |=  pat=path-row:sur
+::    ^-  (list card)
+::    =/  peers=(list peer-row:sur)  (~(got by peers-table.state) path.pat)
+::    %+  turn
+::      peers
+::    |=  p=peer-row:sur
+::    ^-  card
+::    [%pass /dbpoke %agent [patp.p %bedrock] %poke %db-action !>([%refresh-path `@da`+(now.bowl) path.p])]
 
   ~&  >  "made {<(lent cards)>} %create %message cards + %refresh-path cards"
   [cards state]

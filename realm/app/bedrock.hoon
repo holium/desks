@@ -129,6 +129,8 @@
 
       %create-initial-spaces-paths
         (create-initial-spaces-paths:db state bowl)
+      %refresh-chat-paths
+        (refresh-chat-paths:db state bowl)
       %toggle-hide-logs
         (toggle-hide-logs:db +.act state bowl)
     ==
