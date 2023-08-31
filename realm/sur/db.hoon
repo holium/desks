@@ -77,7 +77,7 @@
       space=(unit [=path =role:membership])  :: if the path-row is created from a space, record the info
       created-at=@da
       updated-at=@da
-      received-at=@da
+      received-at=@da   :: also used by keep-alive system to mark what time the host responded to our keep-alive poke, so we don't hammer dead hosts
   ==
 +$  replication   ?(%host %gossip %shared-host)  :: for now only %host is supported
 +$  table-access  (map type:common access-rules)
