@@ -166,6 +166,55 @@
   ==
 ++  creds-type  [%creds (sham -:!>(*creds))]
 
++$  passport
+  $:  =contact
+      bio=(unit @t)
+      user-status=?(%invisible %online)
+      discoverable=?
+      nfts=(list linked-nft)
+      addresses=(list linked-address)
+      default-address=@t
+      recommendations=(set [=id:common =path =type:common mtd=(map @t @t)])
+      chain=passport-chain:common
+      crypto=passport-crypto:common
+  ==
+::
++$  contact
+  $:  =ship 
+      =avatar
+      color=(unit @t) :: i.e. #FCFCFC
+      display-name=(unit @t)
+  ==
+::
++$  avatar
+  $%  [%image img=@t]
+      [%nft nft=@t]
+  ==
+::
++$  linked-nft
+  $:  chain-id=?(%eth-mainnet %eth-tesnet)
+      token-id=@t         :: i.e. 8739
+      contract-address=@t :: i.e. 0x789e...fee7
+      name=@t             :: i.e. "Pixelady #599"
+      image-url=@t
+      owned-by=@t         :: the wallet address that owns the NFT
+      token-standard=@t   :: i.e. ERC-721
+  ==
+::
++$  linked-address
+  $:  wallet=@t   :: "rainbow", "metamask", etc
+      address=@t
+      pubkey=@t
+      =crypto-signature
+  ==
+::
++$  crypto-signature
+  $:  data=@t   ::  the full data blob being signed
+      hash=@t   ::  a hash of the data (sha-256)
+      signature-of-hash=@t :: the private-key encryption of the hash
+      pubkey=@t :: the pubkey needed to decrypt the signature
+  ==
+::
 +$  passport-chain  (list passport-link)
 +$  passport-link
   $%  [%edge-add from-link-hash=@t to-link-hash=@t key=@t value=@t]
@@ -189,7 +238,7 @@
       entity-to-value=(map @p @ud)
       public-key-to-entity=(map @t @p)
   ==
-+$  passport
++$  passport-crypto
   $:  link-id=@t
       epoch-block=@ud
       data-block=@ud

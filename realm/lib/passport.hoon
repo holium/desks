@@ -12,7 +12,79 @@
   ~&  msg
   ~
 ::
+++  url-encode
+  |=  url=@t
+  ^-  @t
+  =/  trl=tape  (trip url)
+  =/  result=tape  ""
+  |-
+    ?:  =(0 (lent trl))
+      (crip result)
+    =/  curr=@t  (snag 0 trl)
+    =/  char=tape
+      ?:  =(curr ':')  "%3A"
+      ?:  =(curr '/')  "%2F"
+      ?:  =(curr '?')  "%3F"
+      ?:  =(curr '#')  "%23"
+      ?:  =(curr '[')  "%5B"
+      ?:  =(curr ']')  "%5D"
+      ?:  =(curr '@')  "%40"
+      ?:  =(curr '!')  "%21"
+      ?:  =(curr '$')  "%24"
+      ?:  =(curr '&')  "%26"
+      ?:  =(curr '\'')  "%27"
+      ?:  =(curr '(')  "%29"
+      ?:  =(curr ')')  "%2A"
+      ?:  =(curr '*')  "%2B"
+      ?:  =(curr '+')  "%2C"
+      ?:  =(curr ',')  "%2D"
+      ?:  =(curr ';')  "%3B"
+      ?:  =(curr '=')  "%3D"
+      ?:  =(curr '%')  "%25"
+      ?:  =(curr ' ')  "%20"
+      (trip curr)
+    %=  $
+      trl       +.trl
+      result    (weld result char)
+    ==
+::
 :: pokes
+++  receive-contacts
+::passport &passport-action [%receive-contacts (malt [~zod [~zod [%image ''] ~ [~ 'ZOOOD']]]~)]
+  |=  [m=peers state=state-0 =bowl:gall]
+  ^-  (quip card state-0)
+  =/  log1  (maybe-log hide-logs.state "%receive-contacts: {<m>}")
+
+  :: loop through the ships they sent us
+  =/  ships=(list ship)  ~(key by m)
+  |-
+    ?:  =(0 (lent ships))
+      [~ state]
+    =/  shp=ship  (snag 0 ships)
+    =/  con=contact:common  (~(got by m) shp)
+    =.  avatar.con
+      ?-  -.avatar.con
+          %image
+        [%image (url-encode img.avatar.con)]
+          %nft
+        [%nft (url-encode nft.avatar.con)]
+      ==
+    %=  $
+      :: add to the peers map
+      peers.state   (~(put by peers.state) ship.con con)
+      ships         +.ships
+    ==
+::
+++  request-contacts
+::passport &passport-action [%request-contacts ~]
+  |=  [state=state-0 =bowl:gall]
+  ^-  (quip card state-0)
+  =/  log1  (maybe-log hide-logs.state "%request-contacts from {<src.bowl>}")
+
+  =/  cards=(list card)
+    [%pass /contacts %agent [src.bowl dap.bowl] %poke %passport-action !>([%receive-contacts peers.state])]~
+  [cards state]
+::
 ++  add-link
 ::passport &passport-action [%add-link passport-link]
   |=  [[=req-id:db ln=passport-link:common] state=state-0 =bowl:gall]

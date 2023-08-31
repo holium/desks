@@ -31,6 +31,10 @@
     ?-  -.act  :: each handler function here should return [(list card) state]
       %add-link
         (add-link:passport +.act state bowl)
+      %receive-contacts
+        (receive-contacts:passport +.act state bowl)
+      %request-contacts
+        (request-contacts:passport state bowl)
       %get     :: for getting someone else's passport via a threadpoke
         (get:passport +.act state bowl)
       %toggle-hide-logs
