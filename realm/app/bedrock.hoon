@@ -243,6 +243,21 @@
             ::~&  >>>  p.sign
             `this
         ==
+      [%kept-alive *]
+        ?+    -.sign  `this
+          %poke-ack
+            :: update received-at on the path row so we don't hammer
+            :: dead hosts
+            =/  dbpath=path     t.wire
+            =/  pr=path-row     (~(got by paths.state) dbpath)
+            =.  received-at.pr  now.bowl
+            =.  paths.state     (~(put by paths.state) dbpath pr)
+            ?~  p.sign
+              `this(state state)
+            ~&  >>>  "%db: {<(spat wire)>} kept-alive failed"
+            ~&  >>>  p.sign
+            `this
+        ==
       [%selfpoke ~]
         ?+    -.sign  `this
           %poke-ack
@@ -540,13 +555,25 @@
           this
         ]
       [%keep-alive-timer ~]
-        =/  paths-we-dont-host  (skim ~(val by paths.state) |=(p=path-row ?!(=(our.bowl host.p))))
+        :: gets all the paths we don't host AND whose host is 'alive'
+        =/  paths-we-dont-host
+          %+  skim
+            ~(val by paths.state)
+          |=  p=path-row
+          ?&  ?!(=(our.bowl host.p))
+            :: host acked a keep-alive poke, or sent an update within
+            :: 1.5 timer windows, proving it's still alive and we should
+            :: send %keep-alive to them
+              (gth received-at.p (sub now.bowl ~h3))
+          ==
+
         =/  pokes=(list card)
           %+  turn
             paths-we-dont-host
           |=  p=path-row
           ^-  card
-          [%pass /dbpoke %agent [host.p dap.bowl] %poke %db-action !>([%keep-alive path.p])]
+          [%pass (weld /kept-alive path.p) %agent [host.p dap.bowl] %poke %db-action !>([%keep-alive path.p])]
+
         [
           :: we remove the old timer (if any) and add the new one, so that
           :: we don't get an increasing number of timers associated with
