@@ -261,7 +261,6 @@
       ::TODO handle the schema has changed situation
       !!
     %del-row
-      ~&  >>>  "processing %del-row t.ch = {<t.ch>} now.bowl = {<now.bowl>} id = {<id.ch>}  path = {<path.ch>}"
       =.  updated-at.path-row   t.ch
       =.  paths.state           (~(put by paths.state) path.ch path-row)
       =/  pt              (~(got by tables.state) type.ch)
@@ -576,7 +575,7 @@
 ::bedrock &db-action [%create-path /target %host ~ ~ ~ ~[[~bus %host] [~fed %member]]]
   |=  [=input-path-row state=state-1 =bowl:gall]
   ^-  (quip card state-1)
-  ~&  >  "%create-path {<path.input-path-row>} {<peers.input-path-row>}"
+  =/  log1  (maybe-log hide-logs.state "%create-path {<path.input-path-row>} {<peers.input-path-row>}")
   :: ensure the path doesn't already exist
   =/  pre-existing    (~(get by paths.state) path.input-path-row)
   ?>  =(~ pre-existing)
@@ -1235,7 +1234,6 @@
   :: emit the change to subscribers
   =/  thechange=db-changes    [%add-row row schema.input-row]~
   =/  peers=(list peer)       (~(got by peers.state) path.row)
-  ~&  >>>  "living-peers {<(living-peers peers now.bowl our.bowl)>}"
   =/  cards=(list card)
     :: give vent response
     :-  [%give %fact ~[vent-path] db-vent+!>([%row row schema.input-row])]
@@ -1575,7 +1573,7 @@
 ::  macro for chat-db to force bedrock to refresh all the chat-paths
   |=  [state=state-1 =bowl:gall]
   ^-  (quip card state-1)
-  ~&  >>>  %refresh-chat-paths
+  =/  log1  (maybe-log hide-logs.state "%refresh-chat-paths")
   =/  paths=(list path-row)
     %+  skim
       ~(val by paths.state)

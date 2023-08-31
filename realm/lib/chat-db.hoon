@@ -518,7 +518,6 @@
 ::  :chat-db &chat-db-action [%dump-to-bedrock ~]
   |=  [state=state-2 =bowl:gall]
   ^-  (quip card state-2)
-  ~&  %dump-to-bedrock
   =/  our-paths=(list path-row:sur)  :: the list of paths we need to host in bedrock
     %+  skim
       ~(val by paths-table.state)
@@ -580,7 +579,6 @@
 ::  :chat-db &db-action [%dump-to-bedrock-messages ~]
   |=  [our-paths=(list path-row:sur) state=state-2 =bowl:gall]
   ^-  (quip card state-2)
-  ~&  %dump-to-bedrock-messages
   =/  messages-to-dump=(list msg-part:sur)  :: the list of initial msg-parts we need to host in bedrock
     %+  turn
       %+  skim
@@ -591,13 +589,11 @@
       (lien our-paths |=(p=path-row:sur =(path.p path.v)))
     |=([k=uniq-id:sur v=msg-part:sur] v)
 
-  ~&  >  messages-to-dump
   :: first, test bedrock to see if we have already dumped stuff there
   ?:  %+  levy
         messages-to-dump
       |=  =msg-part:sur
       =/  ex=?  (test-bedrock-row-existence:db-scry path.msg-part message-type:common (swap-id-parts msg-id.msg-part) bowl)
-      ~&  ex
       ex
     ~&  >>>  "already dumped to bedrock"
     `state  :: since the path already exists in bedrock, assume we have already dumped
@@ -605,13 +601,11 @@
   :: second, push everything into bedrock
   =/  cards=(list card)
     :-  [%pass /dbpoke %agent [our.bowl %bedrock] %poke %db-action !>([%refresh-chat-paths ~])]
-::    %+  weld
     %+  turn 
       messages-to-dump
     |=  =msg-part:sur
     ^-  card
     =/  chat-id=[=ship t=@da]  id:(scry-first-bedrock-chat:db-scry path.msg-part bowl)
-    ~&  >  "chat-id {<chat-id>} msg-id {<msg-id.msg-part>}"
     =/  msg  [
       chat-id
       ?~(reply-to.msg-part ~ (some [-.u.reply-to.msg-part (swap-id-parts q.u.reply-to.msg-part)]))
@@ -627,20 +621,7 @@
       %db-action
       !>([%create [sender.msg-id.msg-part created-at.msg-part] path.msg-part message-type:common [%message msg] ~])
     ]
-::    ^-  (list card)
-::    %-  zing
-::    %+  turn
-::      our-paths
-::    |=  pat=path-row:sur
-::    ^-  (list card)
-::    =/  peers=(list peer-row:sur)  (~(got by peers-table.state) path.pat)
-::    %+  turn
-::      peers
-::    |=  p=peer-row:sur
-::    ^-  card
-::    [%pass /dbpoke %agent [patp.p %bedrock] %poke %db-action !>([%refresh-path `@da`+(now.bowl) path.p])]
 
-  ~&  >  "made {<(lent cards)>} %create %message cards + %refresh-path cards"
   [cards state]
 ::
 ::  mini helper lib

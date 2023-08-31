@@ -43,14 +43,6 @@
     |=  old-state=vase
     ^-  (quip card _this)
     =/  old  !<(versioned-state old-state)
-    ~&  vote-type:common
-    ~&  rating-type:common
-    ~&  comment-type:common
-    ~&  react-type:common
-    ~&  relay-type:common
-    ~&  creds-type:common
-    ~&  chat-type:common
-    ~&  message-type:common
     :: do a quick check to make sure we are subbed to /updates in %spaces
     =/  cards
       :-  [%pass /timer %arvo %b %rest next-refresh-time:core]
@@ -168,7 +160,7 @@
           =/  thepathrow    (~(got by paths.state) t.t.path)
           :: if the @da they passed was behind, %give them the current version, and %kick them
           ?:  (gth updated-at.thepathrow t)
-            ~&  >>>  "{<src.bowl>} tried to sub on old @da {<t>}, %kicking them"
+            ~&  >>>  "{<src.bowl>} tried to sub on old @da {<t>}, %kicking them from {<t.t.path>}"
             =/  thepeers    (~(got by peers.state) t.t.path)
             =/  tbls        (tables-by-path:db tables.state t.t.path)
             =/  dels=(list [@da db-del-change])

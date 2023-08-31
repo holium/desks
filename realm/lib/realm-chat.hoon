@@ -348,7 +348,6 @@
       !>([%send-message chat-path ~[[[%status (crip "{(scow %p our.bowl)} created the chat")] ~ ~]] *@dr])
     !>([%send-message chat-path ~[[[%status (crip "{(scow %p our.bowl)} added {(scow %ud (dec (lent all-ships)))} peers")] ~ ~]] *@dr])
   =.  cards  (snoc cards [%pass /selfpoke %agent [our.bowl %realm-chat] %poke %chat-action send-status-message])
-  ~&  cards
   [cards state]
 ::
 ++  edit-chat
@@ -485,8 +484,6 @@
   ^-  (quip card state-1)
   ?>  =(src.bowl our.bowl)
   ?>  (gth (lent fragments.act) 0)  :: no sending empty messages
-  ~&  %t-act
-  ~&  t.act
 
   :: read the peers for the path
   =/  pathpeers  (scry-peers path.act bowl)
