@@ -65,6 +65,7 @@
       [%creds creds:common]
       [%chat chat:common]
       [%message message:common]
+      [%passport passport:common]
   ==
 +$  row-and-schema  [=row =schema] :: the row and the schema for the row
 

@@ -1,6 +1,13 @@
 /-  bedrock=db, common
 |%
-
+++  our-passport
+  |=  =bowl:gall
+  ^-  passport:common
+  =/  r=row:bedrock  (first-common passport-type:common /private bowl)
+  ?+  -.data.r  !!
+    %passport  +.data.r
+  ==
+::
 ++  test-bedrock-path-existence
   |=  [=path =bowl:gall]
   ^-  ?
@@ -59,17 +66,22 @@
 ++  scry-first-bedrock-chat
   |=  [=path =bowl:gall]
   ^-  row:bedrock
-  =/  all-chats=[=type:common pt=pathed-table:bedrock =schemas:bedrock]
+  (first-common chat-type:common path bowl)
+::
+++  first-common
+  |=  [=type:common =path =bowl:gall]
+  ^-  row:bedrock
+  =/  all-rows=[=type:common pt=pathed-table:bedrock =schemas:bedrock]
     .^
       [=type:common pt=pathed-table:bedrock =schemas:bedrock]
       %gx
       %+  weld
         %+  weld
-          /(scot %p our.bowl)/bedrock/(scot %da now.bowl)/db/table-by-path/chat/(scot %uv hash:chat-type:common)
+          /(scot %p our.bowl)/bedrock/(scot %da now.bowl)/db/table-by-path/(scot %tas name.type)/(scot %uv hash.type)
         path
       /noun
     ==
-  =/  rows=(list row:bedrock)  ~(val by (~(got by pt.all-chats) path))
+  =/  rows=(list row:bedrock)  ~(val by (~(got by pt.all-rows) path))
   (snag 0 rows)
 ::
 ++  scry-bedrock-message

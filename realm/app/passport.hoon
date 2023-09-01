@@ -12,7 +12,7 @@
   ++  on-init
     ^-  (quip card _this)
     =/  default-state=state-0   *state-0
-    =/  default-cards=(list card )  ~
+    =/  default-cards=(list card)  ~
     [default-cards this(state default-state)]
   ++  on-save   !>(state)
   ++  on-load
@@ -73,7 +73,7 @@
     ::
       [%x %pending-friends ~]
         =/  contacts=(list contact:common)
-        %+  turm
+        %+  turn
           %+  skim
             ~(val by friends.state)
           |=  =fren

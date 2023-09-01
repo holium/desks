@@ -28,7 +28,7 @@
   $%
       [%receive-contacts m=(map ship contact:common)]  :: other ship is dumping us its peers list
       [%request-contacts ~] :: other ship send this to us to ask us to give them our whole peers list
-      [%get =ship]  :: when a client wants to threadpoke and get a full passport for a given ship
+      [%get =req-id]  :: when a client wants to threadpoke and get a full passport for a given ship
       [%add-link =req-id ln=passport-link:common]
       [%add-friend =req-id =ship mtd=(map @t @t)]     :: client to ship
       [%get-friend mtd=(map @t @t)]                   :: ship to ship
@@ -41,6 +41,7 @@
 ::
 +$  vent
   $%  [%link =passport-link:common]
+      [%passport =passport:common]
       [%ack ~]
   ==
 --

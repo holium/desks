@@ -11,6 +11,7 @@
       %creds
       %chat
       %message
+      %passport
       @tas
   ==
 +$  type      [name=type-prefix hash=@uvH]  :: hash is (sham schema) for %general, and incrementing @uv for common types
@@ -178,13 +179,14 @@
       nfts=(list linked-nft)
       addresses=(list linked-address)
       default-address=@t
-      recommendations=(set [=id:common =path =type:common mtd=(map @t @t)])
-      chain=passport-chain:common
-      crypto=passport-crypto:common
+      recommendations=(set [=id =path =type mtd=(map @t @t)])
+      chain=passport-chain
+      crypto=passport-crypto
   ==
+++  passport-type  `type`[name=%passport hash=0v0]
 ::
 +$  contact
-  $:  =ship 
+  $:  =ship
       =avatar
       color=(unit @t) :: i.e. #FCFCFC
       display-name=(unit @t)
@@ -237,7 +239,7 @@
   ==
 +$  pki-state
   $:  chain-owner-entities=(list @p)
-      entity-to-public-keys(map @p @t)
+      entity-to-public-keys=(map @p @t)
       public-key-to-nonce=(map @t @ud)
       entity-to-value=(map @p @ud)
       public-key-to-entity=(map @t @p)
@@ -253,7 +255,6 @@
       data-structs=[struct-names=(list @t) struct-types=@t]
       sig-chain-settings=[new-entity-balance=@ud epoch-length=@ud signing-key=@t]
   ==
---
 
 :: chat-db stuff
 +$  chat
