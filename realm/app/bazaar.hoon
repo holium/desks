@@ -115,7 +115,7 @@
         =/  path              [host space-path]
         ?>  (check-member:security:core path src.bowl)
         %-  (slog leaf+"{<dap.bowl>}: [on-watch]. {<src.bowl>} subscribing to {<(spat /(scot %p host)/(scot %tas space-path))>}..." ~)
-        =/  space-data        (filter-space-data:helpers:bazaar path)
+        =/  space-data        (filter-space-data:helpers:bazaar:core path)
         [%give %fact ~ bazaar-reaction+!>([%joined-bazaar path catalog.space-data stall.space-data])]~
       ::
     ==
@@ -506,9 +506,21 @@
         =/  paths               [/updates /bazaar/(scot %p ship.path)/(scot %tas space.path) ~]
         =/  stal                (~(get by stalls.state) path)
         ?~  stal                `state
+        :: remove any references to apps in the suite that no longer exist
+        =.  suite.u.stal
+          %-  malt
+          %+  skim  ~(tap by suite.u.stal)
+          |=  [idx=@ud =app-id:store]
+          (~(has by catalog.state) app-id)
+        :: remove any references to apps in the recommended apps that no longer exist
+        =.  recommended.u.stal
+          %-  malt
+          %+  skim  ~(tap by recommended.u.stal)
+          |=  [=app-id:store =member-set:store]
+          (~(has by catalog.state) app-id)
         =/  apps                (get-stall-apps:helpers path args)
         ?~  apps                `state
-        :_  state
+        :_  state(stalls (~(put by stalls.state) path u.stal))
         :~  [%give %fact paths bazaar-reaction+!>([%rebuild-stall path u.apps u.stal])]
         ==
       ::
@@ -894,6 +906,7 @@
     ::
     ++  on-rebuild-stall
       |=  [path=space-path:spaces-store =catalog:store =stall:store]
+      :: %-  (slog leaf+"{<dap.bowl>}: [on-rebuild-stall] => {<[path catalog stall]>}" ~)
       ::  only process if received from space host or admin
       ?.  (~(has by stalls.state) path)  `state
       =.  stalls.state    (~(put by stalls.state) path stall)
@@ -1087,6 +1100,14 @@
         =.  config.native-app           [size=[5 6] titlebar-border=%.y show-titlebar=%.n]
       =.  catalog.init                  (~(put by catalog.init) %os-settings [%native native-app])
       =.  grid-index.init               (set-grid-index:helpers:bazaar:core %os-settings grid-index.init)
+      =|  =native-app:store
+        =.  title.native-app            'Notes'
+        =.  info.native-app             'Realm\'s collaborative notes app.'
+        =.  color.native-app            '#F2CA00'
+        =.  icon.native-app             'AppIconNotes'
+        =.  config.native-app           [size=[0 0] titlebar-border=%.n show-titlebar=%.y]
+      =.  catalog.init                  (~(put by catalog.init) %os-notes [%native native-app])
+      =.  grid-index.init               (set-grid-index:helpers:bazaar:core %os-notes grid-index.init)
       =|  =native-app:store
         =.  title.native-app            'Lexicon'
         =.  color.native-app            '#EEDFC9'
@@ -1303,15 +1324,18 @@
     ::
     ++  filter-space-data
       |=  [path=space-path:spaces-store]
+      ^-  [catalog=catalog:store stall=stall:store]
       =/  stall=stall:store       (~(got by stalls.state) path)
       =/  suite-apps              ~(val by suite.stall)
       =/  recommended-apps        ~(tap in ~(key by recommended.stall))
       =/  catalog-apps            (weld suite-apps recommended-apps)
-      =/  catalog=(list [app-id:store =app:store])
-        %+  turn  catalog-apps
+      =/  catalog  %-  malt
+        %+  murn  catalog-apps
         |=  [=app-id:store]
-        [app-id (~(got by catalog.state) app-id)]
-      [catalog=(malt catalog) stall=stall]
+        =/  app  (~(get by catalog.state) app-id)
+        ?~  app  ~
+        (some [app-id u.app])
+      [catalog stall]
     ::
     ++  is-system-app
       |=  [=app-id:store]
