@@ -129,7 +129,7 @@
       `state
     %-  (slog leaf+"{<dap.bowl>}: creating chat for {<path.new-space>}" ~)
     =/  access-type=chat-access:store    [%role %member]
-    =/  cards-and-space       (create-space-chat:lib new-space access-type members now.bowl)
+    =/  cards-and-space       (create-space-chat:lib new-space access-type members now.bowl our.bowl)
     =/  cards=(list card)     -.cards-and-space
     =/  new-chat              +.cards-and-space
     =/  chats-map             `chats:store`~

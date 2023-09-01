@@ -63,6 +63,8 @@
       [%relay relay:common]
       [%react react:common]
       [%creds creds:common]
+      [%chat chat:common]
+      [%message message:common]
   ==
 +$  row-and-schema  [=row =schema] :: the row and the schema for the row
 
@@ -170,11 +172,13 @@
       [%edit =req-id =id:common =input-row] :: sends %upd-row to all subs
       [%remove =req-id =type:common =path =id:common]      :: %host deleting the row, sends %delete to all peers
       [%remove-many =req-id =path ids=(list [=id:common =type:common])]      :: delete many records at once
+      [%remove-before =type:common =path t=@da]    :: similar to TRUNCATE, up to and including `t` the timestamp
       [%relay =req-id =input-row]          :: like %create, but for creating a %relay (relay:common)
 
       [%handle-changes =db-changes =path]
 
       [%create-initial-spaces-paths ~]
+      [%refresh-chat-paths ~]
 
       [%toggle-hide-logs toggle=?]
   ==

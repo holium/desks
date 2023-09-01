@@ -261,7 +261,6 @@
       ::TODO handle the schema has changed situation
       !!
     %del-row
-      ~&  >>>  "processing %del-row t.ch = {<t.ch>} now.bowl = {<now.bowl>} id = {<id.ch>}  path = {<path.ch>}"
       =.  updated-at.path-row   t.ch
       =.  paths.state           (~(put by paths.state) path.ch path-row)
       =/  pt              (~(got by tables.state) type.ch)
@@ -576,17 +575,27 @@
 ::bedrock &db-action [%create-path /target %host ~ ~ ~ ~[[~bus %host] [~fed %member]]]
   |=  [=input-path-row state=state-1 =bowl:gall]
   ^-  (quip card state-1)
+  =/  log1  (maybe-log hide-logs.state "%create-path {<path.input-path-row>} {<peers.input-path-row>}")
   :: ensure the path doesn't already exist
   =/  pre-existing    (~(get by paths.state) path.input-path-row)
   ?>  =(~ pre-existing)
   :: ensure this came from our ship
   ?>  =(our.bowl src.bowl)
 
+  =/  sorted-peers=ship-roles
+    (sort peers.input-path-row |=([a=[s=@p =role] b=[s=@p =role]] (gth s.a s.b)))
+  =/  requested-hosts=ship-roles
+    (skim sorted-peers |=(p=[s=@p =role] =(role.p %host)))
+  ?>  (gth (lent requested-hosts) 0)  :: ensure there is at least one requested host
+  :: ensure our ship is in the peers list
+  =/  our-role  (snag 0 (skim sorted-peers |=(a=[s=@p =role] =(s.a our.bowl))))
+  =/  true-host=ship   s:(snag 0 requested-hosts)
+
   :: local state updates
   :: create the path-row
   =/  path-row=path-row  [
     path.input-path-row
-    our.bowl
+    true-host
     replication.input-path-row
     default-access.input-path-row
     table-access.input-path-row
@@ -603,19 +612,15 @@
     default-access.path-row
   =.  paths.state     (~(put by paths.state) path.path-row path-row)
   :: create the peers list
-  =/  peers :: ensure [our.bowl %host] is in the peers list
-    ?~  (find [[our.bowl %host]]~ peers.input-path-row)
-      [[our.bowl %host] peers.input-path-row]
-    peers.input-path-row
   =/  peerslist
     %+  turn
-      peers
+      sorted-peers
     |=  [s=@p =role]
     ^-  peer
     [
       path.path-row
       s
-      ?:(=(s our.bowl) %host role)  :: our is always the %host
+      role
       now.bowl
       now.bowl
       now.bowl
@@ -628,7 +633,7 @@
       (skip peerslist |=(p=peer =(ship.p our.bowl))) :: skip ourselves though, since that poke will just fail
     |=  =peer
     ^-  card
-    (get-path-card ship.peer path-row peers)
+    (get-path-card ship.peer path-row sorted-peers)
   :: emit the change to self-subscriptions (our clients)
   =/  thechange  db-changes+!>([[%add-path path-row] (turn peerslist |=(p=peer [%add-peer p]))])
   =/  subscription-facts=(list card)  :~
@@ -836,13 +841,20 @@
 ::bedrock &db-action [%add-peer /example ~fed %member]
   |=  [[=path =ship =role] state=state-1 =bowl:gall]
   ^-  (quip card state-1)
+  =/  log1  (maybe-log hide-logs.state "%add-peer: {<ship>} to {(spud path)} as {<role>}")
   :: ensure the path actually exists
   =/  path-row=path-row    (~(got by paths.state) path)
-  :: and that we are the %host of it
-  ?>  =(host.path-row our.bowl)
-  :: ensure this came from our ship
-  ?>  =(our.bowl src.bowl)
-  =/  log1  (maybe-log hide-logs.state "%add-peer: {<ship>} to {(spud path)} as {<role>}")
+  =/  is-allowed=?
+    ?+  path
+      :: and that we are the %host of it
+      ?&  =(host.path-row our.bowl)
+      :: ensure this came from our ship
+          =(our.bowl src.bowl)
+      ==
+      [%spaces @ @ %chats @ ~]  %.y
+      [%realm-chat @ ~]         %.y
+    ==
+  ?>  is-allowed
 
   =/  newpeer=peer  [path ship role now.bowl now.bowl now.bowl]
 
@@ -989,6 +1001,7 @@
   [cards state]
 ::
 ++  refresh-path
+::~bus/bedrock &db-action [%refresh-path now /path]
   |=  [[t=@da =path] state=state-1 =bowl:gall]
   ^-  (quip card state-1)
   =/  log1  (maybe-log hide-logs.state "%refresh-path {(spud path)}")
@@ -1180,13 +1193,19 @@
   =/  vent-path=path  /vent/(scot %p src.req-id)/(scot %da now.req-id)
   =/  kickcard=card  [%give %kick ~[vent-path] ~]
   :: form row from input
+  =/  created-time=@da  
+    ?:(=(now.req-id *@da) now.bowl ?:((gth now.bowl now.req-id) now.req-id now.bowl))
+  =/  creator=ship
+    ?:  &(=(our.bowl src.bowl) ?!(=(src.req-id our.bowl)))
+      src.req-id
+    src.bowl
   =/  row=row  [
     path.input-row
-    [src.bowl now.bowl]
+    [creator created-time]
     type.input-row
     data.input-row
-    now.bowl
-    now.bowl
+    created-time
+    created-time
     now.bowl
   ]
 
@@ -1416,6 +1435,63 @@
       logs            [log logs]
     ==
 ::
+++  remove-before :: similar to TRUNCATE, removes all rows of a given type and path up to and including a certain timestamp
+::bedrock &db-action [%remove-before [%foo *@uvH] /example ~2023.5.22..19.22.29..d0f7]
+  |=  [[=type:common =path t=@da] state=state-1 =bowl:gall]
+  =/  log1  (maybe-log hide-logs.state "%remove-before")
+  ^-  (quip card state-1)
+
+  :: forward the request if we aren't the host
+  =/  path-row=path-row   (~(got by paths.state) path)
+  ?.  =(host.path-row our.bowl)
+    =/  log2  (maybe-log hide-logs.state "{<src.bowl>} tried to have us ({<our.bowl>}) %remove-before in {<path.path-row>} where we are not the host. forwarding the poke to the host: {<host.path-row>}")
+    :_  state
+    [%pass /dbpoke %agent [host.path-row dap.bowl] %poke %db-action !>([%remove-before type path t])]~
+  :: permissions
+  =/  pt          (~(got by tables.state) type)
+  =/  tbl         (~(got by pt) path)
+  =/  ids         (skim ~(tap in ~(key by tbl)) |=(k=id:common (lte t.k t)))
+  =/  index=@ud   0
+  =/  all-have-permission=?
+    |-
+      ?:  =(index (lent ids))
+        %.y
+      =/  id        (snag index ids)
+      =/  old-row   (~(got by tbl) id) :: old row must first exist
+      ?:  (has-delete-permissions path-row old-row state bowl)
+        $(index +(index))
+      %.n
+  ?.  all-have-permission
+    =/  log1  (maybe-log hide-logs.state "{(scow %p src.bowl)} tried to delete a %{(scow %tas name.type)} row where they didn't have permissions")
+    `state
+
+  :: update path
+  =/  foreign-ship-sub-wire   (weld /next/(scot %da updated-at.path-row) path)
+  =.  updated-at.path-row     now.bowl
+  =.  received-at.path-row    now.bowl
+  =.  paths.state             (~(put by paths.state) path path-row)
+
+  :: do the delete
+  =.  index    0
+  =/  logs=(list db-row-del-change)  ~
+  |-
+    ?:  =(index (lent ids))
+      =.  pt              (~(put by pt) path tbl)           :: update the pathed-table
+      =.  tables.state    (~(put by tables.state) type pt)  :: update the tables.state
+      :: TODO remove remote-scry paths for the row
+
+      :: emit the change to subscribers
+      =/  cards=(list card)  :~
+        :: tell subs about the new row
+        [%give %fact [/db (weld /path path) foreign-ship-sub-wire ~] db-changes+!>(logs)]
+        :: kick foreign ship subs to force them to re-sub for next update
+        [%give %kick [foreign-ship-sub-wire ~] ~]
+      ==
+
+      [cards state]
+    =/  log=db-row-del-change    [%del-row path type (snag index ids) (add now.bowl index)]
+    $(index +(index), tbl (~(del by tbl) (snag index ids)), del-log.state (~(put by del-log.state) (add now.bowl index) log), logs [log logs])
+::
 ++  relay
   :: supposed to be used by the sharer, poking their own ship,
   :: regardless of if they are the host of either original or target path
@@ -1493,6 +1569,27 @@
       $(index +(index), cs [(weld -.cs -.owr) +.owr])
     $(index +(index))
 ::
+++  refresh-chat-paths
+::  macro for chat-db to force bedrock to refresh all the chat-paths
+  |=  [state=state-1 =bowl:gall]
+  ^-  (quip card state-1)
+  =/  log1  (maybe-log hide-logs.state "%refresh-chat-paths")
+  =/  paths=(list path-row)
+    %+  skim
+      ~(val by paths.state)
+    |=  p=path-row
+    ?+  path.p  %.n
+      [%spaces @ @ %chats @ ~]  %.y
+      [%realm-chat @ ~]         %.y
+    ==
+  =/  cards=(list card)
+    %+  turn
+      paths
+    |=  p=path-row
+    ^-  card
+    [%pass (weld /next/~2000.1.1 path.p) %agent [host.p dap.bowl] %watch (weld /next/~2000.1.1 path.p)]
+  [cards state]
+::
 ::
 ::  JSON
 ::
@@ -1516,6 +1613,7 @@
           [%edit de-edit-poke]
           [%remove remove]
           [%remove-many remove-many]
+          [%remove-before remove-before]
           [%relay de-create-input-row]
       ==
     ::
@@ -1579,6 +1677,13 @@
       %-  ot
       :~  [%path pa]
           [%ids (ar (ot [[%id de-id] [%type de-type] ~]))]
+      ==
+    ::
+    ++  remove-before
+      %-  ot
+      :~  [%type de-type]
+          [%path pa]
+          [%t di]
       ==
     ::
     ++  de-create-from-space
@@ -1692,13 +1797,29 @@
         ?+  name.data-type
             [%general ((de-cols schema) (~(got by p.jon) 'data'))]
           %vote
-            [%vote (de-vote (~(got by p.jon) 'data'))]
+            ?:  =(hash.data-type hash:vote-type:common)
+              [%vote (de-vote (~(got by p.jon) 'data'))]
+            [%general ((de-cols schema) (~(got by p.jon) 'data'))]
           %comment
-            [%comment (de-comment (~(got by p.jon) 'data'))]
+            ?:  =(hash.data-type hash:comment-type:common)
+              [%comment (de-comment (~(got by p.jon) 'data'))]
+            [%general ((de-cols schema) (~(got by p.jon) 'data'))]
           %relay
-            [%relay (de-relay (~(got by p.jon) 'data'))]
+            ?:  =(hash.data-type hash:relay-type:common)
+              [%relay (de-relay (~(got by p.jon) 'data'))]
+            [%general ((de-cols schema) (~(got by p.jon) 'data'))]
           %creds
-            [%creds (de-creds (~(got by p.jon) 'data'))]
+            ?:  =(hash.data-type hash:creds-type:common)
+              [%creds (de-creds (~(got by p.jon) 'data'))]
+            [%general ((de-cols schema) (~(got by p.jon) 'data'))]
+          %chat
+            ?:  =(hash.data-type hash:chat-type:common)
+              [%chat (de-chat (~(got by p.jon) 'data'))]
+            [%general ((de-cols schema) (~(got by p.jon) 'data'))]
+          %message
+            ?:  =(hash.data-type hash:message-type:common)
+              [%message (de-message (~(got by p.jon) 'data'))]
+            [%general ((de-cols schema) (~(got by p.jon) 'data'))]
         ==
       [
         (pa (~(got by p.jon) 'path'))
@@ -1773,6 +1894,55 @@
           [%deleted bo]
       ==
     ::
+    ++  de-chat
+      %-  ot
+      :~  [%metadata (om so)]
+          [%type (se %tas)]
+          [%pins (as de-id)]
+          [%invites (se %tas)]
+          [%peers-get-backlog bo]
+          [%max-expires-at-duration null-or-dri]
+      ==
+    ::
+    ++  de-message
+      %-  ot
+      :~  [%chat-id de-id]
+          [%reply-to (mu path-and-id)]
+          [%expires-at da-or-bunt-null]
+          [%content (ar de-msg-part)]
+      ==
+    ::
+    ++  de-msg-part
+      %-  ot
+      :~  [%formatted-text de-formatted-text]
+          [%metadata (om so)]
+      ==
+    ::
+    ++  de-formatted-text
+      %-  of
+      :~  
+          [%plain so]
+          [%markdown so]
+          [%bold so]
+          [%italics so]
+          [%strike so]
+          [%bold-italics so]
+          [%bold-strike so]
+          [%italics-strike so]
+          [%bold-italics-strike so]
+          [%blockquote so]
+          [%inline-code so]
+          [%code so]
+          [%image so]
+          [%ur-link so]
+          [%react so]
+          [%break ul]
+          [%ship de-ship]
+          [%link so]
+          [%custom (ot ~[[%name so] [%value so]])]
+          [%status so]
+      ==
+    ::
     ++  de-type
       %+  cu
         path-to-type
@@ -1783,7 +1953,6 @@
       ^-  type:common
       [`@tas`(slav %tas +2:p) `@uvH`(slav %uv +6:p)]
     ::
-    ::
     ++  de-id
       %+  cu
         path-to-id
@@ -1793,6 +1962,13 @@
       |=  p=path
       ^-  id:common
       [`@p`(slav %p +2:p) `@da`(slav %da +6:p)]
+    ::
+    ++  path-and-id
+      %-  ot
+      :~  
+          [%path pa]
+          [%id de-id]
+      ==
     ::
     ++  de-space-path
       %+  cu
@@ -1835,8 +2011,27 @@
     ::
     ++  de-ship  (su ;~(pfix sig fed:ag))
     ::
+    ++  da-or-bunt-null   :: specify in integer milliseconds, returns a @dr
+      |=  jon=json
+      ^-  @da
+      ?+  jon   !!
+        [%n *]  (di jon)
+        ~       *@da
+      ==
+    ::
     ++  dri   :: specify in integer milliseconds, returns a @dr
       (cu |=(t=@ud ^-(@dr (div (mul ~s1 t) 1.000))) ni)
+    ::
+    ++  null-or-dri   :: specify in integer milliseconds, returns a @dr
+      (cu |=(t=@ud ^-(@dr (div (mul ~s1 t) 1.000))) null-or-ni)
+    ::
+    ++  null-or-ni  :: accepts either a null or a n+'123', and converts nulls to 0, non-null to the appropriate number
+      |=  jon=json
+      ^-  @ud
+      ?+  jon  !!
+        [%n *]  (rash p.jon dem)
+        ~       0
+      ==
     --
   --
 ::
@@ -2065,6 +2260,22 @@
                 ['current-bucket' s+current-bucket.data.row]
                 ['region' s+region.data.row]
             ==
+          %chat
+            :~  metadata+(metadata-to-json metadata.data.row)
+                ['type' s+type.data.row]
+                ['pins' a+(turn ~(tap in pins.data.row) row-id-to-json)]
+                ['invites' s+invites.data.row]
+                ['peers-get-backlog' b+peers-get-backlog.data.row]
+                :: return as integer millisecond duration
+                ['max-expires-at-duration' (numb (|=(t=@dr ^-(@ud (mul (div t ~s1) 1.000))) max-expires-at-duration.data.row))]
+            ==
+          %message
+            :~  ['chat-id' (row-id-to-json chat-id.data.row)]
+                reply-to+(reply-to-to-json reply-to.data.row)
+                expires-at+(time-bunt-null expires-at.data.row)
+                ['content' a+(turn content.data.row en-msg-part)]
+                ['sender' s+(scot %p ship.id.row)]
+            ==
         ==
       =/  keyvals
         :_  basekvs
@@ -2152,6 +2363,33 @@
           ['schema' a+(turn v |=(col=[name=@t t=@t] (pairs ~[['name' s+name.col] ['type' s+t.col]])))]
       ==
     ::
+    ++  en-msg-part
+      |=  =msg-part:common
+      %-  pairs
+      :~  content-type+(ft-typeify formatted-text.msg-part)
+          metadata+(metadata-to-json metadata.msg-part)
+          content-data+(ft-dataify formatted-text.msg-part)
+      ==
+    ::
+    ++  ft-typeify
+      |=  =formatted-text:common
+      ^-  json
+      ?+  -.formatted-text
+        ::default here
+        [%s `@t`-.formatted-text]
+        %custom  [%s `@t`-.+.formatted-text]
+      ==
+    ::
+    ++  ft-dataify
+      |=  =formatted-text:common
+      ?+  -.formatted-text
+        ::default here
+        [%s +.formatted-text]
+        %ship     [%s `@t`(scot %p p.formatted-text)]
+        %break    ~
+        %custom   [%s +.+.formatted-text]
+      ==
+    ::
     ++  row-id-to-json
       |=  =id:common
       ^-  json
@@ -2161,6 +2399,27 @@
       |=  =id:common
       ^-  cord
       (spat ~[(scot %p ship.id) (scot %da t.id)])
+    ::
+    ++  reply-to-to-json
+      |=  reply-to=u-path-id:common
+      ^-  json
+      ?~  reply-to
+        ~
+      %-  pairs
+      :~  path+[%s (spat -.u.reply-to)]
+          id+(row-id-to-json +.u.reply-to)
+      ==
+    ::
+    ++  metadata-to-json
+      |=  m=(map cord cord)
+      ^-  json
+      o+(~(rut by m) |=([k=cord v=cord] s+v))
+    ::
+    ++  time-bunt-null
+      |=  t=@da
+      ?:  =(t *@da)
+        ~
+      (time t)
     ::
     ++  en-db-type
       |=  =type:common

@@ -25,7 +25,10 @@
     :: we don't get an increasing number of timers associated with
     :: this agent every time the agent gets updated
     =/  default-cards
-      [[%pass /timer %arvo %b %rest next-expire-time:core] [%pass /timer %arvo %b %wait next-expire-time:core] ~]
+      :~  [%pass /timer %arvo %b %rest next-expire-time:core]
+          [%pass /timer %arvo %b %wait next-expire-time:core]
+          [%pass /selfpoke %agent [our.bowl dap.bowl] %poke %chat-db-action !>([%dump-to-bedrock ~])]
+      ==
     ?-  -.old
       %0  
         =/  new  [%1 paths-table-1.old messages-table-1.old peers-table-1.old *del-log-1:sur]
@@ -143,6 +146,12 @@
         (add-peer:db-lib +.act state bowl)
       %kick-peer
         (kick-peer:db-lib +.act state bowl)
+
+      :: misc
+      %dump-to-bedrock
+        (dump-to-bedrock:db-lib state bowl)
+      %dump-to-bedrock-messages
+        (dump-to-bedrock-messages:db-lib +.act state bowl)
     ==
     [cards this]
   ::
