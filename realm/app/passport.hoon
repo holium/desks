@@ -29,6 +29,15 @@
     =/  act  !<(action vase)
     =^  cards  state
     ?-  -.act  :: each handler function here should return [(list card) state]
+      %add-friend
+        (add-friend:passport +.act state bowl)
+      %get-friend
+        (get-friend:passport +.act state bowl)
+      %handle-friend-request
+        (handle-friend-request:passport +.act state bowl)
+      %respond-to-friend-request
+        (respond-to-friend-request:passport +.act state bowl)
+
       %add-link
         (add-link:passport +.act state bowl)
       %receive-contacts
@@ -61,6 +70,20 @@
     |=  =path
     ^-  (unit (unit cage))
     ?+    path  !!
+    ::
+      [%x %pending-friends ~]
+        =/  contacts=(list contact:common)
+        %+  turm
+          %+  skim
+            ~(val by friends.state)
+          |=  =fren
+          ^-  ?
+          =(%pending status.fren)
+        |=  =fren
+        ^-  contact:common
+        (~(got by peers.state) ship.fren)
+
+        ``contacts+!>(contacts)
     ::
       [%x %passport ~]
         ``passport+!>(state)

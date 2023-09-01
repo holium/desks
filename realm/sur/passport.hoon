@@ -15,6 +15,11 @@
 ::
 +$  fren
   $:  =ship
+      ::requested = WE asked `ship` to be friend
+      ::pending = `ship` asked US to be friend
+      ::friend = pending `ship` accepted to be friend
+      ::rejected = pending `ship` rejected to be friend
+      status=?(%requested %pending %friend %rejected)
       pinned=?
       mtd=(map @t @t)
   ==
@@ -25,6 +30,10 @@
       [%request-contacts ~] :: other ship send this to us to ask us to give them our whole peers list
       [%get =ship]  :: when a client wants to threadpoke and get a full passport for a given ship
       [%add-link =req-id ln=passport-link:common]
+      [%add-friend =req-id =ship mtd=(map @t @t)]     :: client to ship
+      [%get-friend mtd=(map @t @t)]                   :: ship to ship
+      [%handle-friend-request =req-id accept=? =ship] :: client to ship
+      [%respond-to-friend-request accept=?]           :: ship to ship
       [%toggle-hide-logs toggle=?]
   ==
 ::

@@ -1,7 +1,7 @@
 ::  db [realm]:
 ::  TODO:
 ::  - constraints via paths-table settings
-/-  *passport, common, db
+/-  *passport, common
 |%
 ::
 :: helpers
@@ -48,8 +48,12 @@
       result    (weld result char)
     ==
 ::
+++  scry-our-passport
+  |=  =bowl:gall
+  ^-  passport:contact
 :: pokes
 ++  receive-contacts
+:: our ship gets this from another ship when they are giving us some contacts
 ::passport &passport-action [%receive-contacts (malt [~zod [~zod [%image ''] ~ [~ 'ZOOOD']]]~)]
   |=  [m=peers state=state-0 =bowl:gall]
   ^-  (quip card state-0)
@@ -76,18 +80,85 @@
     ==
 ::
 ++  request-contacts
+:: our ship gets this from another ship who wants to learn our contacts
 ::passport &passport-action [%request-contacts ~]
   |=  [state=state-0 =bowl:gall]
   ^-  (quip card state-0)
   =/  log1  (maybe-log hide-logs.state "%request-contacts from {<src.bowl>}")
 
+  =/  response  !>([%receive-contacts (~(put by peers.state) our.bowl )])
   =/  cards=(list card)
-    [%pass /contacts %agent [src.bowl dap.bowl] %poke %passport-action !>([%receive-contacts peers.state])]~
+    [%pass /contacts %agent [src.bowl dap.bowl] %poke %passport-action response]~
+  [cards state]
+::
+++  add-friend
+::passport &passport-action [%add-friend [our now] ~zod ~]
+  |=  [[=req-id =ship mtd=(map @t @t)] state=state-0 =bowl:gall]
+  ^-  (quip card state-0)
+  =/  log1  (maybe-log hide-logs.state "%add-friend: {<req-id>} {<ship>}")
+
+  =/  vent-path=path  /vent/(scot %p src.req-id)/(scot %da now.req-id)
+  =/  kickcard=card  [%give %kick ~[vent-path] ~]
+
+  =/  new-fren=fren  [ship %requested %.n mtd]
+  =.  friends.state  (~(put by friends.state) ship new-fren)
+
+  =/  cards=(list card)
+    :~  [%give %fact ~[vent-path] passport-vent+!>([%ack ~])]
+        kickcard
+        [%pass /selfpoke %agent [ship dap.bowl] %poke %passport-action !>([%get-friend mtd])]
+    ==
+  [cards state]
+::
+++  get-friend
+::passport &passport-action [%get-friend ~]
+  |=  [mtd=(map @t @t) state=state-0 =bowl:gall]
+  ^-  (quip card state-0)
+  =/  log1  (maybe-log hide-logs.state "%get-friend: {<mtd>} from {<src.bowl>}")
+
+  =/  new-fren=fren  [src.bowl %pending %.n mtd]
+  =.  friends.state  (~(put by friends.state) ship new-fren)
+
+  =/  cards=(list card)  ~
+  [cards state]
+::
+++  handle-friend-request
+::passport &passport-action [%handle-friend-request [our now] %.y ~zod]
+  |=  [[=req-id accept=? =ship] state=state-0 =bowl:gall]
+  ^-  (quip card state-0)
+  =/  log1  (maybe-log hide-logs.state "%handle-friend-request: {<req-id>} {<accept>} {<ship>}")
+  ?>  =(src.bowl our.bowl) ::only we can accept/reject requests
+
+  =/  vent-path=path  /vent/(scot %p src.req-id)/(scot %da now.req-id)
+  =/  kickcard=card  [%give %kick ~[vent-path] ~]
+
+  =/  new-fren=fren     (~(got by friends.state) ship)
+  =.  status.new-fren   ?:(accept %friend %rejected)
+  =.  friends.state     (~(put by friends.state) ship new-fren)
+
+  =/  cards=(list card)
+    :~  [%give %fact ~[vent-path] passport-vent+!>([%ack ~])]
+        kickcard
+        [%pass /selfpoke %agent [ship dap.bowl] %poke %passport-action !>([%respond-to-friend-request accept])]
+    ==
+  [cards state]
+::
+++  respond-to-friend-request
+::passport &passport-action [%respond-to-friend-request %.y]
+  |=  [accept=? state=state-0 =bowl:gall]
+  ^-  (quip card state-0)
+  =/  log1  (maybe-log hide-logs.state "%respond-to-friend-request: {<accept>} from {<src.bowl>}")
+
+  =/  new-fren=fren     (~(got by friends.state) src.bowl)
+  =.  status.new-fren   ?:(accept %friend %rejected)
+  =.  friends.state     (~(put by friends.state) ship new-fren)
+
+  =/  cards=(list card)  ~
   [cards state]
 ::
 ++  add-link
 ::passport &passport-action [%add-link passport-link]
-  |=  [[=req-id:db ln=passport-link:common] state=state-0 =bowl:gall]
+  |=  [[=req-id ln=passport-link:common] state=state-0 =bowl:gall]
   ^-  (quip card state-0)
   =/  log1  (maybe-log hide-logs.state "%add-link: {<req-id>} {<ln>}")
 
@@ -123,6 +194,7 @@
     ++  decode
       %-  of
       :~  [%add-link add-link]
+          [%receive-contacts]
       ==
     ::
     ++  add-link
