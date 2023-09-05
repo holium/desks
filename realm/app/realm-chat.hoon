@@ -35,11 +35,11 @@
     ^-  (quip card _this)
     :: do a quick check to make sure we are subbed to /db in %chat-db
     =/  cards=(list card)
+      :-  [%pass /selfpoke %agent [our.bowl %realm-chat] %poke %chat-action !>([%create-notes-to-self-if-not-exists ~])]
       ?:  =(wex.bowl ~)  
         :~  [%pass /db %agent [our.bowl %chat-db] %watch /db]
-            [%pass /selfpoke %agent [our.bowl %realm-chat] %poke %chat-action !>([%create-notes-to-self-if-not-exists ~])]
         ==
-      [%pass /selfpoke %agent [our.bowl %realm-chat] %poke %chat-action !>([%create-notes-to-self-if-not-exists ~])]~
+      ~
 
     =/  old  !<(versioned-state old-state)
     ?-  -.old
