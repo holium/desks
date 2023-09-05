@@ -488,12 +488,16 @@
   :: read the peers for the path
   =/  pathpeers  (scry-peers path.act bowl)
   =/  official-time  t.act
-  =/  bedrock-chat=row:bedrock  (scry-first-bedrock-chat:db-scry path.act bowl)
-  =/  cards=(list card)
-    :-  (create-bedrock-message-poke (scry-bedrock-path-host:db-scry path.act bowl) +.act official-time id.bedrock-chat)
+  =/  chat-db-pokes=(list card)
     %+  turn
       pathpeers
     |=(a=peer-row:db (into-insert-message-poke a +.act official-time))
+  =/  cards=(list card)
+    ?.  (test-bedrock-path-existence:db-scry path.act bowl)
+      chat-db-pokes
+    =/  bedrock-chat=row:bedrock  (scry-first-bedrock-chat:db-scry path.act bowl)
+    :-  (create-bedrock-message-poke (scry-bedrock-path-host:db-scry path.act bowl) +.act official-time id.bedrock-chat)
+    chat-db-pokes
   :: then send pokes to all the peers about inserting a message
   [cards state]
 ::
@@ -506,12 +510,15 @@
   :: just pass along the edit-message-action to all the peers chat-db
   :: %chat-db will disallow invalid signals
   =/  pathpeers  (scry-peers path.act bowl)
-  =/  cards=(list card)
-    :-  (edit-bedrock-message-poke (scry-bedrock-path-host:db-scry path.act bowl) act bowl)
-    %:  turn
+  =/  chat-db-pokes=(list card)
+    %+  turn
       pathpeers
-      |=(p=peer-row:db (into-edit-message-poke p act))
-    ==
+    |=(p=peer-row:db (into-edit-message-poke p act))
+  =/  cards=(list card)
+    ?.  (test-bedrock-path-existence:db-scry path.act bowl)
+      chat-db-pokes
+    :-  (edit-bedrock-message-poke (scry-bedrock-path-host:db-scry path.act bowl) act bowl)
+    chat-db-pokes
   [cards state]
 ::
 ++  delete-message
@@ -523,12 +530,15 @@
   :: just pass along the delete msg-id to all the peers chat-db
   :: %chat-db will disallow invalid signals
   =/  pathpeers  (scry-peers path.act bowl)
-  =/  cards=(list card)
-    :-  (delete-bedrock-message-poke (scry-bedrock-path-host:db-scry path.act bowl) act bowl)
-    %:  turn
+  =/  chat-db-pokes=(list card)
+    %+  turn
       pathpeers
-      |=(p=peer-row:db (into-delete-message-poke p msg-id.act))
-    ==
+    |=(p=peer-row:db (into-delete-message-poke p msg-id.act))
+  =/  cards=(list card)
+    ?.  (test-bedrock-path-existence:db-scry path.act bowl)
+      chat-db-pokes
+    :-  (delete-bedrock-message-poke (scry-bedrock-path-host:db-scry path.act bowl) act bowl)
+    chat-db-pokes
   [cards state]
 ::
 ++  delete-backlog
