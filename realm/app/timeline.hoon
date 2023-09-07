@@ -23,9 +23,11 @@
 ::
 ++  on-init
   ^-  (quip card _this)
-  =^  cards  this
+  =^  a-cards  this
     (on-poke timeline-action+!>([%add-forerunners |]))
-  [cards this]
+  =^  b-cards  this
+    (on-poke timeline-action+!>([%add-forerunners-bedrock &]))
+  :_(this (weld a-cards b-cards))
 ::
 ++  on-save  !>(state)
 ::
@@ -34,9 +36,11 @@
   ^-  (quip card _this)
   =/  old=state-0  !<(state-0 ole)
   =.  state  old
-  =^  cards  this
+  =^  a-cards  this
     (on-poke timeline-action+!>([%add-forerunners |]))
-  [cards this]
+  =^  b-cards  this
+    (on-poke timeline-action+!>([%add-forerunners-bedrock |]))
+  :_(this (weld a-cards b-cards))
 ::
 ++  on-poke
   |=  [=mark =vase]
