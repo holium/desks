@@ -11,6 +11,7 @@
       %creds
       %chat
       %message
+      %timeline-post
       @tas
   ==
 +$  type      [name=type-prefix hash=@uvH]  :: hash is (sham schema) for %general, and incrementing @uv for common types
@@ -209,4 +210,80 @@
       [%status p=cord]       :: for automated messages like "X joined the chat"
       [%break ~]
   ==
+::
++$  timeline-post
+  $:  parent=(unit parent)
+      app=(unit app)
+      blocks=(list block)
+  ==
+++  timeline-post-type  `type`[name=%timeline-post hash=0v0]
++$  parent  [=type =id =path]
++$  app     [name=@t icon=@t action=@t]
+++  block
+  =<  block
+  |%
+  +$  block
+    $%  [%text text]
+        [%link link]
+    ==
+  ::
+  +$  text
+    $:  text=@t
+        size=?(%sm %md %lg)
+        weight=?(%normal %bold)
+        style=?(%normal %italic)
+    ==
+  ::
+  ++  link
+    =<  link
+    |%
+    +$  link  [url=@t =metadata]
+    ++  metadata
+      =<  metadata
+      |%
+      +$  metadata
+        $%  [%image image]
+            [%video video]
+            [%audio audio]
+            [%file file]
+            [%link link]
+            [%misc misc]
+        ==
+      :: metadata currently stubbed out
+      ::
+      +$  image
+        $:  width=(unit @ud)
+            height=(unit @ud)
+        ==
+      ::
+      +$  video
+        $:  type=?(%youtube %vimeo %dailymotion %file)
+            orientation=(unit ?(%portrait %landscape))
+        ==
+      ::
+      +$  audio  ~
+      :: potential future features:
+      :: join
+      ::   join a group
+      ::   join a chat
+      ::   join a space
+      :: app
+      ::
+      +$  file  ~
+      +$  link
+        $%  [%raw ~]
+            $:  %opengraph
+                description=(unit @t)
+                image=(unit @t)
+                site-name=(unit @t)
+                title=(unit @t)
+                type=(unit @t)
+                author=(unit @t)
+            ==
+        ==
+      ::
+      +$  misc  (map @t @t)
+      --
+    --
+  --
 --

@@ -1820,6 +1820,10 @@
             ?:  =(hash.data-type hash:message-type:common)
               [%message (de-message (~(got by p.jon) 'data'))]
             [%general ((de-cols schema) (~(got by p.jon) 'data'))]
+          %timeline-post
+            ?:  =(hash.data-type hash:timeline-post-type:common)
+              [%timeline-post (de-timeline-post (~(got by p.jon) 'data'))]
+            [%general ((de-cols schema) (~(got by p.jon) 'data'))]
         ==
       [
         (pa (~(got by p.jon) 'path'))
@@ -1942,6 +1946,96 @@
           [%custom (ot ~[[%name so] [%value so]])]
           [%status so]
       ==
+    ::
+    ++  de-timeline-post
+      %-  ot
+      :~  parent+|=(jon=json ?~(jon ~ `(de-parent jon)))
+          app+|=(jon=json ?~(jon ~ `(de-app jon)))
+          blocks+(ar de-block)
+      ==
+    ::
+    ++  de-parent
+      %-  ot
+      :~  [%type de-type]
+          [%id de-id]
+          [%path pa]
+      ==
+    ::
+    ++  de-app
+      %-  ot
+      :~  name+so
+          icon+so
+          action+so
+      ==
+    ::
+    ++  de-block
+      =<  block
+      |%
+      ++  block
+        %-  of
+        :~  text+text
+            link+link
+        ==
+      ::
+      ++  text
+        %-  ot
+        :~  text+so
+            size+(cu ?(%sm %md %lg) so)
+            weight+(cu ?(%normal %bold) so)
+            style+(cu ?(%normal %italic) so)
+        ==
+      ::
+      ++  link
+        =<  link
+        |%
+        ++  link  (ot ~[url+so metadata+metadata])
+        ::
+        ++  metadata
+          =<  metadata
+          |%
+          ++  metadata
+            %-  of
+            :~  [%image image]
+                [%video video]
+                [%audio audio]
+                [%file file]
+                [%link link]
+                [%misc misc]
+            ==
+          ++  image
+            %-  ot
+            :~  width+|=(jon=json ?~(jon ~ `(ni jon)))
+                height+|=(jon=json ?~(jon ~ `(ni jon)))
+            ==
+          ::
+          ++  video
+            %-  ot 
+            :~  type+(cu ?(%youtube %file) so)
+                :-  %orientation
+                |=  jon=json
+                ?~(jon ~ `((cu ?(%portrait %landscape) so) jon))
+            ==
+          ::
+          ++  audio  ul
+          ++  file  ul
+          ++  link
+            %-  of
+            :~  [%raw |=(jon=json ?>(?=(~ jon) ~))]
+                :-  %opengraph
+                %-  ot
+                :~  description+|=(jon=json ?~(jon ~ `(so jon)))
+                    image+|=(jon=json ?~(jon ~ `(so jon)))
+                    site-name+|=(jon=json ?~(jon ~ `(so jon)))
+                    title+|=(jon=json ?~(jon ~ `(so jon)))
+                    type+|=(jon=json ?~(jon ~ `(so jon)))
+                    author+|=(jon=json ?~(jon ~ `(so jon)))
+                ==
+            ==
+          ::
+          ++  misc  (om so)
+          --
+        --
+      --
     ::
     ++  de-type
       %+  cu
@@ -2276,6 +2370,11 @@
                 ['content' a+(turn content.data.row en-msg-part)]
                 ['sender' s+(scot %p ship.id.row)]
             ==
+          %timeline-post
+            :~  ['parent' ?~(parent.data.row ~ (parent-to-json u.parent.data.row))]
+                ['app' ?~(app.data.row ~ (app-to-json u.app.data.row))]
+                ['blocks' a+(turn blocks.data.row block-to-json)]
+            ==
         ==
       =/  keyvals
         :_  basekvs
@@ -2410,6 +2509,104 @@
           id+(row-id-to-json +.u.reply-to)
       ==
     ::
+    ++  parent-to-json
+      |=  =parent:common
+      ^-  json
+      %-  pairs
+      :~  [%type (en-db-type type.parent)]
+          [%id (row-id-to-json id.parent)]
+          [%path (path path.parent)]
+      ==
+    ::
+    ++  app-to-json
+      |=  =app:common
+      ^-  json
+      %-  pairs
+      :~  [%name s+name.app]
+          [%icon s+icon.app]
+          [%action s+action.app]
+      ==
+    ::
+    ++  block-to-json
+      |=  =block:common
+      |^  ^-  json
+      ?-  -.block
+        %text  (frond %text (text +.block))
+        %link  (frond %link (link +.block))
+      ==
+      ++  text
+        |=  =text:block:common
+        ^-  json
+        %-  pairs
+        :~  [%text s+text.text]
+            [%size s+size.text]
+            [%weight s+weight.text]
+            [%style s+style.text]
+        ==
+      ++  link
+        |=  =link:block:common
+        |^  ^-  json
+        %-  pairs
+        :~  [%url s+url.link]
+            [%metadata (metadata metadata.link)]
+        ==
+        ++  metadata
+          |=  =metadata:link:block:common
+          |^  ^-  json
+          %+  frond  -.metadata
+          ?-  -.metadata
+            %image  (image +.metadata)
+            %video  (video +.metadata)
+            %audio  (audio +.metadata)
+            %file   (file +.metadata)
+            %link   (link +.metadata)
+            %misc   (misc +.metadata)
+          ==
+          ++  image
+            |=  =image:metadata:link:block:common
+            ^-  json
+            %-  pairs
+            :~  [%width ?~(width.image ~ (numb u.width.image))]
+                [%height ?~(height.image ~ (numb u.height.image))]
+            ==
+          ++  video
+            |=  =video:metadata:link:block:common
+            ^-  json
+            %-  pairs
+            :~  [%type s+type.video]
+                [%orientation ?~(orientation.video ~ s+u.orientation.video)]
+            ==
+          ++  audio  _~
+          ++  file   _~
+          ++  link
+            |=  =link:metadata:link:block:common
+            ^-  json
+            %+  frond  -.link
+            ?-    -.link
+              %raw  ~
+              ::
+                %opengraph
+              %-  pairs
+              :~  [%description ?~(description.link ~ s+u.description.link)]
+                  [%image ?~(image.link ~ s+u.image.link)]
+                  [%site-name ?~(site-name.link ~ s+u.site-name.link)]
+                  [%title ?~(title.link ~ s+u.title.link)]
+                  [%type ?~(type.link ~ s+u.type.link)]
+                  [%author ?~(author.link ~ s+u.author.link)]
+              ==
+            ==
+          ::
+          ++  misc
+            |=  =misc:metadata:link:block:common
+            ^-  json
+            :-  %o
+            %-  malt
+            %+  turn  ~(tap by misc)
+            |=([k=@t v=@t] [k s+v])
+          --
+        --
+      --
+    ::
     ++  metadata-to-json
       |=  m=(map cord cord)
       ^-  json
@@ -2503,16 +2700,17 @@
   |=  [name=type-prefix:common sch=(unit schema)]
   ^-  @uvH
   ?~  sch
-    ?+  name      (sham ~)
-        %vote     (sham -:!>(*vote:common))
-        %rating   (sham -:!>(*rating:common))
-        %comment  (sham -:!>(*comment:common))
-        %tag      (sham -:!>(*tag:common))
-        %link     (sham -:!>(*link:common))
-        %follow   (sham -:!>(*follow:common))
-        %relay    (sham -:!>(*relay:common))
-        %react    (sham -:!>(*react:common))
-        %creds    (sham -:!>(*creds:common))
+    ?+  name            (sham ~)
+        %vote           (sham -:!>(*vote:common))
+        %rating         (sham -:!>(*rating:common))
+        %comment        (sham -:!>(*comment:common))
+        %tag            (sham -:!>(*tag:common))
+        %link           (sham -:!>(*link:common))
+        %follow         (sham -:!>(*follow:common))
+        %relay          (sham -:!>(*relay:common))
+        %react          (sham -:!>(*react:common))
+        %creds          (sham -:!>(*creds:common))
+        %timeline-post  (sham -:!>(*timeline-post:common))
     ==
   (sham u.sch)
 ::
