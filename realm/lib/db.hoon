@@ -1199,6 +1199,15 @@
     ?:  &(=(our.bowl src.bowl) ?!(=(src.req-id our.bowl)))
       src.req-id
     src.bowl
+  :: create with unique id
+  ::
+  =?  created-time  (lth (sub now.bowl now.req-id) ~s30)
+    |-
+    =/  =id:common  [creator created-time]
+    ?~  get=(get-db type.input-row path.input-row id state)
+      created-time
+    $(created-time +(created-time))
+  ::
   =/  row=row  [
     path.input-row
     [creator created-time]

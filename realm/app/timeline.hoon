@@ -148,7 +148,7 @@
         ^-  card
         =/  =cage  timeline-action+!>([%create-bedrock-timeline-post fore post])
         [%pass / %agent [our dap]:bowl %poke cage]
-      :_(this (weld post-cards tl-cards))
+      :_(this (weld tl-cards post-cards))
     ==
   ==
 ::
