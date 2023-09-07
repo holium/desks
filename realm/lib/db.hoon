@@ -2504,15 +2504,15 @@
   ^-  @uvH
   ?~  sch
     ?+  name      (sham ~)
-        %vote     (sham -:!>(*vote:common))
-        %rating   (sham -:!>(*rating:common))
-        %comment  (sham -:!>(*comment:common))
-        %tag      (sham -:!>(*tag:common))
-        %link     (sham -:!>(*link:common))
-        %follow   (sham -:!>(*follow:common))
-        %relay    (sham -:!>(*relay:common))
-        %react    (sham -:!>(*react:common))
-        %creds    (sham -:!>(*creds:common))
+        %vote     0v0
+        %rating   0v0
+        %comment  0v0
+        %tag      0v0
+        %link     0v0
+        %follow   0v0
+        %relay    0v0
+        %react    0v0
+        %creds    0v0
     ==
   (sham u.sch)
 ::
