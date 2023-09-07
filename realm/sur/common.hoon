@@ -12,6 +12,7 @@
       %chat
       %message
       %passport
+      %friend
       @tas
   ==
 +$  type      [name=type-prefix hash=@uvH]  :: hash is (sham schema) for %general, and incrementing @uv for common types
@@ -171,9 +172,21 @@
 ++  creds-type  `type`[name=%creds hash=0v0]
 
 ::
++$  friend
+  $:  =ship
+      ::requested = WE asked `ship` to be friend
+      ::pending = `ship` asked US to be friend
+      ::friend = pending `ship` accepted to be friend
+      ::rejected = pending `ship` rejected to be friend
+      status=?(%requested %pending %friend %rejected)
+      pinned=?
+      mtd=(map @t @t)
+  ==
+++  friend-type  `type`[name=%friend hash=0v0]
+::
 +$  passport
   $:  =contact
-      bio=(unit @t)
+      cover=(unit @t)
       user-status=?(%invisible %online)
       discoverable=?
       nfts=(list linked-nft)
@@ -187,8 +200,9 @@
 ::
 +$  contact
   $:  =ship
-      =avatar
+      =avatar  :: defaults to empty string for unset avatars
       color=(unit @t) :: i.e. #FCFCFC
+      bio=(unit @t)
       display-name=(unit @t)
   ==
 ::
@@ -236,6 +250,7 @@
       [%token-burn from-entity=@t amount=@rd]
       [%token-mint to-entity=@t amount=@rd]
       [%token-transfer to-entity=@t amount=@rd]
+      [%passport-root data=@t hash=@t hash-signature=@t]
   ==
 +$  pki-state
   $:  chain-owner-entities=(list @p)

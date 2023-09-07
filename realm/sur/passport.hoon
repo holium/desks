@@ -7,22 +7,10 @@
 +$  state-0
   $:  %0
       =peers
-      friends=(map ship fren)
       hide-logs=?  :: default hidden %.y
   ==
 ::
 +$  peers    (map ship contact:common) :: all known peers
-::
-+$  fren
-  $:  =ship
-      ::requested = WE asked `ship` to be friend
-      ::pending = `ship` asked US to be friend
-      ::friend = pending `ship` accepted to be friend
-      ::rejected = pending `ship` rejected to be friend
-      status=?(%requested %pending %friend %rejected)
-      pinned=?
-      mtd=(map @t @t)
-  ==
 ::
 +$  action
   $%

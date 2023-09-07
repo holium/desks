@@ -1,6 +1,6 @@
 ::  app/passport.hoon
 /-  *passport, db, common
-/+  dbug, passport
+/+  dbug, passport, scries=bedrock-scries
 =|  state-0
 =*  state  -
 =<
@@ -85,8 +85,11 @@
 
         ``contacts+!>(contacts)
     ::
-      [%x %passport ~]
-        ``passport+!>(state)
+      [%x %our-passport ~]
+        ``passport+!>((our-passport:scries bowl))
+    ::
+      [%x %passport-state ~]
+        ``passport-state+!>(state)
     ==
   ::
   ++  on-agent

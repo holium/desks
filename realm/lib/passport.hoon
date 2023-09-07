@@ -1,7 +1,7 @@
 ::  db [realm]:
 ::  TODO:
 ::  - constraints via paths-table settings
-/-  *passport, common
+/-  *passport, common, db
 /+  scries=bedrock-scries
 |%
 ::
@@ -11,6 +11,16 @@
   |=  [=ship dap=@tas]
   ^-  card
   [%pass /contacts %agent [ship dap] %poke %passport-action !>([%request-contacts ~])]
+::
+++  create
+  |=  [our=ship =type:common data=columns:db]
+  ^-  card
+  [%pass /dbpoke %agent [our %bedrock] %poke %db-action !>([%create [our *@da] /private type data ~])]
+::
+++  edit
+  |=  [our=ship =type:common =id:common data=columns:db]
+  ^-  card
+  [%pass /dbpoke %agent [our %bedrock] %poke %db-action !>([%edit [our *@da] id /private type data ~])]
 ::
 ++  maybe-log
   |=  [hide-debug=? msg=tape]
@@ -118,12 +128,12 @@
   =/  vent-path=path  /vent/(scot %p src.req-id)/(scot %da now.req-id)
   =/  kickcard=card  [%give %kick ~[vent-path] ~]
 
-  =/  new-fren=fren  [ship %requested %.n mtd]
-  =.  friends.state  (~(put by friends.state) ship new-fren)
+  =/  new-fren=friend:common  [ship %requested %.n mtd]
 
   =/  cards=(list card)
     :~  [%give %fact ~[vent-path] passport-vent+!>([%ack ~])]
         kickcard
+        (create our.bowl friend-type:common [%friend new-fren])
         [%pass /selfpoke %agent [ship dap.bowl] %poke %passport-action !>([%get-friend mtd])]
         (req ship dap.bowl)
     ==
@@ -135,11 +145,11 @@
   ^-  (quip card state-0)
   =/  log1  (maybe-log hide-logs.state "%get-friend: {<mtd>} from {<src.bowl>}")
 
-  =/  new-fren=fren  [src.bowl %pending %.n mtd]
-  =.  friends.state  (~(put by friends.state) src.bowl new-fren)
+  =/  new-fren=friend:common  [src.bowl %pending %.n mtd]
 
   =/  cards=(list card)
     :~  (req src.bowl dap.bowl)
+        (create our.bowl friend-type:common [%friend new-fren])
     ==
   [cards state]
 ::
@@ -153,13 +163,13 @@
   =/  vent-path=path  /vent/(scot %p src.req-id)/(scot %da now.req-id)
   =/  kickcard=card  [%give %kick ~[vent-path] ~]
 
-  =/  new-fren=fren     (~(got by friends.state) ship)
-  =.  status.new-fren   ?:(accept %friend %rejected)
-  =.  friends.state     (~(put by friends.state) ship new-fren)
+  =/  new-fren                  (get-fren:scries ship bowl)
+  =.  status.friend.new-fren    ?:(accept %friend %rejected)
 
   =/  cards=(list card)
     :~  [%give %fact ~[vent-path] passport-vent+!>([%ack ~])]
         kickcard
+        (edit our.bowl friend-type:common id.new-fren [%friend friend.new-fren])
         [%pass /selfpoke %agent [ship dap.bowl] %poke %passport-action !>([%respond-to-friend-request accept])]
         (req ship dap.bowl)
     ==
@@ -171,12 +181,12 @@
   ^-  (quip card state-0)
   =/  log1  (maybe-log hide-logs.state "%respond-to-friend-request: {<accept>} from {<src.bowl>}")
 
-  =/  new-fren=fren     (~(got by friends.state) src.bowl)
-  =.  status.new-fren   ?:(accept %friend %rejected)
-  =.  friends.state     (~(put by friends.state) src.bowl new-fren)
+  =/  new-fren                  (get-fren:scries src.bowl bowl)
+  =.  status.friend.new-fren    ?:(accept %friend %rejected)
 
   =/  cards=(list card)
     :~  (req src.bowl dap.bowl)
+        (edit src.bowl friend-type:common id.new-fren [%friend friend.new-fren])
     ==
   [cards state]
 ::
@@ -208,8 +218,7 @@
   =/  kickcard=card  [%give %kick ~[vent-path] ~]
 
   =/  pass=passport:common   (our-passport:scries bowl)
-  =/  ufr=(unit fren)   (~(get by friends.state) src.bowl)
-  =/  src-fren=?  ?~(ufr %.n =(%friend status.u.ufr))
+  =/  src-fren=?  (is-friend:scries src.bowl bowl)
   :: only actually give out the passport if we are discoverable
   :: OR we are friends with the requester
   ?>  |(discoverable.pass src-fren)
@@ -228,11 +237,71 @@
   `state
 ::
 ::
+::  initializers (also pokes)
+::
+++  init-our-passport  :: (does nothing if already exists)
+  |=  [state=state-0 =bowl:gall]
+  ^-  (quip card state-0)
+  ?.  =(peers.state ~)  `state
+  :: TODO ask %pals for as many contacts to prepopulate as we can and
+  :: TODO create a poke to auto-add friends from mutuals in %pals
+  =/  old-friends  .^(json %gx /(scot %p our.bowl)/friends/(scot %da now.bowl)/all/noun)
+  =/  contacts=(list contact:common)  (contacts-from-friends:dejs old-friends)
+  =/  our-contact=contact:common  (snag 0 (skim contacts |=(c=contact:common =(our.bowl ship.c))))
+  =/  p=passport:common
+    [our-contact ~ %online %.y ~ ~ '' ~ ~ ~]
+  =.  peers.state  (malt (turn contacts |=(c=contact:common [ship.c c])))
+  `state
+::
 ::  JSON
 ::
 ++  dejs
   =,  dejs:format
   |%
+  ++  contacts-from-friends
+    |=  jon=json
+    ^-  (list contact:common)
+    ?>  ?=([%o *] jon)
+    %+  turn
+      %+  skim
+        %+  turn
+          ~(tap by jon)
+        |=  [shp=@t fr=json]
+        ^-  (unit contact:common)
+        ?>  ?=([%o *] fr)
+        =/  c=(unit json)  (~(get by fr) 'contactInfo')
+        ?~  c  ~
+        %-  some
+        ^-  contact:common
+        :*  `@p`(slav %p shp)
+            (t-or-bunt-null (~(got by u.c) 'avatar'))
+            (some (hex-str (~(got by u.c) 'color')))
+            (some (so (~(got by u.c) 'bio')))
+            (some (so (~(got by u.c) 'nickname')))
+        ==
+      |=  uc=(unit contact:common)
+      ^-  ?
+      ?~(uc %.n %.y)
+    |=  uc=(unit contact:common)
+    ^-  contact:common
+    (need uc)
+  ::
+  ++  t-or-bunt-null
+    |=  jon=json
+    ^-  @t
+    ?+  jon   !!
+      [%s *]  (so jon)
+      ~       ''
+    ==
+  ::
+  ++  hex-str  :: convert @ux formatted string into web #FFAA00 color format string
+    |=  jon=json
+    ^-  @t
+    =/  urbit-format=@t  (so jon)
+    ?:  =('0x0' urbit-format)  '#000000'
+    =/  tr=tape  (trip urbit-format)
+    ?:  (lth (lent tr) 9)  '#000000' :: for weird parsing, just "forget" the color
+    (crip ['#' (oust [2 1] (slag 2 tf))])
   ++  action
     |=  jon=json
     ^-  ^action
@@ -318,6 +387,15 @@
         %link   ~
       ==
     ::
+    ++  en-passport
+      |=  p=passport:common
+      ^-  json
+      %-  pairs
+      :~  ['contact' (en-contact contact.p)]
+          ['cover' ?~(cover.p ~ s+cover.p)]
+          ['user-status' s+user-status.p]
+          ['default-address' s+default-address.p]
+      ==
     ++  state
       |=  st=versioned-state
       ^-  json
