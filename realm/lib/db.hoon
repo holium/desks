@@ -1199,6 +1199,15 @@
     ?:  &(=(our.bowl src.bowl) ?!(=(src.req-id our.bowl)))
       src.req-id
     src.bowl
+  :: create with unique id
+  ::
+  =?  created-time  (lth (sub now.bowl now.req-id) ~s30)
+    |-
+    =/  =id:common  [creator created-time]
+    ?~  get=(get-db type.input-row path.input-row id state)
+      created-time
+    $(created-time +(created-time))
+  ::
   =/  row=row  [
     path.input-row
     [creator created-time]
@@ -1208,7 +1217,6 @@
     created-time
     now.bowl
   ]
-
   :: ensure the path actually exists
   =/  path-row=path-row    (~(got by paths.state) path.row)
   ?.  (has-create-permissions path-row row state bowl)
@@ -1223,6 +1231,7 @@
   ?.  (meets-constraints path-row row state bowl)
     =/  log3  (maybe-log hide-logs.state "{(scow %p src.bowl)} tried to create a %{(scow %tas name.type.row)} row where they violated constraints")
     [~[kickcard] state]
+  ::
 
   :: update path
   =.  updated-at.path-row     now.bowl
