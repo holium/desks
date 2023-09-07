@@ -17,6 +17,7 @@
   ==
 +$  type      [name=type-prefix hash=@uvH]  :: hash is (sham schema) for %general, and incrementing @uv for common types
 +$  id        [=ship t=@da] :: ship is who created the row, t is when it was created since that's inherently unique in one-at-a-time only creation fashion
++$  rich-ref  [=id =path =type mtd=(map @t @t)]
 +$  u-path-id  (unit [=path =id])
 ::
 :: pre-built data-types
@@ -192,7 +193,7 @@
       nfts=(list linked-nft)
       addresses=(list linked-address)
       default-address=@t
-      recommendations=(set [=id =path =type mtd=(map @t @t)])
+      recommendations=(set rich-ref)
       chain=passport-chain
       crypto=passport-crypto
   ==

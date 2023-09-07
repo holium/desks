@@ -163,7 +163,7 @@
   =/  vent-path=path  /vent/(scot %p src.req-id)/(scot %da now.req-id)
   =/  kickcard=card  [%give %kick ~[vent-path] ~]
 
-  =/  new-fren                  (get-fren:scries ship bowl)
+  =/  new-fren                  (get-friend:scries ship bowl)
   =.  status.friend.new-fren    ?:(accept %friend %rejected)
 
   =/  cards=(list card)
@@ -181,7 +181,7 @@
   ^-  (quip card state-0)
   =/  log1  (maybe-log hide-logs.state "%respond-to-friend-request: {<accept>} from {<src.bowl>}")
 
-  =/  new-fren                  (get-fren:scries src.bowl bowl)
+  =/  new-fren                  (get-friend:scries src.bowl bowl)
   =.  status.friend.new-fren    ?:(accept %friend %rejected)
 
   =/  cards=(list card)
@@ -242,16 +242,21 @@
 ++  init-our-passport  :: (does nothing if already exists)
   |=  [state=state-0 =bowl:gall]
   ^-  (quip card state-0)
-  ?.  =(peers.state ~)  `state
+  =/  log1  (maybe-log hide-logs.state "%init-our-passport: at {<now.bowl>}")
+  ::?.  =(peers.state ~)  `state
   :: TODO ask %pals for as many contacts to prepopulate as we can and
   :: TODO create a poke to auto-add friends from mutuals in %pals
   =/  old-friends  .^(json %gx /(scot %p our.bowl)/friends/(scot %da now.bowl)/all/noun)
   =/  contacts=(list contact:common)  (contacts-from-friends:dejs old-friends)
   =/  our-contact=contact:common  (snag 0 (skim contacts |=(c=contact:common =(our.bowl ship.c))))
   =/  p=passport:common
-    [our-contact ~ %online %.y ~ ~ '' ~ ~ ~]
+    [our-contact ~ %online %.y ~ ~ '' ~ ~ *passport-crypto:common]
   =.  peers.state  (malt (turn contacts |=(c=contact:common [ship.c c])))
-  `state
+  =/  cards=(list card)
+    :~  [%pass /dbpoke %agent [our.bowl %bedrock] %poke %db-action !>([%create [our.bowl *@da] /private passport-type:common [%passport p] ~])]
+    ==
+  [cards state]
+::
 ::
 ::  JSON
 ::
@@ -262,22 +267,25 @@
     |=  jon=json
     ^-  (list contact:common)
     ?>  ?=([%o *] jon)
+    =/  jn=json  (~(got by p.jon) 'friends')
+    ?>  ?=([%o *] jn)
     %+  turn
       %+  skim
         %+  turn
-          ~(tap by jon)
+          ~(tap by p.jn)
         |=  [shp=@t fr=json]
         ^-  (unit contact:common)
         ?>  ?=([%o *] fr)
-        =/  c=(unit json)  (~(get by fr) 'contactInfo')
+        =/  c=(unit json)  (~(get by p.fr) 'contactInfo')
         ?~  c  ~
+        ?>  ?=([%o *] u.c)
         %-  some
         ^-  contact:common
         :*  `@p`(slav %p shp)
-            (t-or-bunt-null (~(got by u.c) 'avatar'))
-            (some (hex-str (~(got by u.c) 'color')))
-            (some (so (~(got by u.c) 'bio')))
-            (some (so (~(got by u.c) 'nickname')))
+            (t-or-bunt-null (~(got by p.u.c) 'avatar'))
+            (some (hex-str (~(got by p.u.c) 'color')))
+            (some (so (~(got by p.u.c) 'bio')))
+            (some (so (~(got by p.u.c) 'nickname')))
         ==
       |=  uc=(unit contact:common)
       ^-  ?
@@ -288,10 +296,17 @@
   ::
   ++  t-or-bunt-null
     |=  jon=json
-    ^-  @t
+    ^-  avatar:common
     ?+  jon   !!
-      [%s *]  (so jon)
-      ~       ''
+      [%s *]  [%image (so jon)]
+      ~       [%image '']
+      [%o *]
+        =/  typ=json  (~(got by p.jon) 'type')
+        ?>  ?=([%s *] typ)
+        ?+  `@tas`p.typ  !!
+          %image  [%image (so (~(got by p.jon) 'img'))]
+          %nft    [%nft (so (~(got by p.jon) 'nft'))]
+        ==
     ==
   ::
   ++  hex-str  :: convert @ux formatted string into web #FFAA00 color format string
@@ -301,7 +316,8 @@
     ?:  =('0x0' urbit-format)  '#000000'
     =/  tr=tape  (trip urbit-format)
     ?:  (lth (lent tr) 9)  '#000000' :: for weird parsing, just "forget" the color
-    (crip ['#' (oust [2 1] (slag 2 tf))])
+    (crip ['#' (oust [2 1] (slag 2 tr))])
+  ::
   ++  action
     |=  jon=json
     ^-  ^action
@@ -378,6 +394,16 @@
 ++  enjs
   =,  enjs:format
   |%
+    ++  state
+      |=  st=versioned-state
+      ^-  json
+      ?-  -.st
+          %0
+        %-  pairs
+        :~  ['state-version' (numb `@`-.st)]
+        ==
+      ==
+    ::
     ++  en-vent
       |=  =vent
       ^-  json
@@ -392,18 +418,77 @@
       ^-  json
       %-  pairs
       :~  ['contact' (en-contact contact.p)]
-          ['cover' ?~(cover.p ~ s+cover.p)]
+          ['cover' ?~(cover.p ~ s+u.cover.p)]
           ['user-status' s+user-status.p]
+          ['discoverable' b+discoverable.p]
+          ['nfts' a+(turn nfts.p en-linked-nft)]
+          ['addresses' a+(turn addresses.p en-linked-address)]
           ['default-address' s+default-address.p]
+          ['recommendations' a+(turn ~(tap in recommendations.p) en-recommendation)]
+          ['chain' a+(limo ~[s+%not-implemented])]
+          ['crypto' o+`(map @t json)`(malt ~[object+s+%not-implemented])]
       ==
-    ++  state
-      |=  st=versioned-state
+    ::
+    ++  en-contact
+      |=  n=contact:common
       ^-  json
-      ?-  -.st
-          %0
-        %-  pairs
-        :~  ['state-version' (numb `@`-.st)]
+      %-  pairs
+      :~  ['ship' s+(scot %p ship.n)]
+          ['avatar' (en-avatar avatar.n)]
+          ['color' ?~(color.n ~ s+u.color.n)]
+          ['bio' ?~(bio.n ~ s+u.bio.n)]
+          ['display-name' ?~(display-name.n ~ s+u.display-name.n)]
+      ==
+    ::
+    ++  en-avatar
+      |=  a=avatar:common
+      ^-  json
+      %-  pairs
+      :- 
+        ?-  -.a
+          %image  ['img' s+img.a]
+          %nft  ['nft' s+nft.a]
         ==
+      :~  ['type' [%s -.a]]
+      ==
+    ::
+    ++  en-linked-nft
+      |=  n=linked-nft:common
+      ^-  json
+      %-  pairs
+      :~  ['chain-id' s+chain-id.n]
+          ['token-id' s+token-id.n]
+          ['contract-address' s+contract-address.n]
+          ['name' s+name.n]
+          ['image-url' s+image-url.n]
+          ['owned-by' s+owned-by.n]
+          ['token-standard' s+token-standard.n]
+      ==
+    ::
+    ++  en-linked-address
+      |=  n=linked-address:common
+      ^-  json
+      %-  pairs
+      :~  ['wallet' s+wallet.n]
+          ['address' s+address.n]
+          ['pubkey' s+pubkey.n]
+          :-  'crypto-signature'
+          %-  pairs
+          :~  ['data' s+data.crypto-signature.n]
+              ['hash' s+hash.crypto-signature.n]
+              ['signature-of-hash' s+signature-of-hash.crypto-signature.n]
+              ['pubkey' s+pubkey.crypto-signature.n]
+          ==
+      ==
+    ::
+    ++  en-recommendation
+      |=  r=rich-ref:common
+      ^-  json
+      %-  pairs
+      :~  ['id' (row-id-to-json id.r)]
+          ['path' s+(spat path.r)]
+          ['type' (en-db-type type.r)]
+          ['mtd' (metadata-to-json mtd.r)]
       ==
     ::
     ++  row-id-to-json
@@ -425,6 +510,11 @@
       |=  =type:common
       ^-  cord
       (spat ~[(scot %tas name.type) (scot %uv hash.type)])
+    ::
+    ++  metadata-to-json
+      |=  m=(map cord cord)
+      ^-  json
+      o+(~(rut by m) |=([k=cord v=cord] s+v))
     ::
     ++  numbrd
       |=  a=@rd

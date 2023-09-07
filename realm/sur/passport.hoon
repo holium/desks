@@ -23,6 +23,7 @@
       [%handle-friend-request =req-id accept=? =ship] :: client to ship
       [%respond-to-friend-request accept=?]           :: ship to ship
       [%toggle-hide-logs toggle=?]
+      [%init-our-passport ~]
   ==
 ::
 +$  req-id  [src=ship now=@da] :: the request-id, used for threads and venting

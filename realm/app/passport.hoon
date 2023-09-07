@@ -12,7 +12,9 @@
   ++  on-init
     ^-  (quip card _this)
     =/  default-state=state-0   *state-0
-    =/  default-cards=(list card)  ~
+    =/  default-cards=(list card)
+      :-  [%pass /selfpoke %agent [our.bowl dap.bowl] %poke %passport-action !>([%init-our-passport ~])]
+      ~
     [default-cards this(state default-state)]
   ++  on-save   !>(state)
   ++  on-load
@@ -48,6 +50,9 @@
         (get:passport +.act state bowl)
       %toggle-hide-logs
         (toggle-hide-logs:passport +.act state bowl)
+
+      %init-our-passport
+        (init-our-passport:passport state bowl)
     ==
     [cards this]
   ::
@@ -72,18 +77,18 @@
     ?+    path  !!
     ::
       [%x %pending-friends ~]
-        =/  contacts=(list contact:common)
-        %+  turn
-          %+  skim
-            ~(val by friends.state)
-          |=  =fren
-          ^-  ?
-          =(%pending status.fren)
-        |=  =fren
-        ^-  contact:common
-        (~(got by peers.state) ship.fren)
-
-        ``contacts+!>(contacts)
+::        =/  contacts=(list contact:common)
+::        %+  turn
+::          %+  skim
+::            ~(val by friends.state)
+::          |=  =fren
+::          ^-  ?
+::          =(%pending status.fren)
+::        |=  =fren
+::        ^-  contact:common
+::        (~(got by peers.state) ship.fren)
+        ``contacts+!>(~)
+::        ``contacts+!>(contacts)
     ::
       [%x %our-passport ~]
         ``passport+!>((our-passport:scries bowl))

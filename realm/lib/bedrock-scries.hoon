@@ -111,7 +111,7 @@
   |=  [=ship =bowl:gall]
   ^-  ?
   =/  rows=(list row:bedrock)
-    %+  skim  rows
+    %+  skim
       (all-rows-by-path-type friend-type:common /private bowl)
     |=  r=row:bedrock
     ^-  ?

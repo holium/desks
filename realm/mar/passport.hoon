@@ -1,17 +1,17 @@
-/-  sur=db, common
-/+  lib=db
+/-  common
+/+  lib=passport
 ::
-|_  r=[=row:sur =schemas:sur]
+|_  p=passport:common
 ++  grad  %noun
 ++  grow
   |%
-  ++  noun  r
-  ++  json  (en-row:enjs:lib row.r schemas.r)
+  ++  noun  p
+  ++  json  (en-passport:enjs:lib p)
   --
 ::
 ++  grab
   |%
-  ++  noun  [=row:sur =schemas:sur]
+  ++  noun  passport:common
   --
 --
 
