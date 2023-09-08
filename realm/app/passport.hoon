@@ -82,19 +82,26 @@
     ^-  (unit (unit cage))
     ?+    path  !!
     ::
+      [%x %contacts ~]
+        =/  contacts=(list contact:common)
+          ~(val by peers.state)
+        ``passport-contacts+!>(contacts)
+    ::
+      [%x %friends ~]
+        ?.  (test-bedrock-table-existence:scries friend-type:common bowl)
+          ``passport-friends+!>(~)
+        ``passport-friends+!>((get-friends:scries bowl))
+    ::
       [%x %pending-friends ~]
-::        =/  contacts=(list contact:common)
-::        %+  turn
-::          %+  skim
-::            ~(val by friends.state)
-::          |=  =fren
-::          ^-  ?
-::          =(%pending status.fren)
-::        |=  =fren
-::        ^-  contact:common
-::        (~(got by peers.state) ship.fren)
-        ``noun+!>(~)
-::        ``contacts+!>(contacts)
+        ?.  (test-bedrock-table-existence:scries friend-type:common bowl)
+          ``passport-friends+!>(~)
+        =/  friends=(list friend:common)
+          %+  skim
+            (get-friends:scries bowl)
+          |=  =friend:common
+          ^-  ?
+          =(%pending status.friend)
+        ``passport-friends+!>(friends)
     ::
     :: .^([[@p * (unit @t) *] (unit @t) @t *] %gx /=/passport/=/our-passport/noun)
       [%x %our-passport ~]

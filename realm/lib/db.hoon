@@ -2276,6 +2276,12 @@
                 ['content' a+(turn content.data.row en-msg-part)]
                 ['sender' s+(scot %p ship.id.row)]
             ==
+          %friend
+            :~  ['ship' s+(scot %p ship.data.row)]
+                ['status' s+status.data.row]
+                ['pinned' b+pinned.data.row]
+                ['mtd' (metadata-to-json mtd.data.row)]
+            ==
         ==
       =/  keyvals
         :_  basekvs

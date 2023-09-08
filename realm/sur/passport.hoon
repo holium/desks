@@ -22,7 +22,7 @@
       [%handle-friend-request =req-id accept=? =ship] :: client to ship
       [%respond-to-friend-request accept=?]           :: ship to ship
 
-      [%change-contact c=contact:common]   :: client to ship, we change our own contact info
+      [%change-contact =req-id c=contact:common]   :: client to ship, we change our own contact info
       [%add-link =req-id ln=passport-link:common]
       [%change-passport =req-id p=passport:common]  :: client->ship, DOES NOT UPDATE `chain` or `crypto`, MUST use %add-link for that
 

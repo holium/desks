@@ -12,10 +12,14 @@
   ^-  card
   [%pass /contacts %agent [ship dap] %poke %passport-action !>([%request-contacts ~])]
 ::
+++  create-req
+  |=  [our=ship =type:common data=columns:db =req-id]
+  ^-  card
+  [%pass /dbpoke %agent [our %bedrock] %poke %db-action !>([%create req-id /private type data ~])]
+::
 ++  create
   |=  [our=ship =type:common data=columns:db]
-  ^-  card
-  [%pass /dbpoke %agent [our %bedrock] %poke %db-action !>([%create [our *@da] /private type data ~])]
+  (create-req our type data [our *@da])
 ::
 ++  edit
   |=  [our=ship =type:common =id:common data=columns:db]
@@ -78,6 +82,50 @@
       result    ?:(=(curr '\0a') result (snoc result curr))
     ==
 ::
+++  trim-whitespace
+  |=  str=@t
+  ^-  @t
+  =/  tp=tape  (flop (trip str))
+  =/  result=tape  ""
+  |-
+    ?:  =(0 (lent tp))
+      ''
+    =/  curr=@t  (snag 0 tp)
+    ?:  ?|  =(curr '\09')  :: tab
+            =(curr '\0a')  :: newline
+            =(curr '\0d')  :: carriage return
+            =(curr ' ')    :: space
+        ==
+      $(tp +.tp)
+    (crip (flop tp))
+::
+++  truncate
+  |=  [str=@t n=@ud]
+  ^-  @t
+  (crip (scag n (trip str)))
+::
+++  cleanup-contact
+  |=  =contact:common
+  ^-  contact:common
+  =.  display-name.contact
+    ?~  display-name.contact  ~
+    (some (remove-newlines u.display-name.contact))
+  =.  avatar.contact
+    ?~  avatar.contact  ~
+    ?-  -.u.avatar.contact
+      %image
+        ?:  =('' img.u.avatar.contact)  ~
+        (some [%image (url-encode img.u.avatar.contact)])
+      %nft
+        ?:  =('' nft.u.avatar.contact)  ~
+        (some [%nft (url-encode nft.u.avatar.contact)])
+    ==
+  =.  bio.contact
+    ?~  bio.contact  ~
+    ?:  =('' (trim-whitespace u.bio.contact))  ~
+    (some (truncate (trim-whitespace u.bio.contact) 240))
+  contact
+::
 :: pokes
 ++  receive-contacts
 :: our ship gets this from another ship when they are giving us some contacts
@@ -127,15 +175,11 @@
   ^-  (quip card state-0)
   =/  log1  (maybe-log hide-logs.state "%add-friend: {<req-id>} {<ship>}")
 
-  =/  vent-path=path  /vent/(scot %p src.req-id)/(scot %da now.req-id)
-  =/  kickcard=card  [%give %kick ~[vent-path] ~]
-
+  :: TODO check that we don't already have a friendship with this ship
   =/  new-fren=friend:common  [ship %requested %.n mtd]
 
   =/  cards=(list card)
-    :~  [%give %fact ~[vent-path] passport-vent+!>([%ack ~])]
-        kickcard
-        (create our.bowl friend-type:common [%friend new-fren])
+    :~  (create-req our.bowl friend-type:common [%friend new-fren] req-id)
         [%pass /selfpoke %agent [ship dap.bowl] %poke %passport-action !>([%get-friend mtd])]
         (req ship dap.bowl)
     ==
@@ -202,8 +246,11 @@
   =/  vent-path=path  /vent/(scot %p src.req-id)/(scot %da now.req-id)
   =/  kickcard=card  [%give %kick ~[vent-path] ~]
 
+  ~&  "getting passport"
   =/  pass=passport:common   (our-passport:scries bowl)
+  ~&  >  pass
   =/  src-fren=?  (is-friend:scries src.bowl bowl)
+  ~&  >  src-fren
   :: only actually give out the passport if we are discoverable
   :: OR we are friends with the requester
   ?>  |(discoverable.pass src-fren)
@@ -215,18 +262,24 @@
   [cards state]
 ::
 ++  change-contact
-::passport &passport-action [%change-contact ~zod [%image 'url'] [~ '#fcfcfc'] [~ 'my bio'] [~ 'ZOOOD']]
-  |=  [c=contact:common state=state-0 =bowl:gall]
+::passport &passport-action [%change-contact [our now] ~zod [%image 'url'] [~ '#fcfcfc'] [~ 'my bio'] [~ 'ZOOOD']]
+  |=  [[=req-id c=contact:common] state=state-0 =bowl:gall]
   ^-  (quip card state-0)
+  =/  log1  (maybe-log hide-logs.state "%change-contact: {<req-id>} {<c>}")
   :: assure it's us, and we're editing our self
   ?>  =(our.bowl src.bowl)
   ?>  =(our.bowl ship.c)
 
+  =/  vent-path=path  /vent/(scot %p src.req-id)/(scot %da now.req-id)
+  =/  kickcard=card  [%give %kick ~[vent-path] ~]
+
   =/  p=passport:common  (our-passport:scries bowl)
-  =.  contact.p  c
+  =.  contact.p  (cleanup-contact c)
 
   =/  cards=(list card)
     :~  (edit our.bowl passport-type:common (our-passport-id:scries bowl) [%passport p])
+        [%give %fact ~[vent-path] passport-vent+!>([%passport p])]
+        kickcard
     ==
   [cards state]
 ::
@@ -266,7 +319,7 @@
   =/  kickcard=card  [%give %kick ~[vent-path] ~]
 
   =/  p=passport:common   (our-passport:scries bowl)
-  =.  contact.p           contact.pi
+  =.  contact.p           (cleanup-contact contact.pi)
   =.  cover.p             cover.pi
   =.  user-status.p       user-status.pi
   =.  discoverable.p      discoverable.pi
@@ -302,8 +355,13 @@
   :: TODO ask %pals for as many contacts to prepopulate as we can and
   :: TODO create a poke to auto-add friends from mutuals in %pals
   =/  old-friends  .^(json %gx /(scot %p our.bowl)/friends/(scot %da now.bowl)/all/noun)
-  =/  contacts=(list contact:common)  (contacts-from-friends:dejs old-friends)
-  =/  our-contact=contact:common  (snag 0 (skim contacts |=(c=contact:common =(our.bowl ship.c))))
+  =/  contacts=(list contact:common)
+    %+  turn
+      (contacts-from-friends:dejs old-friends)
+    cleanup-contact
+  =/  our-contact=contact:common
+    %+  snag  0
+    (skim contacts |=(c=contact:common =(our.bowl ship.c)))
   =/  p=passport:common
     [our-contact ~ %online %.y ~ ~ '' ~ ~ *passport-crypto:common]
   =.  peers.state  (malt (turn contacts |=(c=contact:common [ship.c c])))
@@ -334,13 +392,15 @@
         =/  c=(unit json)  (~(get by p.fr) 'contactInfo')
         ?~  c  ~
         ?>  ?=([%o *] u.c)
+        =/  raw-bio   (so (~(got by p.u.c) 'bio'))
+        =/  raw-name  (so (~(got by p.u.c) 'nickname'))
         %-  some
         ^-  contact:common
         :*  `@p`(slav %p shp)
             (de-avatar (~(got by p.u.c) 'avatar'))
             (some (hex-str (~(got by p.u.c) 'color')))
-            (some (so (~(got by p.u.c) 'bio')))
-            (some (so (~(got by p.u.c) 'nickname')))
+            ?:(=(raw-bio '') ~ (some raw-bio))
+            ?:(=(raw-name '') ~ (some raw-name))
         ==
       |=  uc=(unit contact:common)
       ^-  ?
@@ -382,7 +442,22 @@
     ++  decode
       %-  of
       :~  [%add-link add-link]
-          ::[%receive-contacts ]
+          [%get de-get]
+          [%add-friend de-add-friend]
+      ==
+    ::
+    ++  de-add-friend
+      |=  jon=json
+      ^-  [req-id ship (map @t @t)]
+      ?>  ?=([%o *] jon)
+      =/  gt  ~(got by p.jon)
+      =/  request-id=(unit json)  (~(get by p.jon) 'request-id')
+      =/  id=id:common  
+        ?~  request-id  [~zod ~2000.1.1]  :: if the poke-sender didn't care enough to pass a request id, just use a fake one
+        (de-id u.request-id)
+      :*  id
+          (de-ship (gt 'ship'))
+          ((om so) (gt 'mtd'))
       ==
     ::
     ++  add-link
@@ -408,6 +483,15 @@
           %name-record-set
         [%name-record-set (so (gt 'name')) (so (gt 'record'))]
       ==
+    ::
+    ++  de-get
+      :: allow people to pass {"request-id": "/~zod/~2000.1.1"} or {"ship": "~zod"}
+      |=  jon=json
+      ^-  req-id
+      ?>  ?=([%o *] jon)
+      =/  rq  (~(get by p.jon) 'request-id')
+      ?~  rq  `id:common`[`@p`(slav %p (so (~(got by p.jon) 'ship'))) *@da]
+      (de-id u.rq)
     ::
     ++  de-type
       %+  cu
@@ -465,7 +549,7 @@
       ^-  json
       ?-  -.vent
         %ack    s/%ack
-        %passport  ~  :: TODO (en-passport passport.vent)
+        %passport  (en-passport passport.vent)
         %link   ~
       ==
     ::
@@ -546,6 +630,16 @@
           ['path' s+(spat path.r)]
           ['type' (en-db-type type.r)]
           ['mtd' (metadata-to-json mtd.r)]
+      ==
+    ::
+    ++  en-friend
+      |=  n=friend:common
+      ^-  json
+      %-  pairs
+      :~  ['ship' s+(scot %p ship.n)]
+          ['status' s+status.n]
+          ['pinned' b+pinned.n]
+          ['mtd' (metadata-to-json mtd.n)]
       ==
     ::
     ++  row-id-to-json

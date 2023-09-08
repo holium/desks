@@ -42,6 +42,16 @@
     /noun
   ==
 ::
+++  test-bedrock-table-existence
+  |=  [=type:common =bowl:gall]
+  ^-  ?
+  .=  %.y
+  .^
+    @ud
+    %gx
+    /(scot %p our.bowl)/bedrock/(scot %da now.bowl)/loobean/table/(scot %t name.type)/(scot %uv hash.type)/noun
+  ==
+::
 ++  scry-bedrock-path-host
   |=  [=path =bowl:gall]
   ^-  ship
@@ -113,9 +123,21 @@
     %friend  +.data.r
   ==
 ::
+++  get-friends
+  |=  =bowl:gall
+  ^-  (list =friend:common)
+  =/  rows=(list row:bedrock)  (all-rows-by-path-type friend-type:common /private bowl)
+  %+  turn  rows
+  |=  r=row:bedrock
+  ^-  friend:common
+  ?+  -.data.r  !!
+    %friend  +.data.r
+  ==
+::
 ++  is-friend
   |=  [=ship =bowl:gall]
   ^-  ?
+  ?.  (test-bedrock-table-existence friend-type:common bowl)  %.n
   =/  rows=(list row:bedrock)
     %+  skim
       (all-rows-by-path-type friend-type:common /private bowl)
