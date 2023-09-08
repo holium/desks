@@ -104,7 +104,7 @@
       [%delete-timeline-post =path key=path]
       [%add-forerunners force=?]
       [%create-bedrock-timeline =path]
-      [%create-bedrock-timeline-post =path post=timeline-post]
+      [%create-bedrock-timeline-post =path req-id=[@p @da] post=timeline-post]
       [%add-forerunners-bedrock force=?]
   ==
 ::

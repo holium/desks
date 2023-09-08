@@ -1,10 +1,14 @@
 /-  *timeline, cd=chat-db
 |%
 ++  convert-messages
-  |=  [=msg-id:cd =msg-part-id:cd =content:cd metadata=(map cord cord)]
-  ^-  (unit [path timeline-post])
-  =/  name=path
-    /(scot %da timestamp.msg-id)/(scot %p sender.msg-id)/(scot %ud msg-part-id)
+  |=  $:  our=@p
+          created-at=@da
+          =msg-id:cd
+          =msg-part-id:cd
+          =content:cd
+          metadata=(map cord cord)
+      ==
+  ^-  (unit [[@p @da] timeline-post])
   ?+    -.content  ~
       %image
     =/  width=(unit @ud)
@@ -17,12 +21,12 @@
       ?~  rus=(rush u.get (cook head ;~(plug dem (jest 'px'))))
         ~&(failed-to-parse-height+u.get ~)
       rus
-    `[name ~ ~ [%link p.content %image width height]~]
+    `[[our created-at] ~ ~ [%link p.content %image width height]~]
     ::
       %link
     ?^  vid=(parse-video p.content)
       :-  ~
-      :-  name
+      :-  [our created-at]
       :-  ~  :-  ~
       :_  ~
       :*  %link
@@ -42,16 +46,16 @@
         ?~  rus=(rush u.get (cook head ;~(plug dem (jest 'px'))))
           ~&(failed-to-parse-height+u.get ~)
         rus
-      `[name ~ ~ [%link p.content %image width height]~]
+      `[[our created-at] ~ ~ [%link p.content %image width height]~]
     =/  description=(unit @t)  ?~(get=(~(get by metadata) 'ogDescription') ~ get)
     =/  image=(unit @t)        ?~(get=(~(get by metadata) 'ogImage') ~ get)
     =/  site-name=(unit @t)    ?~(get=(~(get by metadata) 'ogSiteName') ~ get)
     =/  title=(unit @t)        ?~(get=(~(get by metadata) 'ogTitle') ~ get)
     =/  type=(unit @t)         ?~(get=(~(get by metadata) 'ogType') ~ get)
     ?:  =([~ ~ ~ ~ ~] [description image site-name title type])
-      `[name ~ ~ [%link p.content %link %raw ~]~]
+      `[[our created-at] ~ ~ [%link p.content %link %raw ~]~]
     :-  ~
-    :-  name
+    :-  [our created-at]
     :-  ~  :-  ~
     :_  ~
     :*  %link

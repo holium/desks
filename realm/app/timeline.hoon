@@ -66,7 +66,7 @@
       =.  path.axn  (weld /timeline/(scot %p our.bowl) path.axn)
       =/  =cage
         :-  %db-action  !>
-        :*  %create   [our now]:bowl
+        :*  %create   req-id.axn
             path.axn  [%timeline-post 0v0]
             [%timeline-post post.axn]  ~
         ==
@@ -103,25 +103,26 @@
       `this(timelines (~(put by timelines) path.axn timeline))
       ::
         %add-forerunners
-      =/  fore=path  /spaces/~lomder-librun/realm-forerunners/chats/0v2.68end.ets6m.29fgc.ntejl.jbeo7
-      ?:  &(!force.axn (~(has by timelines) fore))
-        ~&(%forerunners-already-imported `this)
-      =+  .^(dump=db-dump:cd %gx /(scot %p our.bowl)/chat-db/(scot %da now.bowl)/db/chat-db-dump)
-      ?>  ?=(%tables -.dump)
-      =/  tables=(map term table:cd)
-        %-  ~(gas by *(map term table:cd))
-        (turn tables.dump |=(=table:cd [-.table table]))
-      =/  =table:cd  (~(got by tables) %messages)
-      ?>  ?=(%messages -.table)
-      =|  posts=(map path timeline-post)
-      =.  posts
-        %-  ~(gas by posts) 
-        %+  murn  (tap:msgon:cd messages-table.table)
-        |=  [* msg-part:cd]
-        ?.  =(fore path)  ~
-        (convert-messages msg-id msg-part-id content metadata)
-      =/  =timeline  [fore (sy ~[our.bowl]) posts]
-      `this(timelines (~(put by timelines) fore timeline))
+      `this
+      :: =/  fore=path  /spaces/~lomder-librun/realm-forerunners/chats/0v2.68end.ets6m.29fgc.ntejl.jbeo7
+      :: ?:  &(!force.axn (~(has by timelines) fore))
+      ::   ~&(%forerunners-already-imported `this)
+      :: =+  .^(dump=db-dump:cd %gx /(scot %p our.bowl)/chat-db/(scot %da now.bowl)/db/chat-db-dump)
+      :: ?>  ?=(%tables -.dump)
+      :: =/  tables=(map term table:cd)
+      ::   %-  ~(gas by *(map term table:cd))
+      ::   (turn tables.dump |=(=table:cd [-.table table]))
+      :: =/  =table:cd  (~(got by tables) %messages)
+      :: ?>  ?=(%messages -.table)
+      :: =|  posts=(map path timeline-post)
+      :: =.  posts
+      ::   %-  ~(gas by posts) 
+      ::   %+  murn  (tap:msgon:cd messages-table.table)
+      ::   |=  [* msg-part:cd]
+      ::   ?.  =(fore path)  ~
+      ::   (convert-messages msg-id msg-part-id content metadata)
+      :: =/  =timeline  [fore (sy ~[our.bowl]) posts]
+      :: `this(timelines (~(put by timelines) fore timeline))
       ::
         %add-forerunners-bedrock
       =/  fore=path  /spaces/~lomder-librun/realm-forerunners/chats/0v2.68end.ets6m.29fgc.ntejl.jbeo7
@@ -137,20 +138,18 @@
         (turn tables.dump |=(=table:cd [-.table table]))
       =/  =table:cd  (~(got by tables) %messages)
       ?>  ?=(%messages -.table)
-      =|  posts=(map path timeline-post)
-      =.  posts
-        %-  ~(gas by posts) 
+      =/  posts=(list [[@p @da] timeline-post])
         %+  murn  (tap:msgon:cd messages-table.table)
         |=  [* msg-part:cd]
         ?.  =(fore path)  ~
-        (convert-messages msg-id msg-part-id content metadata)
+        (convert-messages our.bowl created-at msg-id msg-part-id content metadata)
       =^  tl-cards  this
         (on-poke timeline-action+!>([%create-bedrock-timeline fore]))
       =/  post-cards
-        %+  turn  ~(val by posts)
-        |=  post=timeline-post
+        %+  turn  posts
+        |=  [req-id=[@p @da] post=timeline-post]
         ^-  card
-        =/  =cage  timeline-action+!>([%create-bedrock-timeline-post fore post])
+        =/  =cage  timeline-action+!>([%create-bedrock-timeline-post fore req-id post])
         [%pass / %agent [our dap]:bowl %poke cage]
       :_(this (weld tl-cards post-cards))
     ==
