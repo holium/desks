@@ -94,11 +94,13 @@
     =/  shp=ship  (snag 0 ships)
     =/  con=contact:common  (~(got by m) shp)
     =.  avatar.con
-      ?-  -.avatar.con
+      ?~  avatar.con  ~
+      %-  some
+      ?-  -.u.avatar.con
           %image
-        [%image (url-encode img.avatar.con)]
+        [%image (url-encode img.u.avatar.con)]
           %nft
-        [%nft (url-encode nft.avatar.con)]
+        [%nft (url-encode nft.u.avatar.con)]
       ==
     %=  $
       :: add to the peers map
@@ -190,23 +192,6 @@
     ==
   [cards state]
 ::
-++  add-link
-::passport &passport-action [%add-link passport-link]
-  |=  [[=req-id ln=passport-link:common] state=state-0 =bowl:gall]
-  ^-  (quip card state-0)
-  =/  log1  (maybe-log hide-logs.state "%add-link: {<req-id>} {<ln>}")
-
-  =/  vent-path=path  /vent/(scot %p src.req-id)/(scot %da now.req-id)
-  =/  kickcard=card  [%give %kick ~[vent-path] ~]
-
-  :: TODO verify the link is valid, then save it to bedrock
-
-  =/  cards=(list card)
-    :-  [%give %fact ~[vent-path] passport-vent+!>([%link ln])]
-    :-  kickcard
-    ~
-  [cards state]
-::
 ++  get
 :: for getting our passport
 ::passport &passport-action [%get [our now]]
@@ -227,6 +212,76 @@
     :-  [%give %fact ~[vent-path] passport-vent+!>([%passport pass])]
     :-  kickcard
     ~
+  [cards state]
+::
+++  change-contact
+::passport &passport-action [%change-contact ~zod [%image 'url'] [~ '#fcfcfc'] [~ 'my bio'] [~ 'ZOOOD']]
+  |=  [c=contact:common state=state-0 =bowl:gall]
+  ^-  (quip card state-0)
+  :: assure it's us, and we're editing our self
+  ?>  =(our.bowl src.bowl)
+  ?>  =(our.bowl ship.c)
+
+  =/  p=passport:common  (our-passport:scries bowl)
+  =.  contact.p  c
+
+  =/  cards=(list card)
+    :~  (edit our.bowl passport-type:common (our-passport-id:scries bowl) [%passport p])
+    ==
+  [cards state]
+::
+++  add-link
+::passport &passport-action [%add-link passport-link]
+  |=  [[=req-id ln=passport-link:common] state=state-0 =bowl:gall]
+  ^-  (quip card state-0)
+  =/  log1  (maybe-log hide-logs.state "%add-link: {<req-id>} {<ln>}")
+  :: assure it's us
+  ?>  =(our.bowl src.bowl)
+
+  =/  vent-path=path  /vent/(scot %p src.req-id)/(scot %da now.req-id)
+  =/  kickcard=card  [%give %kick ~[vent-path] ~]
+
+  =/  p=passport:common   (our-passport:scries bowl)
+  :: TODO verify the link is valid, then save it to bedrock
+  :: also probably need to make updates to `crypto.p` and the pki state
+  =.  chain.p             (snoc chain.p ln)
+
+  =/  cards=(list card)
+    :~  (edit our.bowl passport-type:common (our-passport-id:scries bowl) [%passport p])
+        [%give %fact ~[vent-path] passport-vent+!>([%passport p])]
+        kickcard
+    ==
+  [cards state]
+::
+++  change-passport
+:: DOES NOT UPDATE `chain` or `crypto`, MUST use %add-link for those
+::passport &passport-action [%change-passport passport]
+  |=  [[=req-id pi=passport:common] state=state-0 =bowl:gall]
+  ^-  (quip card state-0)
+  =/  log1  (maybe-log hide-logs.state "%change-passport: {<req-id>} {<pi>}")
+  :: assure it's us
+  ?>  =(our.bowl src.bowl)
+
+  =/  vent-path=path  /vent/(scot %p src.req-id)/(scot %da now.req-id)
+  =/  kickcard=card  [%give %kick ~[vent-path] ~]
+
+  =/  p=passport:common   (our-passport:scries bowl)
+  =.  contact.p           contact.pi
+  =.  cover.p             cover.pi
+  =.  user-status.p       user-status.pi
+  =.  discoverable.p      discoverable.pi
+  =.  discoverable.p      discoverable.pi
+  =.  nfts.p              nfts.pi
+  =.  addresses.p         addresses.pi
+  =.  default-address.p   default-address.pi
+  =.  recommendations.p   recommendations.pi
+  :: INTENTIONALLY SKIPPING chain.p and crypto.p
+
+  =/  cards=(list card)
+    :~  (edit our.bowl passport-type:common (our-passport-id:scries bowl) [%passport p])
+        [%give %fact ~[vent-path] passport-vent+!>([%passport p])]
+        kickcard
+    ==
   [cards state]
 ::
 ++  toggle-hide-logs
@@ -253,7 +308,7 @@
     [our-contact ~ %online %.y ~ ~ '' ~ ~ *passport-crypto:common]
   =.  peers.state  (malt (turn contacts |=(c=contact:common [ship.c c])))
   =/  cards=(list card)
-    :~  [%pass /dbpoke %agent [our.bowl %bedrock] %poke %db-action !>([%create [our.bowl *@da] /private passport-type:common [%passport p] ~])]
+    :~  (create our.bowl passport-type:common [%passport p])
     ==
   [cards state]
 ::
@@ -282,7 +337,7 @@
         %-  some
         ^-  contact:common
         :*  `@p`(slav %p shp)
-            (t-or-bunt-null (~(got by p.u.c) 'avatar'))
+            (de-avatar (~(got by p.u.c) 'avatar'))
             (some (hex-str (~(got by p.u.c) 'color')))
             (some (so (~(got by p.u.c) 'bio')))
             (some (so (~(got by p.u.c) 'nickname')))
@@ -294,15 +349,16 @@
     ^-  contact:common
     (need uc)
   ::
-  ++  t-or-bunt-null
+  ++  de-avatar
     |=  jon=json
-    ^-  avatar:common
+    ^-  (unit avatar:common)
     ?+  jon   !!
-      [%s *]  [%image (so jon)]
-      ~       [%image '']
+      [%s *]  (some [%image (so jon)])
+      ~       ~
       [%o *]
         =/  typ=json  (~(got by p.jon) 'type')
         ?>  ?=([%s *] typ)
+        %-  some
         ?+  `@tas`p.typ  !!
           %image  [%image (so (~(got by p.jon) 'img'))]
           %nft    [%nft (so (~(got by p.jon) 'nft'))]
@@ -441,15 +497,16 @@
       ==
     ::
     ++  en-avatar
-      |=  a=avatar:common
+      |=  a=(unit avatar:common)
       ^-  json
+      ?~  a  ~
       %-  pairs
       :- 
-        ?-  -.a
-          %image  ['img' s+img.a]
-          %nft  ['nft' s+nft.a]
+        ?-  -.u.a
+          %image  ['img' s+img.u.a]
+          %nft  ['nft' s+nft.u.a]
         ==
-      :~  ['type' [%s -.a]]
+      :~  ['type' [%s -.u.a]]
       ==
     ::
     ++  en-linked-nft

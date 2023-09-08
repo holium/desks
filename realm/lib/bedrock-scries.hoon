@@ -8,6 +8,12 @@
     %passport  +.data.r
   ==
 ::
+++  our-passport-id
+  |=  =bowl:gall
+  ^-  id:common
+  =/  r=row:bedrock  (first-common passport-type:common /private bowl)
+  id.r
+::
 ++  test-bedrock-path-existence
   |=  [=path =bowl:gall]
   ^-  ?

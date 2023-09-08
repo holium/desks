@@ -40,14 +40,20 @@
       %respond-to-friend-request
         (respond-to-friend-request:passport +.act state bowl)
 
-      %add-link
-        (add-link:passport +.act state bowl)
       %receive-contacts
         (receive-contacts:passport +.act state bowl)
       %request-contacts
         (request-contacts:passport state bowl)
+
       %get     :: for getting someone else's passport via a threadpoke
         (get:passport +.act state bowl)
+      %add-link
+        (add-link:passport +.act state bowl)
+      %change-contact
+        (change-contact:passport +.act state bowl)
+      %change-passport
+        (change-passport:passport +.act state bowl)
+
       %toggle-hide-logs
         (toggle-hide-logs:passport +.act state bowl)
 
@@ -87,9 +93,10 @@
 ::        |=  =fren
 ::        ^-  contact:common
 ::        (~(got by peers.state) ship.fren)
-        ``contacts+!>(~)
+        ``noun+!>(~)
 ::        ``contacts+!>(contacts)
     ::
+    :: .^([[@p * (unit @t) *] (unit @t) @t *] %gx /=/passport/=/our-passport/noun)
       [%x %our-passport ~]
         ``passport+!>((our-passport:scries bowl))
     ::

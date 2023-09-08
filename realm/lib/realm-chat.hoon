@@ -176,7 +176,7 @@
       [host %bedrock]
       %poke
       %db-action
-      !>([%edit id.bedrock-chat path.act chat-type:common [%chat chat] ~])
+      !>([%edit [~zod *@da] id.bedrock-chat path.act chat-type:common [%chat chat] ~])
     ]
   ==
 ::
@@ -213,7 +213,7 @@
       [host %bedrock]
       %poke
       %db-action
-      !>([%edit (swap-id-parts msg-id.act) path.act message-type:common [%message msg] ~])
+      !>([%edit [~zod *@da] (swap-id-parts msg-id.act) path.act message-type:common [%message msg] ~])
     ]
   ==
 ::

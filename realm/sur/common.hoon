@@ -201,7 +201,7 @@
 ::
 +$  contact
   $:  =ship
-      =avatar  :: defaults to empty string for unset avatars
+      avatar=(unit avatar)
       color=(unit @t) :: i.e. #FCFCFC
       bio=(unit @t)
       display-name=(unit @t)
