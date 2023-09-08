@@ -69,6 +69,7 @@
         ++  image
           |=  =image:metadata:link:block:tl
           ^-  json
+          %+  frond  %size
           %-  pairs
           :~  [%width ?~(width.image ~ (numb u.width.image))]
               [%height ?~(height.image ~ (numb u.height.image))]
