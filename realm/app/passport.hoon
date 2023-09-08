@@ -119,6 +119,14 @@
         ::~&  >  "remote-scry/callback on-agent {<-.sign>}"
         ::~&  +.sign
         `this
+      [%contacts ~]
+        ?+    -.sign  `this
+          %poke-ack
+            ?~  p.sign  `this
+            ::~&  >>>  "%db: {<(spat wire)>} contacts failed"
+            ::~&  >>>  p.sign
+            `this
+        ==
       [%dbpoke ~]
         ?+    -.sign  `this
           %poke-ack

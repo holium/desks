@@ -21,10 +21,14 @@
   |=  [our=ship =type:common data=columns:db]
   (create-req our type data [our *@da])
 ::
+++  edit-req
+  |=  [our=ship =type:common =id:common data=columns:db =req-id]
+  ^-  card
+  [%pass /dbpoke %agent [our %bedrock] %poke %db-action !>([%edit req-id id /private type data ~])]
+::
 ++  edit
   |=  [our=ship =type:common =id:common data=columns:db]
-  ^-  card
-  [%pass /dbpoke %agent [our %bedrock] %poke %db-action !>([%edit [our *@da] id /private type data ~])]
+  (edit-req our type id data [our *@da])
 ::
 ++  maybe-log
   |=  [hide-debug=? msg=tape]
@@ -42,16 +46,16 @@
       (crip result)
     =/  curr=@t  (snag 0 trl)
     =/  char=tape
-      ?:  =(curr ':')  "%3A"
-      ?:  =(curr '/')  "%2F"
-      ?:  =(curr '?')  "%3F"
+::      ?:  =(curr ':')  "%3A"
+::      ?:  =(curr '/')  "%2F"
+::      ?:  =(curr '?')  "%3F"
       ?:  =(curr '#')  "%23"
-      ?:  =(curr '[')  "%5B"
-      ?:  =(curr ']')  "%5D"
+::      ?:  =(curr '[')  "%5B"
+::      ?:  =(curr ']')  "%5D"
       ?:  =(curr '@')  "%40"
       ?:  =(curr '!')  "%21"
       ?:  =(curr '$')  "%24"
-      ?:  =(curr '&')  "%26"
+::      ?:  =(curr '&')  "%26"
       ?:  =(curr '\'')  "%27"
       ?:  =(curr '(')  "%29"
       ?:  =(curr ')')  "%2A"
@@ -213,7 +217,7 @@
   =.  status.friend.new-fren    ?:(accept %friend %rejected)
 
   =/  cards=(list card)
-    :~  [%give %fact ~[vent-path] passport-vent+!>([%ack ~])]
+    :~  [%give %fact ~[vent-path] passport-vent+!>([%friend friend.new-fren])]
         kickcard
         (edit our.bowl friend-type:common id.new-fren [%friend friend.new-fren])
         [%pass /selfpoke %agent [ship dap.bowl] %poke %passport-action !>([%respond-to-friend-request accept])]
@@ -277,7 +281,7 @@
   =.  contact.p  (cleanup-contact c)
 
   =/  cards=(list card)
-    :~  (edit our.bowl passport-type:common (our-passport-id:scries bowl) [%passport p])
+    :~  (edit-req our.bowl passport-type:common (our-passport-id:scries bowl) [%passport p] req-id)
         [%give %fact ~[vent-path] passport-vent+!>([%passport p])]
         kickcard
     ==
@@ -444,6 +448,28 @@
       :~  [%add-link add-link]
           [%get de-get]
           [%add-friend de-add-friend]
+          [%handle-friend-request de-handle-friend-request]
+          [%change-contact de-change-contact]
+      ==
+    ::
+    ++  de-change-contact
+      |=  jon=json
+      ^-  [req-id contact:common]
+      ?>  ?=([%o *] jon)
+      =/  request-id=(unit json)  (~(get by p.jon) 'request-id')
+      =/  id=id:common  
+        ?~  request-id  [~zod ~2000.1.1]  :: if the poke-sender didn't care enough to pass a request id, just use a fake one
+        (de-id u.request-id)
+      :-  id
+      (de-contact jon)
+    ::
+    ++  de-contact
+      %-  ot
+      :~  [%ship de-ship]
+          [%avatar de-avatar]
+          [%color so:dejs-soft:format]
+          [%bio so:dejs-soft:format]
+          [%display-name so:dejs-soft:format]
       ==
     ::
     ++  de-add-friend
@@ -458,6 +484,20 @@
       :*  id
           (de-ship (gt 'ship'))
           ((om so) (gt 'mtd'))
+      ==
+    ::
+    ++  de-handle-friend-request
+      |=  jon=json
+      ^-  [req-id ? ship]
+      ?>  ?=([%o *] jon)
+      =/  gt  ~(got by p.jon)
+      =/  request-id=(unit json)  (~(get by p.jon) 'request-id')
+      =/  id=id:common  
+        ?~  request-id  [~zod ~2000.1.1]  :: if the poke-sender didn't care enough to pass a request id, just use a fake one
+        (de-id u.request-id)
+      :*  id
+          (bo (gt 'accept'))
+          (de-ship (gt 'ship'))
       ==
     ::
     ++  add-link
@@ -548,9 +588,10 @@
       |=  =vent
       ^-  json
       ?-  -.vent
-        %ack    s/%ack
-        %passport  (en-passport passport.vent)
-        %link   ~
+        %ack        s/%ack
+        %passport   (en-passport passport.vent)
+        %friend     (en-friend friend.vent)
+        %link       ~
       ==
     ::
     ++  en-passport

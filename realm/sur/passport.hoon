@@ -36,6 +36,7 @@
 +$  vent
   $%  [%link =passport-link:common]
       [%passport =passport:common]
+      [%friend =friend:common]
       [%ack ~]
   ==
 --
