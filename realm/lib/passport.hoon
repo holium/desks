@@ -516,12 +516,32 @@
       =/  gt  ~(got by p.jon)
       =/  link-type=@tas   ((se %tas) (gt 'link-type'))
       ?+  link-type  !!
+          %edge-add
+        [%edge-add (so (gt 'from-link-hash')) (so (gt 'to-link-hash')) (so (gt 'key')) (so (gt 'value'))]
           %edge-remove
         [%edge-remove (so (gt 'link-hash'))]
+          %entity-add
+        [%entity-add (so (gt 'public-key')) (so (gt 'public-key-type')) (so (gt 'name'))]
+          %key-add
+        [%key-add (so (gt 'public-key')) (so (gt 'public-key-type')) (so (gt 'name'))]
           %key-remove
         [%key-remove (so (gt 'name'))]
+          %post-add
+        [%post-add (so (gt 'type')) (gt 'data')]
+          %post-edit
+        [%post-edit (so (gt 'link-hash')) (so (gt 'type')) (gt 'data')]
+          %post-remove
+        [%post-remove (so (gt 'link-hash'))]
           %name-record-set
         [%name-record-set (so (gt 'name')) (so (gt 'record'))]
+          %token-burn
+        [%token-burn (so (gt 'from-entity')) (ne (gt 'amount'))]
+          %token-mint
+        [%token-mint (so (gt 'to-entity')) (ne (gt 'amount'))]
+          %token-transfer
+        [%token-transfer (so (gt 'to-entity')) (ne (gt 'amount'))]
+          %passport-root
+        [%passport-root (so (gt 'data')) (so (gt 'hash')) (so (gt 'hash-signature'))]
       ==
     ::
     ++  de-get
@@ -606,8 +626,72 @@
           ['addresses' a+(turn addresses.p en-linked-address)]
           ['default-address' s+default-address.p]
           ['recommendations' a+(turn ~(tap in recommendations.p) en-recommendation)]
-          ['chain' a+(limo ~[s+%not-implemented])]
+          ['chain' a+(turn chain.p en-link)]
           ['crypto' o+`(map @t json)`(malt ~[object+s+%not-implemented])]
+      ==
+    ::
+    ++  en-link
+      |=  ln=passport-link:common
+      ^-  json
+      %-  pairs
+      ?+  -.ln  !!
+          %edge-add
+        :~  ['link-type' [%s -.ln]]
+            ['from-link-hash' s+from-link-hash.ln]
+            ['to-link-hash' s+to-link-hash.ln]
+            ['key' s+key.ln]
+            ['value' s+value.ln]
+        ==
+          %edge-remove
+        :~  ['link-type' [%s -.ln]]
+            ['link-hash' s+link-hash.ln]
+        ==
+          %entity-add
+        :~  ['link-type' [%s -.ln]]
+            ['public-key' s+public-key.ln]
+            ['public-key-type' s+public-key-type.ln]
+            ['name' s+name.ln]
+        ==
+          %entity-remove
+        :~  ['link-type' [%s -.ln]]
+            ['name' s+name.ln]
+        ==
+          %key-add
+        :~  ['link-type' [%s -.ln]]
+            ['public-key' s+public-key.ln]
+            ['public-key-type' s+public-key-type.ln]
+            ['name' s+name.ln]
+        ==
+          %key-remove
+        :~  ['link-type' [%s -.ln]]
+            ['name' s+name.ln]
+        ==
+          %post-add
+        :~  ['link-type' [%s -.ln]]
+            ['type' s+type.ln]
+            ['data' data.ln]
+        ==
+          %post-edit
+        :~  ['link-type' [%s -.ln]]
+            ['link-hash' s+link-hash.ln]
+            ['type' s+type.ln]
+            ['data' data.ln]
+        ==
+          %post-remove
+        :~  ['link-type' [%s -.ln]]
+            ['link-hash' s+link-hash.ln]
+        ==
+          %name-record-set
+        :~  ['link-type' [%s -.ln]]
+            ['name' s+name.ln]
+            ['record' s+record.ln]
+        ==
+          %passport-root
+        :~  ['link-type' [%s -.ln]]
+            ['data' s+data.ln]
+            ['hash' s+hash.ln]
+            ['hash-signature' s+hash-signature.ln]
+        ==
       ==
     ::
     ++  en-contact
