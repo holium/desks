@@ -1981,9 +1981,14 @@
       =<  block
       |%
       ++  block
-        %-  of
-        :~  text+text
-            link+link
+        |=  jon=json
+        ?>  ?=(%o -.jon)
+        ^-  block:common
+        =/  type=json  (~(got by p.jon) 'block-type')
+        =.  p.jon      (~(del by p.jon) 'block-type')
+        ?+  type  !!
+          [%s %text]  [%text (text jon)]
+          [%s %link]  [%link (link jon)]
         ==
       ::
       ++  text
@@ -1997,54 +2002,54 @@
       ++  link
         =<  link
         |%
-        ++  link  (ot ~[url+so metadata+metadata])
+        ++  link
+          |=  jon=json
+          ?>  ?=(%o -.jon)
+          ^-  link:block:common
+          =/  type=json  (~(got by p.jon) 'link-type')
+          =.  p.jon      (~(del by p.jon) 'link-type')
+          :-  (so (~(got by p.jon) 'url'))
+          ?+  type  !!
+            [%s %image]      [%image (image jon)]
+            [%s %video]      [%video (video jon)]
+            [%s %audio]      [%audio (audio jon)]
+            [%s %file]       [%file (file jon)]
+            [%s %raw]        [%raw (raw jon)]
+            [%s %opengraph]  [%opengraph (opengraph jon)]
+            [%s %misc]       [%misc (misc jon)]
+          ==
         ::
-        ++  metadata
-          =<  metadata
-          |%
-          ++  metadata
-            %-  of
-            :~  [%image image]
-                [%video video]
-                [%audio audio]
-                [%file file]
-                [%raw raw]
-                [%opengraph opengraph]
-                [%misc misc]
-            ==
-          ::
-          ++  size
-            %-  ot
-            :~  width+|=(jon=json ?~(jon ~ `(ni jon)))
-                height+|=(jon=json ?~(jon ~ `(ni jon)))
-            ==
-          ::
-          ++  image  (ot ~[size+size])
-          ::
-          ++  video
-            %-  ot 
-            :~  size+size
-                type+(cu ?(%youtube %file) so)
-                :-  %orientation
-                |=  jon=json
-                ?~(jon ~ `((cu ?(%portrait %landscape) so) jon))
-            ==
-          ::
-          ++  audio  ul
-          ++  file   ul
-          ++  raw    ul
-          ++  opengraph
-            %-  ot
-            :~  description+|=(jon=json ?~(jon ~ `(so jon)))
-                image+|=(jon=json ?~(jon ~ `(so jon)))
-                site-name+|=(jon=json ?~(jon ~ `(so jon)))
-                title+|=(jon=json ?~(jon ~ `(so jon)))
-                type+|=(jon=json ?~(jon ~ `(so jon)))
-                author+|=(jon=json ?~(jon ~ `(so jon)))
-            ==
-          ::
-          ++  misc  (om so)
-          --
+        ++  size
+          %-  ot
+          :~  width+|=(jon=json ?~(jon ~ `(ni jon)))
+              height+|=(jon=json ?~(jon ~ `(ni jon)))
+          ==
+        ::
+        ++  image  (ot ~[size+size])
+        ::
+        ++  video
+          %-  ot 
+          :~  size+size
+              type+(cu ?(%youtube %file) so)
+              :-  %orientation
+              |=  jon=json
+              ?~(jon ~ `((cu ?(%portrait %landscape) so) jon))
+          ==
+        ::
+        ++  audio  ul
+        ++  file   ul
+        ++  raw    ul
+        ++  opengraph
+          %-  ot
+          :~  description+|=(jon=json ?~(jon ~ `(so jon)))
+              image+|=(jon=json ?~(jon ~ `(so jon)))
+              site-name+|=(jon=json ?~(jon ~ `(so jon)))
+              title+|=(jon=json ?~(jon ~ `(so jon)))
+              type+|=(jon=json ?~(jon ~ `(so jon)))
+              author+|=(jon=json ?~(jon ~ `(so jon)))
+          ==
+        ::
+        ++  misc  (om so)
         --
       --
     ::
