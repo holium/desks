@@ -229,7 +229,7 @@
   ::
   +$  text
     $:  text=@t
-        size=?(%sm %md %lg)
+        text-size=?(%sm %md %lg)
         weight=?(%normal %bold)
         style=?(%normal %italic)
     ==
@@ -273,12 +273,12 @@
       +$  file  ~
       +$  raw   ~
       +$  opengraph
-        $:  description=(unit @t)
-            image=(unit @t)
-            site-name=(unit @t)
-            title=(unit @t)
-            type=(unit @t)
-            author=(unit @t)
+        $:  og-description=(unit @t)
+            og-image=(unit @t)
+            og-site-name=(unit @t)
+            og-title=(unit @t)
+            og-type=(unit @t)
+            og-author=(unit @t)
         ==
       ::
       +$  misc  (map @t @t)

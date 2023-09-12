@@ -1994,7 +1994,7 @@
       ++  text
         %-  ot
         :~  text+so
-            size+(cu ?(%sm %md %lg) so)
+            text-size+(cu ?(%sm %md %lg) so)
             weight+(cu ?(%normal %bold) so)
             style+(cu ?(%normal %italic) so)
         ==
@@ -2041,12 +2041,12 @@
         ++  raw    ul
         ++  opengraph
           %-  ot
-          :~  description+|=(jon=json ?~(jon ~ `(so jon)))
-              image+|=(jon=json ?~(jon ~ `(so jon)))
-              site-name+|=(jon=json ?~(jon ~ `(so jon)))
-              title+|=(jon=json ?~(jon ~ `(so jon)))
-              type+|=(jon=json ?~(jon ~ `(so jon)))
-              author+|=(jon=json ?~(jon ~ `(so jon)))
+          :~  og-description+|=(jon=json ?~(jon ~ `(so jon)))
+              og-image+|=(jon=json ?~(jon ~ `(so jon)))
+              og-site-name+|=(jon=json ?~(jon ~ `(so jon)))
+              og-title+|=(jon=json ?~(jon ~ `(so jon)))
+              og-type+|=(jon=json ?~(jon ~ `(so jon)))
+              og-author+|=(jon=json ?~(jon ~ `(so jon)))
           ==
         ::
         ++  misc  (om so)
@@ -2556,7 +2556,7 @@
         %-  pairs
         :~  [%block-type s+%text]
             [%text s+text.text]
-            [%size s+size.text]
+            [%text-size s+text-size.text]
             [%weight s+weight.text]
             [%style s+style.text]
         ==
@@ -2621,12 +2621,12 @@
             |=  og=opengraph:metadata:link:block:common
             ^-  (list [@t json])
             :~  [%link-type s+%opengraph]
-                [%description ?~(description.og ~ s+u.description.og)]
-                [%image ?~(image.og ~ s+u.image.og)]
-                [%site-name ?~(site-name.og ~ s+u.site-name.og)]
-                [%title ?~(title.og ~ s+u.title.og)]
-                [%type ?~(type.og ~ s+u.type.og)]
-                [%author ?~(author.og ~ s+u.author.og)]
+                [%og-description ?~(og-description.og ~ s+u.og-description.og)]
+                [%og-image ?~(og-image.og ~ s+u.og-image.og)]
+                [%og-site-name ?~(og-site-name.og ~ s+u.og-site-name.og)]
+                [%og-title ?~(og-title.og ~ s+u.og-title.og)]
+                [%og-type ?~(og-type.og ~ s+u.og-type.og)]
+                [%og-author ?~(og-author.og ~ s+u.og-author.og)]
             ==
           ::
           ++  misc
