@@ -2008,37 +2008,39 @@
                 [%video video]
                 [%audio audio]
                 [%file file]
-                [%link link]
+                [%raw raw]
+                [%opengraph opengraph]
                 [%misc misc]
             ==
-          ++  image
+          ::
+          ++  size
             %-  ot
             :~  width+|=(jon=json ?~(jon ~ `(ni jon)))
                 height+|=(jon=json ?~(jon ~ `(ni jon)))
             ==
           ::
+          ++  image  (ot ~[size+size])
+          ::
           ++  video
             %-  ot 
-            :~  type+(cu ?(%youtube %file) so)
+            :~  size+size
+                type+(cu ?(%youtube %file) so)
                 :-  %orientation
                 |=  jon=json
                 ?~(jon ~ `((cu ?(%portrait %landscape) so) jon))
             ==
           ::
           ++  audio  ul
-          ++  file  ul
-          ++  link
-            %-  of
-            :~  [%raw |=(jon=json ?>(?=(~ jon) ~))]
-                :-  %opengraph
-                %-  ot
-                :~  description+|=(jon=json ?~(jon ~ `(so jon)))
-                    image+|=(jon=json ?~(jon ~ `(so jon)))
-                    site-name+|=(jon=json ?~(jon ~ `(so jon)))
-                    title+|=(jon=json ?~(jon ~ `(so jon)))
-                    type+|=(jon=json ?~(jon ~ `(so jon)))
-                    author+|=(jon=json ?~(jon ~ `(so jon)))
-                ==
+          ++  file   ul
+          ++  raw    ul
+          ++  opengraph
+            %-  ot
+            :~  description+|=(jon=json ?~(jon ~ `(so jon)))
+                image+|=(jon=json ?~(jon ~ `(so jon)))
+                site-name+|=(jon=json ?~(jon ~ `(so jon)))
+                title+|=(jon=json ?~(jon ~ `(so jon)))
+                type+|=(jon=json ?~(jon ~ `(so jon)))
+                author+|=(jon=json ?~(jon ~ `(so jon)))
             ==
           ::
           ++  misc  (om so)
@@ -2540,14 +2542,15 @@
       |=  =block:common
       |^  ^-  json
       ?-  -.block
-        %text  (frond %text (text +.block))
-        %link  (frond %link (link +.block))
+        %text  (text +.block)
+        %link  (link +.block)
       ==
       ++  text
         |=  =text:block:common
         ^-  json
         %-  pairs
-        :~  [%text s+text.text]
+        :~  [%block-type s+%text]
+            [%text s+text.text]
             [%size s+size.text]
             [%weight s+weight.text]
             [%style s+style.text]
@@ -2556,62 +2559,79 @@
         |=  =link:block:common
         |^  ^-  json
         %-  pairs
-        :~  [%url s+url.link]
-            [%metadata (metadata metadata.link)]
+        %+  welp
+          (metadata metadata.link)
+        :~  [%block-type s+%link]
+            [%url s+url.link]
         ==
         ++  metadata
           |=  =metadata:link:block:common
-          |^  ^-  json
-          %+  frond  -.metadata
+          |^  ^-  (list [@t json])
           ?-  -.metadata
-            %image  (image +.metadata)
-            %video  (video +.metadata)
-            %audio  (audio +.metadata)
-            %file   (file +.metadata)
-            %link   (link +.metadata)
-            %misc   (misc +.metadata)
+            %image      (image +.metadata)
+            %video      (video +.metadata)
+            %audio      (audio +.metadata)
+            %file       (file +.metadata)
+            %raw        (raw +.metadata)
+            %opengraph  (opengraph +.metadata)
+            %misc       (misc +.metadata)
           ==
           ++  image
             |=  =image:metadata:link:block:common
-            ^-  json
-            %+  frond  %size 
-            %-  pairs
-            :~  [%width ?~(width.image ~ (numb u.width.image))]
-                [%height ?~(height.image ~ (numb u.height.image))]
+            ^-  (list [@t json])
+            :~  [%link-type s+%image]
+                :-  %size
+                %-  pairs
+                :~  [%width ?~(width.size.image ~ (numb u.width.size.image))]
+                    [%height ?~(height.size.image ~ (numb u.height.size.image))]
+                ==
             ==
           ++  video
             |=  =video:metadata:link:block:common
-            ^-  json
-            %-  pairs
-            :~  [%type s+type.video]
+            ^-  (list [@t json])
+            :~  [%link-type s+%video]
+                :-  %size
+                %-  pairs
+                :~  [%width ?~(width.size.video ~ (numb u.width.size.video))]
+                    [%height ?~(height.size.video ~ (numb u.height.size.video))]
+                ==
+                [%video-type s+type.video]
                 [%orientation ?~(orientation.video ~ s+u.orientation.video)]
             ==
-          ++  audio  _~
-          ++  file   _~
-          ++  link
-            |=  =link:metadata:link:block:common
-            ^-  json
-            %+  frond  -.link
-            ?-    -.link
-              %raw  ~
-              ::
-                %opengraph
-              %-  pairs
-              :~  [%description ?~(description.link ~ s+u.description.link)]
-                  [%image ?~(image.link ~ s+u.image.link)]
-                  [%site-name ?~(site-name.link ~ s+u.site-name.link)]
-                  [%title ?~(title.link ~ s+u.title.link)]
-                  [%type ?~(type.link ~ s+u.type.link)]
-                  [%author ?~(author.link ~ s+u.author.link)]
-              ==
+          ++  audio
+            |=  =audio:metadata:link:block:common
+            ^-  (list [@t json])
+            [%link-type s+%video]~
+
+          ++  file
+            |=  =file:metadata:link:block:common
+            ^-  (list [@t json])
+            [%link-type s+%video]~
+          ++  raw
+            |=  =raw:metadata:link:block:common
+            ^-  (list [@t json])
+            [%link-type s+%raw]~
+            
+          ++  opengraph
+            |=  og=opengraph:metadata:link:block:common
+            ^-  (list [@t json])
+            :~  [%link-type s+%opengraph]
+                [%description ?~(description.og ~ s+u.description.og)]
+                [%image ?~(image.og ~ s+u.image.og)]
+                [%site-name ?~(site-name.og ~ s+u.site-name.og)]
+                [%title ?~(title.og ~ s+u.title.og)]
+                [%type ?~(type.og ~ s+u.type.og)]
+                [%author ?~(author.og ~ s+u.author.og)]
             ==
           ::
           ++  misc
             |=  =misc:metadata:link:block:common
-            ^-  json
-            :-  %o
-            %-  malt
-            %+  turn  ~(tap by misc)
+            ^-  (list [@t json])
+            %+  turn
+              %~  tap  by
+              %+  ~(put by misc)
+                'link-type'
+              'misc'
             |=([k=@t v=@t] [k s+v])
           --
         --

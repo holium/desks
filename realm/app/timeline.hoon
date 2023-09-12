@@ -127,9 +127,7 @@
         %add-forerunners-bedrock
       =/  fore=path  /spaces/~lomder-librun/realm-forerunners/chats/0v2.68end.ets6m.29fgc.ntejl.jbeo7
       =/  db-fore=path  [%timeline (scot %p our.bowl) fore]
-      ?:  ?&  !force.axn
-              (test-bedrock-path-existence:scries db-fore bowl)
-          ==
+      ?:  &(!force.axn (test-bedrock-path-existence:scries db-fore bowl))
         ~&(%forerunners-already-imported-to-bedrock `this)
       =+  .^(dump=db-dump:cd %gx /(scot %p our.bowl)/chat-db/(scot %da now.bowl)/db/chat-db-dump)
       ?>  ?=(%tables -.dump)

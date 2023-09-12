@@ -21,19 +21,28 @@
       ?~  rus=(rush u.get (cook head ;~(plug dem (jest 'px'))))
         ~&(failed-to-parse-height+u.get ~)
       rus
-    `[[our created-at] ~ ~ [%link p.content %image width height]~]
+    :-  ~
+    :-  [our created-at]  :-  ~  :-  ~
+    :~  [%text 'This is a test.' %md %bold %italic]
+        [%link p.content %image width height]
+    ==
     ::
       %link
     ?^  vid=(parse-video p.content)
       :-  ~
       :-  [our created-at]
       :-  ~  :-  ~
-      :_  ~
-      :*  %link
-          p.content
-          %video
-          u.vid
-          ~
+      :~  :*  %text
+              'This is a test.'
+              %md  %bold  %italic
+          ==
+          :*  %link
+              p.content
+              %video
+              [~ ~]
+              u.vid
+              ~
+          ==
       ==
     ?:  (parse-image-extension p.content)
       =/  width=(unit @ud)
@@ -46,29 +55,40 @@
         ?~  rus=(rush u.get (cook head ;~(plug dem (jest 'px'))))
           ~&(failed-to-parse-height+u.get ~)
         rus
-      `[[our created-at] ~ ~ [%link p.content %image width height]~]
+      :-  ~
+      :-  [our created-at]  :-  ~  :-  ~
+      :~  [%text 'This is a test.' %md %bold %italic]
+          [%link p.content %image width height]
+      ==
     =/  description=(unit @t)  ?~(get=(~(get by metadata) 'ogDescription') ~ get)
     =/  image=(unit @t)        ?~(get=(~(get by metadata) 'ogImage') ~ get)
     =/  site-name=(unit @t)    ?~(get=(~(get by metadata) 'ogSiteName') ~ get)
     =/  title=(unit @t)        ?~(get=(~(get by metadata) 'ogTitle') ~ get)
     =/  type=(unit @t)         ?~(get=(~(get by metadata) 'ogType') ~ get)
     ?:  =([~ ~ ~ ~ ~] [description image site-name title type])
-      `[[our created-at] ~ ~ [%link p.content %link %raw ~]~]
+      :-  ~
+      :-  [our created-at]  :-  ~  :-  ~
+      :~  [%text 'This is a test.' %md %bold %italic]
+          [%link p.content %raw ~]
+      ==
     :-  ~
     :-  [our created-at]
     :-  ~  :-  ~
-    :_  ~
-    :*  %link
-        p.content
-        %link
-        %opengraph
-        description
-        image
-        site-name
-        title
-        type
-        ~
-    ==
+    :~  :*  %text
+            'This is a test.'
+            %md  %bold  %italic
+        ==
+        :*  %link
+            p.content
+            %opengraph
+            description
+            image
+            site-name
+            title
+            type
+            ~
+        ==
+      ==
   ==
 ::
 ++  parse-video
@@ -115,6 +135,8 @@
   |=  link=@t
   ^-  (unit ?(%youtube %vimeo %dailymotion %file))
   :: flip link text and send to lowercase; parse backwards
+  :: (parsing happens from left to right)
+  ::
   %+  rush  (crip (flop (cass (trip link))))
   %+  cold  %file
   ;~  plug
@@ -138,6 +160,8 @@
   ^-  ?
   =-  ?=(^ -)
   :: flip link text and send to lowercase; parse backwards
+  :: (parsing happens from left to right)
+  ::
   %+  rush  (crip (flop (cass (trip link))))
   ;~  plug
     ;~  pose

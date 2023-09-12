@@ -246,18 +246,19 @@
             [%video video]
             [%audio audio]
             [%file file]
-            [%link link]
+            [%raw raw]
+            [%opengraph opengraph]
             [%misc misc]
         ==
       :: metadata currently stubbed out
       ::
       +$  image
-        $:  width=(unit @ud)
-            height=(unit @ud)
+        $:  size=[width=(unit @ud) height=(unit @ud)]
         ==
       ::
       +$  video
-        $:  type=?(%youtube %vimeo %dailymotion %file)
+        $:  size=[width=(unit @ud) height=(unit @ud)]
+            type=?(%youtube %vimeo %dailymotion %file)
             orientation=(unit ?(%portrait %landscape))
         ==
       ::
@@ -270,16 +271,14 @@
       :: app
       ::
       +$  file  ~
-      +$  link
-        $%  [%raw ~]
-            $:  %opengraph
-                description=(unit @t)
-                image=(unit @t)
-                site-name=(unit @t)
-                title=(unit @t)
-                type=(unit @t)
-                author=(unit @t)
-            ==
+      +$  raw   ~
+      +$  opengraph
+        $:  description=(unit @t)
+            image=(unit @t)
+            site-name=(unit @t)
+            title=(unit @t)
+            type=(unit @t)
+            author=(unit @t)
         ==
       ::
       +$  misc  (map @t @t)
