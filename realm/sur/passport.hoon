@@ -23,7 +23,7 @@
       [%respond-to-friend-request accept=?]           :: ship to ship
 
       [%change-contact =req-id c=contact:common]   :: client to ship, we change our own contact info
-      [%add-link =req-id ln=passport-link:common]  :: client to ship, we add a passport link
+      [%add-link =req-id ln=passport-link-container:common]  :: client to ship, we add a passport link
       [%change-passport =req-id p=passport:common]  :: client->ship, DOES NOT UPDATE `chain` or `crypto`, MUST use %add-link for that
 
       [%toggle-hide-logs toggle=?]

@@ -2,11 +2,38 @@
 ::  TODO:
 ::  - constraints via paths-table settings
 /-  *passport, common, db
-/+  scries=bedrock-scries
+/+  scries=bedrock-scries, eth=ethereum
 |%
 ::
 :: helpers
 ::
+++  ether-hash-to-ux
+  |=  str=@t
+  ^-  @ux
+  =/  ta=tape  (cass (slag 2 (trip str)))
+  =/  reordered=tape  ""
+  =/  i=@ud  0
+  =/  ready=tape
+    |-
+      ?:  =(0 (lent ta))
+        +.reordered
+      =/  b1=@t  (snag 0 ta)
+      =/  b2=@t  (snag 1 ta)
+      ?:  =(1 (mod i 2))
+        $(reordered ['.' b1 b2 reordered], ta +.+.ta, i +(i))
+      $(reordered [b1 b2 reordered], ta +.+.ta, i +(i))
+  `@ux`(slav %ux (crip ['0' 'x' ready]))
+::
+++  parse-signing-key
+  |=  ln=passport-link-container:common
+  ^-  @t
+  =/  pr=passport-crypto:common           (passport-root:dejs (need (de-json:html data.ln)))
+  ?:  =('PASSPORT_ROOT' link-type.ln)     signing-key.sig-chain-settings.pr
+  ?:  =('KEY_ADD' link-type.ln)           ''::signing-public-key:link-metadata:(passport-data-link:dejs (need (de-json:html data.ln)))
+  ?:  =('KEY_REMOVE' link-type.ln)        ''::signing-public-key:link-metadata:(passport-data-link:dejs (need (de-json:html data.ln)))
+  ?:  =('NAME_RECORD_SET' link-type.ln)   ''::signing-public-key:link-metadata:(passport-data-link:dejs (need (de-json:html data.ln)))
+  !!
+
 ++  req
   |=  [=ship dap=@tas]
   ^-  card
@@ -288,8 +315,8 @@
   [cards state]
 ::
 ++  add-link
-::passport &passport-action [%add-link passport-link]
-  |=  [[=req-id ln=passport-link:common] state=state-0 =bowl:gall]
+::passport &passport-action [%add-link passport-link-container]
+  |=  [[=req-id ln=passport-link-container:common] state=state-0 =bowl:gall]
   ^-  (quip card state-0)
   =/  log1  (maybe-log hide-logs.state "%add-link: {<req-id>} {<ln>}")
   :: assure it's us
@@ -301,7 +328,21 @@
   =/  p=passport:common   (our-passport:scries bowl)
   :: TODO verify the link is valid, then save it to bedrock
   :: also probably need to make updates to `crypto.p` and the pki state
-  =.  chain.p             (snoc chain.p ln)
+
+  ~&  ln
+  ~&  (ether-hash-to-ux hash.ln)
+  ~&  `@ux`(shax data.ln)
+  ~&  (parse-signing-key ln)
+  ~&  `@ux`(hex-to-num:eth hash.ln)
+  :: validate the hash of data is what the payload claims it is
+  ?>  =((shax data.ln) (ether-hash-to-ux hash.ln))
+
+  :: parse the signer address
+  =/  addr=@t  (parse-signing-key ln)
+  :: and verify that the signing key matches the signature and the message
+  :: TODO translate the strings into urbit-atoms bytes
+  ?>  (veri:ed:crypto hash-signature.ln hash.ln addr)
+  ::=.  chain.p             (snoc chain.p ln)
 
   =/  cards=(list card)
     :~  (edit our.bowl passport-type:common (our-passport-id:scries bowl) [%passport p])
@@ -438,6 +479,87 @@
     ?:  (lth (lent tr) 9)  '#000000' :: for weird parsing, just "forget" the color
     (crip ['#' (oust [2 1] (slag 2 tr))])
   ::
+  ++  passport-data-link
+    %-  ot
+    :~  [%link-metadata de-passport-data-link-metadata]
+        [%link-data de-passport-link]
+    ==
+  ::
+  ++  de-passport-link
+    |=  jon=json
+    ^-  passport-link:common
+    ?>  ?=([%o *] jon)
+    =/  gt  ~(got by p.jon)
+    =/  link-type=@tas   ((se %tas) (gt 'link-type'))
+    ?+  link-type  !!
+        %edge-add
+      [%edge-add (so (gt 'from-link-hash')) (so (gt 'to-link-hash')) (so (gt 'key')) (so (gt 'value'))]
+        %edge-remove
+      [%edge-remove (so (gt 'link-hash'))]
+        %entity-add
+      [%entity-add (so (gt 'public-key')) (so (gt 'public-key-type')) (so (gt 'name'))]
+        %key-add
+      [%key-add (so (gt 'public-key')) (so (gt 'public-key-type')) (so (gt 'name'))]
+        %key-remove
+      [%key-remove (so (gt 'name'))]
+        %post-add
+      [%post-add (so (gt 'type')) (gt 'data')]
+        %post-edit
+      [%post-edit (so (gt 'link-hash')) (so (gt 'type')) (gt 'data')]
+        %post-remove
+      [%post-remove (so (gt 'link-hash'))]
+        %name-record-set
+      [%name-record-set (so (gt 'name')) (so (gt 'record'))]
+        %token-burn
+      [%token-burn (so (gt 'from-entity')) (ne (gt 'amount'))]
+        %token-mint
+      [%token-mint (so (gt 'to-entity')) (ne (gt 'amount'))]
+        %token-transfer
+      [%token-transfer (so (gt 'to-entity')) (ne (gt 'amount'))]
+    ==
+  ::
+  ++  de-passport-data-link-metadata
+    %-  ot
+    :~  [%from-entity so]
+        [%signing-public-key so]
+        [%value ni]
+        [%link-id so]
+        [%epoch-block-number ni]
+        [%previous-epoch-nonce ni]
+        [%previous-epoch-hash so]
+        [%nonce ni]
+        [%previous-link-hash so]
+        [%data-block-number ni]
+        [%timestamp di]
+    ==
+  ::
+  ++  passport-root
+    %-  ot
+    :~  ['link_id' so]
+        ['epoch_block_number' ni]
+        ['data_block_number' ni]
+        ['timestamp' di]
+        ['previous_epoch_hash' so]
+        ['pki_state' de-pki-state]
+        ['transaction_types' (ot ~[['link_names' (ar so)] ['link_structs' so]])]
+        ['data_structs' (ot ~[['struct_names' (ar so)] ['struct_types' so]])]
+        ['sig_chain_settings' (ot ~[['new_entity_balance' ni] ['epoch_length' ni] ['signing_key' so] ['data_state' nuthing]])]
+    ==
+  ::
+  ++  nuthing
+    |=  jon=json
+    ^-  json
+    jon
+  ::
+  ++  de-pki-state
+    %-  ot
+    :~  ['chain_owner_entities' (ar so)]
+        ['entity_to_public_keys' (om (ar so))]
+        ['public_key_to_nonce' (om ni)]
+        ['entity_to_value' (om ni)]
+        ['public_key_to_entity' (om so)]
+    ==
+  ::
   ++  action
     |=  jon=json
     ^-  ^action
@@ -502,48 +624,21 @@
     ::
     ++  add-link
       |=  jon=json
-      ^-  [req-id passport-link:common]
+      ^-  [req-id passport-link-container:common]
       ?>  ?=([%o *] jon)
       =/  request-id=(unit json)  (~(get by p.jon) 'request-id')
+      ~&  jon
       ?~  request-id
         [[~zod ~2000.1.1] (de-add-link jon)]  :: if the poke-sender didn't care enough to pass a request id, just use a fake one
       [(de-id u.request-id) (de-add-link jon)]
     ::
     ++  de-add-link
-      |=  jon=json
-      ^-  passport-link:common
-      ?>  ?=([%o *] jon)
-      =/  gt  ~(got by p.jon)
-      =/  link-type=@tas   ((se %tas) (gt 'link-type'))
-      ?+  link-type  !!
-          %edge-add
-        [%edge-add (so (gt 'from-link-hash')) (so (gt 'to-link-hash')) (so (gt 'key')) (so (gt 'value'))]
-          %edge-remove
-        [%edge-remove (so (gt 'link-hash'))]
-          %entity-add
-        [%entity-add (so (gt 'public-key')) (so (gt 'public-key-type')) (so (gt 'name'))]
-          %key-add
-        [%key-add (so (gt 'public-key')) (so (gt 'public-key-type')) (so (gt 'name'))]
-          %key-remove
-        [%key-remove (so (gt 'name'))]
-          %post-add
-        [%post-add (so (gt 'type')) (gt 'data')]
-          %post-edit
-        [%post-edit (so (gt 'link-hash')) (so (gt 'type')) (gt 'data')]
-          %post-remove
-        [%post-remove (so (gt 'link-hash'))]
-          %name-record-set
-        [%name-record-set (so (gt 'name')) (so (gt 'record'))]
-          %token-burn
-        [%token-burn (so (gt 'from-entity')) (ne (gt 'amount'))]
-          %token-mint
-        [%token-mint (so (gt 'to-entity')) (ne (gt 'amount'))]
-          %token-transfer
-        [%token-transfer (so (gt 'to-entity')) (ne (gt 'amount'))]
-          %passport-root
-        [%passport-root (so (gt 'data')) (so (gt 'hash')) (so (gt 'hash-signature'))]
+      %-  ot
+      :~  ['link_type' so]
+          [%data so]
+          [%hash so]
+          ['signature_of_hash' so]
       ==
-    ::
     ++  de-get
       :: allow people to pass {"request-id": "/~zod/~2000.1.1"} or {"ship": "~zod"}
       |=  jon=json
@@ -627,7 +722,27 @@
           ['default-address' s+default-address.p]
           ['recommendations' a+(turn ~(tap in recommendations.p) en-recommendation)]
           ['chain' a+(turn chain.p en-link)]
-          ['crypto' o+`(map @t json)`(malt ~[object+s+%not-implemented])]
+          ['crypto' (en-p-crypto crypto.p)]
+      ==
+    ::
+    ++  en-p-crypto
+      |=  cryp=passport-crypto:common
+      ^-  json
+      %-  pairs
+      :~  ['link-id' s+link-id.cryp]
+          ['epoch-block' (numb epoch-block.cryp)]
+          ['data-block' (numb data-block.cryp)]
+          ['timestamp' (time timestamp.cryp)]
+          ['previous-epoch-hash' s+previous-epoch-hash.cryp]
+          ['pki-state' s+%not-implemented]
+          ['transaction-types' s+%not-implemented]
+          ['data-structs' s+%not-implemented]
+          :-  'sig-chain-settings'
+          %-  pairs
+          :~  ['new-entity-balance' (numb new-entity-balance.sig-chain-settings.cryp)]
+              ['epoch-length' (numb epoch-length.sig-chain-settings.cryp)]
+              ['signing-key' s+signing-key.sig-chain-settings.cryp]
+          ==
       ==
     ::
     ++  en-link
@@ -685,12 +800,6 @@
         :~  ['link-type' [%s -.ln]]
             ['name' s+name.ln]
             ['record' s+record.ln]
-        ==
-          %passport-root
-        :~  ['link-type' [%s -.ln]]
-            ['data' s+data.ln]
-            ['hash' s+hash.ln]
-            ['hash-signature' s+hash-signature.ln]
         ==
       ==
     ::

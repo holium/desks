@@ -237,6 +237,7 @@
   ==
 ::
 +$  passport-chain  (list passport-link)
++$  passport-link-container   [link-type=@t data=@t hash=@t hash-signature=@t]
 +$  passport-link
   $%  [%edge-add from-link-hash=@t to-link-hash=@t key=@t value=@t]
       [%edge-remove link-hash=@t]
@@ -251,14 +252,30 @@
       [%token-burn from-entity=@t amount=@rd]
       [%token-mint to-entity=@t amount=@rd]
       [%token-transfer to-entity=@t amount=@rd]
-      [%passport-root data=@t hash=@t hash-signature=@t]
+  ==
++$  passport-data-link
+  $:  mtd=passport-data-link-metadata
+      data=passport-link
+  ==
++$  passport-data-link-metadata
+  $:  from-entity=@t
+      signing-public-key=@t
+      value=@ud
+      link-id=@t
+      epoch-block-number=@ud
+      previous-epoch-nonce=@ud
+      previous-epoch-hash=@t
+      nonce=@ud
+      previous-link-hash=@t
+      data-block-number=@ud
+      timestamp=@da
   ==
 +$  pki-state
-  $:  chain-owner-entities=(list @p)
-      entity-to-public-keys=(map @p @t)
+  $:  chain-owner-entities=(list @t)
+      entity-to-public-keys=(map @t (list @t))
       public-key-to-nonce=(map @t @ud)
-      entity-to-value=(map @p @ud)
-      public-key-to-entity=(map @t @p)
+      entity-to-value=(map @t @ud)
+      public-key-to-entity=(map @t @t)
   ==
 +$  passport-crypto
   $:  link-id=@t
@@ -269,7 +286,7 @@
       =pki-state
       transaction-types=[link-names=(list @t) link-structs=@t]
       data-structs=[struct-names=(list @t) struct-types=@t]
-      sig-chain-settings=[new-entity-balance=@ud epoch-length=@ud signing-key=@t]
+      sig-chain-settings=[new-entity-balance=@ud epoch-length=@ud signing-key=@t data-state=json]
   ==
 
 :: chat-db stuff
