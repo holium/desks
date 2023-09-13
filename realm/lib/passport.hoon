@@ -7,6 +7,50 @@
 ::
 :: helpers
 ::
+++  split-sig
+  |=  sig=@
+  ^-  [v=@ r=@ s=@]
+  |^
+    =^  v  sig  (take 3)
+    =^  s  sig  (take 3 32)
+    =^  r  sig  (take 3 32)
+    =?  v  (gte v 27)  (sub v 27)
+    [v r s]
+  ::
+  ++  take
+    |=  =bite
+    [(end bite sig) (rsh bite sig)]
+  --
+++  verify-message
+  |=  [msg=@t sig=@t addr=@t]  ^-  ?
+  =/  hashed-msg=@ux
+    %-  keccak-256:keccak:crypto
+    %-  as-octs:mimes:html
+    %-  crip
+    ^-  tape
+    %+  weld
+    (trip '\19Ethereum Signed Message:\0a')
+    %+  weld
+    (en-json:html (numb:enjs:format (lent (trip msg))))
+    (trip msg)
+    ::export function hashMessage(message: Bytes | string): string {
+    ::    if (typeof(message) === "string") { message = toUtf8Bytes(message); }
+    ::    return keccak256(concat([
+    ::        toUtf8Bytes(messagePrefix),
+    ::        toUtf8Bytes(String(message.length)),
+    ::        message]));
+  ~&  >>>  hashed-msg
+
+  =/  ux-sig=@ux  (hex-to-num:eth sig)
+  =/  vrs         (split-sig ux-sig)
+  =/  pubkey=@ux::SigningKey.recoverPublicKey(digest, signature)
+    %-  serialize-point:secp256k1:secp:crypto
+    (ecdsa-raw-recover:secp256k1:secp:crypto hashed-msg vrs)
+  ~&  >>>  pubkey
+  ~&  >>>  "addr {<addr>} address-from-pub {<(address-from-pub:key:eth pubkey)>}"
+
+  :: if the passed in address equals the address for the the recovered public key of the sig, then it is verified
+  =((hex-to-num:eth addr) (address-from-pub:key:eth pubkey))
 ++  ether-hash-to-ux
   |=  str=@t
   ^-  @ux
@@ -33,7 +77,7 @@
   ?:  =('KEY_REMOVE' link-type.ln)        ''::signing-public-key:link-metadata:(passport-data-link:dejs (need (de-json:html data.ln)))
   ?:  =('NAME_RECORD_SET' link-type.ln)   ''::signing-public-key:link-metadata:(passport-data-link:dejs (need (de-json:html data.ln)))
   !!
-
+::
 ++  req
   |=  [=ship dap=@tas]
   ^-  card
@@ -339,9 +383,10 @@
 
   :: parse the signer address
   =/  addr=@t  (parse-signing-key ln)
+  ~&  >  (verify-message hash.ln hash-signature.ln addr)
+  ?>  (verify-message hash.ln hash-signature.ln addr)
   :: and verify that the signing key matches the signature and the message
   :: TODO translate the strings into urbit-atoms bytes
-  ?>  (veri:ed:crypto hash-signature.ln hash.ln addr)
   ::=.  chain.p             (snoc chain.p ln)
 
   =/  cards=(list card)
