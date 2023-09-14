@@ -114,7 +114,7 @@
       [%edit =edit-message-action]
       [%delete =msg-id]
       [%delete-backlog =path before=time]
-      [%add-peer =path patp=ship]
+      [%add-peer t=@da =path patp=ship]
       [%kick-peer =path patp=ship]
       [%dump-to-bedrock ~]
       [%dump-to-bedrock-messages our-paths=(list path-row)]
