@@ -49,7 +49,10 @@
   .^
     @ud
     %gx
-    /(scot %p our.bowl)/bedrock/(scot %da now.bowl)/loobean/table/(scot %t name.type)/(scot %uv hash.type)/noun
+    %+  weld
+      /(scot %p our.bowl)/bedrock/(scot %da now.bowl)/loobean/table
+    :-  name.type
+    /(scot %uv hash.type)/noun
   ==
 ::
 ++  scry-bedrock-path-host
