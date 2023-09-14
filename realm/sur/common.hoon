@@ -213,7 +213,7 @@
   ==
 ::
 +$  linked-nft
-  $:  chain-id=?(%eth-mainnet %eth-tesnet)
+  $:  chain-id=?(%eth-mainnet %eth-testnet)
       token-id=@t         :: i.e. 8739
       contract-address=@t :: i.e. 0x789e...fee7
       name=@t             :: i.e. "Pixelady #599"
@@ -236,7 +236,7 @@
       pubkey=@t :: the pubkey needed to decrypt the signature
   ==
 ::
-+$  passport-chain  (list passport-link)
++$  passport-chain  (list passport-link-container)
 +$  passport-link-container   [link-type=@t data=@t hash=@t hash-signature=@t]
 +$  passport-link
   $%  [%edge-add from-link-hash=@t to-link-hash=@t key=@t value=@t]

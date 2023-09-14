@@ -7,6 +7,17 @@
 ::
 :: helpers
 ::
+++  validate-signing-key
+  |=  [p=passport:common ln=passport-link-container:common]
+  ^-  ?
+  :: only allow keys that are already in the crypto state to add other keys
+  =/  parsed-link=passport-data-link:common   (passport-data-link:dejs (need (de-json:html data.ln)))
+  =/  entity=@t     from-entity.mtd.parsed-link
+  =/  key=@t        signing-public-key.mtd.parsed-link
+  =/  keys=(list @t)  (~(got by entity-to-public-keys.pki-state.crypto.p) entity)
+  ?~  (find [key]~ keys)  %.n  ::invalid signing key
+  %.y
+::
 ++  split-sig
   |=  sig=@
   ^-  [v=@ r=@ s=@]
@@ -21,8 +32,9 @@
     |=  =bite
     [(end bite sig) (rsh bite sig)]
   --
-++  verify-message
-  |=  [msg=@t sig=@t addr=@t]  ^-  ?
+::
+++  recover-pub-key
+  |=  [msg=@t sig=@t addr=@t]  ^-  @ux
   =/  hashed-msg=@ux
     %-  keccak-256:keccak:crypto
     %-  as-octs:mimes:html
@@ -39,18 +51,21 @@
     ::        toUtf8Bytes(messagePrefix),
     ::        toUtf8Bytes(String(message.length)),
     ::        message]));
-  ~&  >>>  hashed-msg
-
   =/  ux-sig=@ux  (hex-to-num:eth sig)
   =/  vrs         (split-sig ux-sig)
-  =/  pubkey=@ux::SigningKey.recoverPublicKey(digest, signature)
-    %-  serialize-point:secp256k1:secp:crypto
-    (ecdsa-raw-recover:secp256k1:secp:crypto hashed-msg vrs)
+  ::SigningKey.recoverPublicKey(digest, signature)
+  %-  serialize-point:secp256k1:secp:crypto
+  (ecdsa-raw-recover:secp256k1:secp:crypto hashed-msg vrs)
+::
+++  verify-message
+  |=  [msg=@t sig=@t addr=@t]  ^-  ?
+  =/  pubkey=@ux  (recover-pub-key msg sig addr)
   ~&  >>>  pubkey
   ~&  >>>  "addr {<addr>} address-from-pub {<(address-from-pub:key:eth pubkey)>}"
 
   :: if the passed in address equals the address for the the recovered public key of the sig, then it is verified
   =((hex-to-num:eth addr) (address-from-pub:key:eth pubkey))
+::
 ++  ether-hash-to-ux
   |=  str=@t
   ^-  @ux
@@ -71,11 +86,15 @@
 ++  parse-signing-key
   |=  ln=passport-link-container:common
   ^-  @t
-  =/  pr=passport-crypto:common           (passport-root:dejs (need (de-json:html data.ln)))
-  ?:  =('PASSPORT_ROOT' link-type.ln)     signing-key.sig-chain-settings.pr
-  ?:  =('KEY_ADD' link-type.ln)           ''::signing-public-key:link-metadata:(passport-data-link:dejs (need (de-json:html data.ln)))
-  ?:  =('KEY_REMOVE' link-type.ln)        ''::signing-public-key:link-metadata:(passport-data-link:dejs (need (de-json:html data.ln)))
-  ?:  =('NAME_RECORD_SET' link-type.ln)   ''::signing-public-key:link-metadata:(passport-data-link:dejs (need (de-json:html data.ln)))
+  ?:  =('PASSPORT_ROOT' link-type.ln)
+    =/  pr=passport-crypto:common           (passport-root:dejs (need (de-json:html data.ln)))
+    signing-key.sig-chain-settings.pr
+  ?:  ?|  =('KEY_ADD' link-type.ln)
+          =('KEY_REMOVE' link-type.ln)
+          =('NAME_RECORD_SET' link-type.ln)
+      ==
+    =/  pd=passport-data-link:common  (passport-data-link:dejs (need (de-json:html data.ln)))
+    signing-public-key.mtd.pd
   !!
 ::
 ++  req
@@ -373,21 +392,88 @@
   :: TODO verify the link is valid, then save it to bedrock
   :: also probably need to make updates to `crypto.p` and the pki state
 
-  ~&  ln
-  ~&  (ether-hash-to-ux hash.ln)
-  ~&  `@ux`(shax data.ln)
-  ~&  (parse-signing-key ln)
-  ~&  `@ux`(hex-to-num:eth hash.ln)
   :: validate the hash of data is what the payload claims it is
   ?>  =((shax data.ln) (ether-hash-to-ux hash.ln))
 
   :: parse the signer address
   =/  addr=@t  (parse-signing-key ln)
-  ~&  >  (verify-message hash.ln hash-signature.ln addr)
-  ?>  (verify-message hash.ln hash-signature.ln addr)
   :: and verify that the signing key matches the signature and the message
-  :: TODO translate the strings into urbit-atoms bytes
-  ::=.  chain.p             (snoc chain.p ln)
+  ?>  (verify-message hash.ln hash-signature.ln addr)
+
+  =.  p
+    ?:  =('PASSPORT_ROOT' link-type.ln)
+      ?>  =((lent chain.p) 0) :: only allow passport_root as first link in chain
+      =.  crypto.p   (passport-root:dejs (need (de-json:html data.ln)))
+      =.  default-address.p   addr
+      =/  pk=@ux        (recover-pub-key hash.ln hash-signature.ln addr)
+      =/  t-pk=@t       (crip (num-to-hex:eth pk))
+      =/  sig=crypto-signature:common  [data.ln hash.ln hash-signature.ln t-pk]
+      =.  addresses.p   ['root' addr t-pk sig]~
+      p
+    ?:  =('KEY_ADD' link-type.ln)
+      ?>  (validate-signing-key p ln)   :: only allow keys that are already in the crypto state to add other keys
+      :: TODO check previous_link_hash
+      =/  parsed-link=passport-data-link:common   (passport-data-link:dejs (need (de-json:html data.ln)))
+      =/  entity=@t     from-entity.mtd.parsed-link
+      =/  key=@t        signing-public-key.mtd.parsed-link
+      ?+  -.data.parsed-link  !!
+        %key-add
+      =/  new-key-type=@t   public-key-type.data.parsed-link
+      =/  new-key=@t        public-key.data.parsed-link
+      =/  new-entity=@t     name.data.parsed-link
+      ::  add new key to the pki-state for the new-entity
+      =/  keys=(list @t)  (~(got by entity-to-public-keys.pki-state.crypto.p) new-entity)
+      =.  entity-to-public-keys.pki-state.crypto.p  (~(put by entity-to-public-keys.pki-state.crypto.p) new-entity (snoc keys new-key))
+      =.  public-key-to-entity.pki-state.crypto.p   (~(put by public-key-to-entity.pki-state.crypto.p) new-key new-entity)
+
+      =.  public-key-to-nonce.pki-state.crypto.p  :: increment signing key nonce
+        (~(put by public-key-to-nonce.pki-state.crypto.p) key +((~(got by public-key-to-nonce.pki-state.crypto.p) key)))
+      :: set new-key nonce to 0
+      =.  public-key-to-nonce.pki-state.crypto.p    (~(put by public-key-to-nonce.pki-state.crypto.p) new-key 0)
+      :: update known addresses
+      =/  pk=@ux  (recover-pub-key hash.ln hash-signature.ln addr)
+      =/  t-pk=@t  (crip (num-to-hex:eth pk))
+      =/  sig=crypto-signature:common  [data.ln hash.ln hash-signature.ln t-pk]
+      =.  addresses.p  (snoc addresses.p [new-key-type new-key t-pk sig])
+      p
+      ==
+    ?:  =('NAME_RECORD_SET' link-type.ln)
+      ?>  (validate-signing-key p ln)   :: only allow keys that are already in the crypto state to update the name_record
+      :: TODO check previous_link_hash
+      =/  parsed-link=passport-data-link:common   (passport-data-link:dejs (need (de-json:html data.ln)))
+      ?+  -.data.parsed-link  !!
+        %name-record-set
+      ?:  =('display-name' name.data.parsed-link)
+        =.  display-name.contact.p  (some record.data.parsed-link)
+        p
+      ?:  =('avatar' name.data.parsed-link)
+        =.  avatar.contact.p  (some [%image record.data.parsed-link])
+        p
+      ?:  =('color' name.data.parsed-link)
+        =.  color.contact.p  (some record.data.parsed-link)
+        p
+      ?:  =('bio' name.data.parsed-link)
+        =.  bio.contact.p  (some record.data.parsed-link)
+        p
+      ?:  =('cover' name.data.parsed-link)
+        =.  cover.p  (some record.data.parsed-link)
+        p
+      ?:  =('user-status' name.data.parsed-link)
+        =.  user-status.p  ?:(=(record.data.parsed-link 'invisible') %invisible %online)
+        p
+      ?:  =('discoverable' name.data.parsed-link)
+        =.  discoverable.p  =(record.data.parsed-link 'true')
+        p
+      ?:  =('nfts' name.data.parsed-link)
+        =.  nfts.p  (linked-nfts:dejs (need (de-json:html record.data.parsed-link)))
+        p
+      ~&  >>>  'unrecognized NAME_RECORD_SET "name" property'
+      !!
+      ==
+    !!
+
+  =.  chain.p    (snoc chain.p ln)
+  =.  contact.p  (cleanup-contact contact.p)
 
   =/  cards=(list card)
     :~  (edit our.bowl passport-type:common (our-passport-id:scries bowl) [%passport p])
@@ -520,62 +606,75 @@
     ^-  @t
     =/  urbit-format=@t  (so jon)
     ?:  =('0x0' urbit-format)  '#000000'
-    =/  tr=tape  (trip urbit-format)
-    ?:  (lth (lent tr) 9)  '#000000' :: for weird parsing, just "forget" the color
-    (crip ['#' (oust [2 1] (slag 2 tr))])
+    =/  tr=tape  (skip (slag 2 (trip urbit-format)) |=(c=@t =('.' c)))
+    |-
+      ?:  =((lent tr) 6)
+        %-  crip
+        :-  '#'
+        tr
+      $(tr ['0' tr])
   ::
   ++  passport-data-link
-    %-  ot
-    :~  [%link-metadata de-passport-data-link-metadata]
-        [%link-data de-passport-link]
-    ==
+    |=  jon=json
+    ^-  passport-data-link:common
+    ?>  ?=([%o *] jon)
+    =/  gt  ~(got by p.jon)
+    =/  pmtd=passport-data-link-metadata:common  (de-passport-data-link-metadata (gt 'link_metadata'))
+    [
+      pmtd
+      (de-passport-link (gt 'link_data') link-id.pmtd)
+    ]
   ::
   ++  de-passport-link
-    |=  jon=json
+    |=  [jon=json typ=@t]
     ^-  passport-link:common
     ?>  ?=([%o *] jon)
     =/  gt  ~(got by p.jon)
-    =/  link-type=@tas   ((se %tas) (gt 'link-type'))
-    ?+  link-type  !!
-        %edge-add
-      [%edge-add (so (gt 'from-link-hash')) (so (gt 'to-link-hash')) (so (gt 'key')) (so (gt 'value'))]
-        %edge-remove
-      [%edge-remove (so (gt 'link-hash'))]
-        %entity-add
-      [%entity-add (so (gt 'public-key')) (so (gt 'public-key-type')) (so (gt 'name'))]
-        %key-add
-      [%key-add (so (gt 'public-key')) (so (gt 'public-key-type')) (so (gt 'name'))]
-        %key-remove
-      [%key-remove (so (gt 'name'))]
-        %post-add
-      [%post-add (so (gt 'type')) (gt 'data')]
-        %post-edit
-      [%post-edit (so (gt 'link-hash')) (so (gt 'type')) (gt 'data')]
-        %post-remove
-      [%post-remove (so (gt 'link-hash'))]
-        %name-record-set
+    ?:  =('KEY_ADD' typ)
+      [%key-add (so (gt 'public_key')) (so (gt 'public_key_type')) (so (gt 'entity_name'))]
+    ?:  =('NAME_RECORD_SET' typ)
       [%name-record-set (so (gt 'name')) (so (gt 'record'))]
-        %token-burn
-      [%token-burn (so (gt 'from-entity')) (ne (gt 'amount'))]
-        %token-mint
-      [%token-mint (so (gt 'to-entity')) (ne (gt 'amount'))]
-        %token-transfer
-      [%token-transfer (so (gt 'to-entity')) (ne (gt 'amount'))]
-    ==
+    !!
+::    ?+  link-type  !!
+::        %edge-add
+::      [%edge-add (so (gt 'from-link-hash')) (so (gt 'to-link-hash')) (so (gt 'key')) (so (gt 'value'))]
+::        %edge-remove
+::      [%edge-remove (so (gt 'link-hash'))]
+::        %entity-add
+::      [%entity-add (so (gt 'public-key')) (so (gt 'public-key-type')) (so (gt 'name'))]
+::        %key-add
+::      [%key-add (so (gt 'public-key')) (so (gt 'public-key-type')) (so (gt 'name'))]
+::        %key-remove
+::      [%key-remove (so (gt 'name'))]
+::        %post-add
+::      [%post-add (so (gt 'type')) (gt 'data')]
+::        %post-edit
+::      [%post-edit (so (gt 'link-hash')) (so (gt 'type')) (gt 'data')]
+::        %post-remove
+::      [%post-remove (so (gt 'link-hash'))]
+::        %name-record-set
+::      [%name-record-set (so (gt 'name')) (so (gt 'record'))]
+::        %token-burn
+::      [%token-burn (so (gt 'from-entity')) (ne (gt 'amount'))]
+::        %token-mint
+::      [%token-mint (so (gt 'to-entity')) (ne (gt 'amount'))]
+::        %token-transfer
+::      [%token-transfer (so (gt 'to-entity')) (ne (gt 'amount'))]
+::    ==
   ::
   ++  de-passport-data-link-metadata
     %-  ot
-    :~  [%from-entity so]
-        [%signing-public-key so]
-        [%value ni]
-        [%link-id so]
-        [%epoch-block-number ni]
-        [%previous-epoch-nonce ni]
-        [%previous-epoch-hash so]
-        [%nonce ni]
-        [%previous-link-hash so]
-        [%data-block-number ni]
-        [%timestamp di]
+    :~  ['from_entity' so]
+        ['signing_public_key' so]
+        ['value' ni]
+        ['link_id' so]
+        ['epoch_block_number' ni]
+        ['previous_epoch_nonce' ni]
+        ['previous_epoch_hash' so]
+        ['nonce' ni]
+        ['previous_link_hash' so]
+        ['data_block_number' ni]
+        ['timestamp' di]
     ==
   ::
   ++  passport-root
@@ -596,6 +695,25 @@
     ^-  json
     jon
   ::
+  ++  linked-nfts
+    %-  ar
+    %-  ot
+    :~  [%chain-id de-chain-id]
+        [%token-id so]
+        [%contract-address so]
+        [%name so]
+        [%image-url so]
+        [%owned-by so]
+        [%token-standard so]
+    ==
+  ::
+  ++  de-chain-id
+    |=  jon=json
+    ^-  ?(%eth-mainnet %eth-testnet)
+    ?+  ((se %tas) jon)  !!
+      %eth-mainnet    %eth-mainnet
+      %eth-testnet    %eth-testnet
+    ==
   ++  de-pki-state
     %-  ot
     :~  ['chain_owner_entities' (ar so)]
@@ -766,7 +884,7 @@
           ['addresses' a+(turn addresses.p en-linked-address)]
           ['default-address' s+default-address.p]
           ['recommendations' a+(turn ~(tap in recommendations.p) en-recommendation)]
-          ['chain' a+(turn chain.p en-link)]
+          ['chain' a+(turn chain.p en-link-container)]
           ['crypto' (en-p-crypto crypto.p)]
       ==
     ::
@@ -779,7 +897,7 @@
           ['data-block' (numb data-block.cryp)]
           ['timestamp' (time timestamp.cryp)]
           ['previous-epoch-hash' s+previous-epoch-hash.cryp]
-          ['pki-state' s+%not-implemented]
+          ['pki-state' (en-pki-state pki-state.cryp)]
           ['transaction-types' s+%not-implemented]
           ['data-structs' s+%not-implemented]
           :-  'sig-chain-settings'
@@ -788,6 +906,27 @@
               ['epoch-length' (numb epoch-length.sig-chain-settings.cryp)]
               ['signing-key' s+signing-key.sig-chain-settings.cryp]
           ==
+      ==
+    ::
+    ++  en-pki-state
+      |=  pki=pki-state:common
+      ^-  json
+      %-  pairs
+      :~  ['chain-owner-entities' a+(turn chain-owner-entities.pki |=(e=@t s+e))]
+          ['entity-to-public-keys' (map-t-list-t entity-to-public-keys.pki)]
+          ['public-key-to-entity' (metadata-to-json public-key-to-entity.pki)]
+          ['public-key-to-nonce' (map-t-ud public-key-to-nonce.pki)]
+          ['entity-to-value' (map-t-ud entity-to-value.pki)]
+      ==
+    ::
+    ++  en-link-container
+      |=  ln=passport-link-container:common
+      ^-  json
+      %-  pairs
+      :~  ['link_type' s+link-type.ln]
+          ['data' s+data.ln]
+          ['hash' s+hash.ln]
+          ['signature_of_hash' s+hash-signature.ln]
       ==
     ::
     ++  en-link
@@ -945,6 +1084,20 @@
       |=  m=(map cord cord)
       ^-  json
       o+(~(rut by m) |=([k=cord v=cord] s+v))
+    ::
+    ++  map-t-list-t
+      |=  m=(map cord (list cord))
+      ^-  json
+      :-  %o
+      %-  ~(rut by m)
+      |=([k=cord v=(list cord)] a+(turn v |=(a=cord s+a)))
+    ::
+    ++  map-t-ud
+      |=  m=(map cord @ud)
+      ^-  json
+      :-  %o
+      %-  ~(rut by m)
+      |=([k=cord v=@ud] (numb v))
     ::
     ++  numbrd
       |=  a=@rd
