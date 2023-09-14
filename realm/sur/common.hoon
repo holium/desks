@@ -211,6 +211,18 @@
       [%break ~]
   ==
 ::
++$  timeline
+  $:  metadata=(map cord cord)
+  ==
+++  timeline-type  `type`[name=%timeline hash=0v0]
++$  tl-post-stats
+  $:  post-id=id
+      total-reacts=@ud
+      total-comments=@ud
+      recent-reacts=@ud   :: reacts in window: [now - window-size, now]
+      recent-comments=@ud :: comments in window: [now - window-size, now]
+  ==
+++  tl-post-stats-type  `type`[name=%tl-post-stats hash=0v0]
 +$  timeline-post
   $:  parent=(unit parent)
       app=(unit app)

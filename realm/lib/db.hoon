@@ -2362,6 +2362,12 @@
                 ['path' s+(spat path.data.row)]
                 ['revision' (numb revision.data.row)]
             ==
+          %react
+            :~  ['react' s+react.data.row]
+                ['parent-type' (en-db-type parent-type.data.row)]
+                ['parent-id' (row-id-to-json parent-id.data.row)]
+                ['parent-path' s+(spat parent-path.data.row)]
+            ==
           %creds
             :~  ['endpoint' s+endpoint.data.row]
                 ['access-key-id' s+access-key-id.data.row]

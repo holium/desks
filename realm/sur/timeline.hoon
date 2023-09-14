@@ -19,6 +19,7 @@
       [%create-bedrock-timeline =path]
       [%create-bedrock-timeline-post =path req-id=[@p @da] post=timeline-post]
       [%add-forerunners-bedrock force=?]
+      [%add-random-emojis ~]
   ==
 ::
 +$  update  ~
