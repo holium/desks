@@ -527,7 +527,11 @@
   |=  [state=state-0 =bowl:gall]
   ^-  (quip card state-0)
   =/  log1  (maybe-log hide-logs.state "%init-our-passport: at {<now.bowl>}")
-  ?.  =(peers.state ~)  `state
+  =/  passports
+    ?:  (test-bedrock-table-existence:scries passport-type:common bowl)
+      (all-rows-by-path-type:scries passport-type:common /private bowl)
+    ~
+  ?.  =((lent passports) 0)  `state
   :: TODO ask %pals for as many contacts to prepopulate as we can and
   :: TODO create a poke to auto-add friends from mutuals in %pals
   =/  old-friends  .^(json %gx /(scot %p our.bowl)/friends/(scot %da now.bowl)/all/noun)
