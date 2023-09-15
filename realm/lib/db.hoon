@@ -1314,7 +1314,7 @@
   [cards state]
 ::
 ++  remove
-::bedrock &db-action [%remove [~zod now] %foo /example [our ~2023.5.22..19.22.29..d0f7]]
+::bedrock &db-action [%remove [our now] [%friend 0v0] /private [our ~2023.9.15..19.23.10..46c2]]
   |=  [[=req-id =type:common =path =id:common] state=state-1 =bowl:gall]
   ^-  (quip card state-1)
   =/  vent-path=^path  /vent/(scot %p src.req-id)/(scot %da now.req-id)

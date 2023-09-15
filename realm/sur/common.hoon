@@ -13,6 +13,7 @@
       %message
       %passport
       %friend
+      %contact
       @tas
   ==
 +$  type      [name=type-prefix hash=@uvH]  :: hash is (sham schema) for %general, and incrementing @uv for common types
@@ -206,6 +207,8 @@
       bio=(unit @t)
       display-name=(unit @t)
   ==
+::
+++  contact-type  `type`[name=%contact hash=0v0]
 ::
 +$  avatar
   $%  [%image img=@t]

@@ -220,34 +220,39 @@
     (some (truncate (trim-whitespace u.bio.contact) 240))
   contact
 ::
+++  find-contact
+  |=  [c=contact:common ls=(list [=id:common =contact:common])]
+  ^-  (unit @)
+  =/  ships=(list ship)  (turn ls |=(con=[=id:common =contact:common] ship.contact.con))
+  (find [ship.c ~] ships)
+::
 :: pokes
 ++  receive-contacts
 :: our ship gets this from another ship when they are giving us some contacts
-::passport &passport-action [%receive-contacts (malt [~zod [~zod [%image ''] ~ [~ 'ZOOOD']]]~)]
-  |=  [m=peers state=state-0 =bowl:gall]
+::passport &passport-action [%receive-contacts [~zod ~ ~ ~ [~ 'ZOOOD']]~]
+  |=  [contacts=(list contact:common) state=state-0 =bowl:gall]
   ^-  (quip card state-0)
-  =/  log1  (maybe-log hide-logs.state "%receive-contacts: {<m>}")
+  =/  log1  (maybe-log hide-logs.state "%receive-contacts: {<contacts>}")
 
-  :: loop through the ships they sent us
-  =/  ships=(list ship)  ~(tap in ~(key by m))
+  :: loop through the contacts they sent us
+  =/  old=(list [id:common contact:common])  (our-contacts:scries bowl)
+  =/  cards=(list card)  ~
   |-
-    ?:  =(0 (lent ships))
-      [~ state]
-    =/  shp=ship  (snag 0 ships)
-    =/  con=contact:common  (~(got by m) shp)
-    =.  avatar.con
-      ?~  avatar.con  ~
-      %-  some
-      ?-  -.u.avatar.con
-          %image
-        [%image (url-encode img.u.avatar.con)]
-          %nft
-        [%nft (url-encode nft.u.avatar.con)]
-      ==
+    ?:  =(0 (lent contacts))
+      [cards state]
+    =/  con=contact:common  (cleanup-contact (snag 0 contacts))
+    ?:  =(our.bowl ship.con)  :: don't create a contact record for ourselves
+      ~&  'skippin self contact'
+      $(contacts +.contacts)
+    =/  index=(unit @)      (find-contact con old)
+    =/  new-card=card
+      ?~  index
+        (create our.bowl contact-type:common [%contact con])
+      =/  old-con=[=id:common =contact:common]   (snag u.index old)
+      (edit our.bowl contact-type:common id.old-con [%contact con])
     %=  $
-      :: add to the peers map
-      peers.state   (~(put by peers.state) ship.con con)
-      ships         +.ships
+      contacts      +.contacts
+      cards         [new-card cards]
     ==
 ::
 ++  request-contacts
@@ -258,7 +263,10 @@
   =/  log1  (maybe-log hide-logs.state "%request-contacts from {<src.bowl>}")
 
   =/  ourcontact=contact:common  contact:(our-passport:scries bowl)
-  =/  response  !>([%receive-contacts (~(put by peers.state) our.bowl ourcontact)])
+  =/  old=(list contact:common)
+  :-  ourcontact
+  (turn (our-contacts:scries bowl) |=(c=[id:common contact:common] +.c))
+  =/  response  !>([%receive-contacts old])
   =/  cards=(list card)
     [%pass /contacts %agent [src.bowl dap.bowl] %poke %passport-action response]~
   [cards state]
@@ -269,14 +277,18 @@
   ^-  (quip card state-0)
   =/  log1  (maybe-log hide-logs.state "%add-friend: {<req-id>} {<ship>}")
 
-  :: TODO check that we don't already have a friendship with this ship
-  =/  new-fren=friend:common  [ship %requested %.n mtd]
+  =/  new-fren=friend:common      [ship %requested %.n mtd]
 
+  :: check that we don't already have a friendship with this ship
+  =/  frs=(list friend:common)    (get-friends:scries bowl)
+  =/  ships=(list @p)    (turn frs |=(f=friend:common ship.f))
   =/  cards=(list card)
-    :~  (create-req our.bowl friend-type:common [%friend new-fren] req-id)
-        [%pass /selfpoke %agent [ship dap.bowl] %poke %passport-action !>([%get-friend mtd])]
-        (req ship dap.bowl)
-    ==
+    ?~  (find [ship ~] ships)
+      :~  (create-req our.bowl friend-type:common [%friend new-fren] req-id)
+          [%pass /selfpoke %agent [ship dap.bowl] %poke %passport-action !>([%get-friend mtd])]
+          (req ship dap.bowl)
+      ==
+    ~
   [cards state]
 ::
 ++  get-friend
@@ -544,10 +556,15 @@
     (skim contacts |=(c=contact:common =(our.bowl ship.c)))
   =/  p=passport:common
     [our-contact ~ %online %.y ~ ~ '' ~ ~ *passport-crypto:common]
-  =.  peers.state  (malt (turn contacts |=(c=contact:common [ship.c c])))
   =/  cards=(list card)
-    :~  (create our.bowl passport-type:common [%passport p])
-    ==
+    :-  (create our.bowl passport-type:common [%passport p])
+    %+  turn
+      %+  skip  contacts  :: don't save our own contact as a contact
+      |=  c=contact:common
+      ^-  ?
+      =(our.bowl ship.c)
+    |=  c=contact:common
+    (create our.bowl contact-type:common [%contact c])
   [cards state]
 ::
 ::
@@ -767,12 +784,13 @@
       ?>  ?=([%o *] jon)
       =/  gt  ~(got by p.jon)
       =/  request-id=(unit json)  (~(get by p.jon) 'request-id')
+      =/  mtd=(unit json)  (~(get by p.jon) 'mtd')
       =/  id=id:common  
         ?~  request-id  [~zod ~2000.1.1]  :: if the poke-sender didn't care enough to pass a request id, just use a fake one
         (de-id u.request-id)
       :*  id
           (de-ship (gt 'ship'))
-          ((om so) (gt 'mtd'))
+          ?~(mtd ~ ((om so) u.mtd))
       ==
     ::
     ++  de-handle-friend-request

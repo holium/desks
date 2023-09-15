@@ -128,13 +128,26 @@
 ::
 ++  get-friends
   |=  =bowl:gall
-  ^-  (list =friend:common)
+  ^-  (list friend:common)
+  ?.  (test-bedrock-table-existence friend-type:common bowl)  ~
   =/  rows=(list row:bedrock)  (all-rows-by-path-type friend-type:common /private bowl)
   %+  turn  rows
   |=  r=row:bedrock
   ^-  friend:common
   ?+  -.data.r  !!
     %friend  +.data.r
+  ==
+::
+++  our-contacts
+  |=  =bowl:gall
+  ^-  (list [id:common contact:common])
+  ?.  (test-bedrock-table-existence contact-type:common bowl)  ~
+  %+  turn
+    (all-rows-by-path-type contact-type:common /private bowl)
+  |=  r=row:bedrock
+  ^-  [id:common contact:common]
+  ?+  -.data.r  !!
+    %contact  [id.r +.data.r]
   ==
 ::
 ++  is-friend

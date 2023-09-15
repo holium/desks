@@ -6,15 +6,12 @@
   ==
 +$  state-0
   $:  %0
-      =peers
       hide-logs=?  :: default hidden %.y
   ==
 ::
-+$  peers    (map ship contact:common) :: all known peers
-::
 +$  action
   $%
-      [%receive-contacts m=(map ship contact:common)]  :: other ship is dumping us its peers list
+      [%receive-contacts contacts=(list contact:common)]  :: other ship is dumping us its peers list
       [%request-contacts ~] :: other ship send this to us to ask us to give them our whole peers list
       [%get =req-id]  :: when a client wants to threadpoke and get a full passport for a given ship
       [%add-friend =req-id =ship mtd=(map @t @t)]     :: client to ship

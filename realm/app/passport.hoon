@@ -83,9 +83,7 @@
     ?+    path  !!
     ::
       [%x %contacts ~]
-        =/  contacts=(list contact:common)
-          ~(val by peers.state)
-        ``passport-contacts+!>(contacts)
+        ``passport-contacts+!>((turn (our-contacts:scries bowl) |=(c=[=id:common =contact:common] contact.c)))
     ::
       [%x %friends ~]
         ?.  (test-bedrock-table-existence:scries friend-type:common bowl)
