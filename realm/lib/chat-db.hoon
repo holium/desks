@@ -459,8 +459,8 @@
   [gives state]
 ::
 ++  add-peer
-::  :chat-db &db-action [%add-peer [/a/path/to/a/chat ~bus]]
-  |=  [act=[=path patp=ship] state=state-2 =bowl:gall]
+::  :chat-db &db-action [%add-peer now /a/path/to/a/chat ~bus]
+  |=  [act=[t=@da =path patp=ship] state=state-2 =bowl:gall]
   ^-  (quip card state-2)
 
   =/  original-peers-list   (~(got by peers-table.state) path.act)
@@ -478,8 +478,12 @@
   =/  peers  (snoc original-peers-list row)
   =.  peers-table.state  (~(put by peers-table.state) path.act peers)
   =/  thechange  chat-db-change+!>(~[[%add-row [%peers row]]])
+  =/  vent-path=path  /chat-vent/(scot %da t.act)
   =/  gives  :~
     [%give %fact [/db (weld /db/path path.act) ~] thechange]
+    :: give vent response
+    [%give %fact ~[vent-path] chat-vent+!>([%path (~(got by paths-table.state) path.act)])]
+    [%give %kick ~[vent-path] ~]
   ==
   [gives state]
 ::
