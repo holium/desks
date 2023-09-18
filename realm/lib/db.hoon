@@ -2285,6 +2285,7 @@
           %passport
             =/  en-pass  enjs:passport-lib
             :~  ['contact' (en-contact:en-pass contact.data.row)]
+                ['ship' s+(scot %p ship.contact.data.row)]
                 ['cover' ?~(cover.data.row ~ s+u.cover.data.row)]
                 ['user-status' s+user-status.data.row]
                 ['discoverable' b+discoverable.data.row]
