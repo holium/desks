@@ -1,16 +1,13 @@
 /-  *timeline, db
-/+  scries=bedrock-scries, *timeline, timeline-json, cd=chat-db, dbug, verb, default-agent
+/+  scries=bedrock-scries, *timeline, timeline-json, cd=chat-db,
+    dbug, verb, default-agent
 ::
 /=  tv-  /mar/timeline/view
 /=  ta-  /mar/timeline/action
 ::
 |%
-+$  state-0
-  $:  timelines=(map path timeline)
-      collections=(map cid (set path))
-  ==
++$  state-0  [%0 ~]
 +$  card  card:agent:gall
-:: ++  pon   ((on @da timeline-post) gth)
 --
 =|  state-0
 =*  state  -
@@ -23,11 +20,9 @@
 ::
 ++  on-init
   ^-  (quip card _this)
-  =^  a-cards  this
-    (on-poke timeline-action+!>([%add-forerunners |]))
-  =^  b-cards  this
+  =^  cards  this
     (on-poke timeline-action+!>([%add-forerunners-bedrock &]))
-  :_(this (weld a-cards b-cards))
+  [cards this]
 ::
 ++  on-save  !>(state)
 ::
@@ -36,93 +31,78 @@
   ^-  (quip card _this)
   =/  old=state-0  !<(state-0 ole)
   =.  state  old
-  =^  a-cards  this
-    (on-poke timeline-action+!>([%add-forerunners |]))
-  =^  b-cards  this
+  =^  cards  this
     (on-poke timeline-action+!>([%add-forerunners-bedrock |]))
-  :_(this (weld a-cards b-cards))
+  [cards this]
 ::
 ++  on-poke
   |=  [=mark =vase]
   ^-  (quip card _this)
-  ?>  =(src our):bowl :: replace with more robust permissions later
   ?+    mark  (on-poke:def mark vase)
       %timeline-action
     =+  !<(axn=action vase)
     ?-    -.axn
-        %create-bedrock-timeline
-      =|  =input-path-row:db
-      =/  =cage
-        :-  %db-action  !>
-        :-  %create-path
-        %=  input-path-row
-          path         (weld /timeline/(scot %p our.bowl) path.axn)
-          replication  %host
-          peers        ~[[our.bowl %host]]
+        %create-timeline
+      ?>  =(src our):bowl
+      =/  =path  /timeline/(scot %p our.bowl)/[name.axn]
+      ?:  (test-bedrock-path-existence:scries path bowl)
+        ~&(%timeline-already-exists `this)
+      =|  row=input-path-row:db
+      =:  path.row         path
+          replication.row  %host
+          peers.row        ~[[our.bowl %host]]
         ==
+      =/  =cage  db-action+!>([%create-path row])
+      :_(this [%pass / %agent [our.bowl %bedrock] %poke cage]~)
+      :: 
+        %delete-timeline
+      ?>  =(src our):bowl
+      =/  =path  /timeline/(scot %p our.bowl)/[name.axn]
+      ?.  (test-bedrock-path-existence:scries path bowl)
+        ~&(%timeline-does-not-exist `this)
+      =/  =cage  db-action+!>([%delete-path path])
       :_(this [%pass / %agent [our.bowl %bedrock] %poke cage]~)
       ::
-        %create-bedrock-timeline-post
-      =.  path.axn  (weld /timeline/(scot %p our.bowl) path.axn)
+        %follow-timeline
+      ?>  =(src our):bowl
+      =+  ;;([%timeline host=@ta name=@ta ~] path.axn)
+      =/  =cage  db-action+!>([%handle-follow-request name])
+      :_(this [%pass / %agent [(slav %p host) %bedrock] %poke cage]~)
+      ::
+        %handle-follow-request
+      =/  =path  /timeline/(scot %p our.bowl)/[name.axn]
+      :: TODO: check that the timeline is public
+      =/  =cage  db-action+!>([%add-peer path src.bowl %$])
+      :_(this [%pass / %agent [our.bowl %bedrock] %poke cage]~)
+      ::
+        %leave-timeline
+      ?>  =(src our):bowl
+      =+  ;;([%timeline host=@ta name=@ta ~] path.axn)
+      =/  =cage  db-action+!>([%handle-leave-request name])
+      :_(this [%pass / %agent [(slav %p host) %bedrock] %poke cage]~)
+      ::
+        %handle-leave-request
+      =/  =path  /timeline/(scot %p our.bowl)/[name.axn]
+      :: TODO: check that the timeline is public
+      =/  =cage  db-action+!>([%kick-peer path src.bowl])
+      :_(this [%pass / %agent [our.bowl %bedrock] %poke cage]~)
+      ::
+        %create-timeline-post
       =/  =cage
         :-  %db-action  !>
-        :*  %create   req-id.axn
+        :*  %create   [(scot %p our.bowl) (scot %da now.bowl)]
             path.axn  [%timeline-post 0v0]
             [%timeline-post post.axn]  ~
         ==
       :_(this [%pass / %agent [our.bowl %bedrock] %poke cage]~)
       ::
-        %create-timeline
-      ?<  (~(has by timelines) path.axn)
-      =.  timelines
-        (~(put by timelines) path.axn [path.axn curators.axn ~])
-      `this
-      :: 
-        %delete-timeline
-      =.  timelines
-        (~(del by timelines) path.axn)
-      `this
-      ::
-        %create-timeline-post
-      =/  =timeline  (~(got by timelines) path.axn)
-      :: =.  posts.timeline  (put:pon posts.timeline now.bowl post.axn)
-      =/  post-id=path
-        |-
-        =/  pid=path  /(scot %p our.bowl)/(scot %da now.bowl)
-        ?.  (~(has by posts.timeline) pid)
-          pid
-        $(now.bowl +(now.bowl))
-      ::
-      =.  posts.timeline  (~(put by posts.timeline) post-id post.axn)
-      `this(timelines (~(put by timelines) path.axn timeline))
-      ::
         %delete-timeline-post
-      =/  =timeline  (~(got by timelines) path.axn)
-      :: =.  posts.timeline  +:(del:pon posts.timeline key.axn)
-      =.  posts.timeline  (~(del by posts.timeline) key.axn)
-      `this(timelines (~(put by timelines) path.axn timeline))
-      ::
-        %add-forerunners
-      `this
-      :: =/  fore=path  /spaces/~lomder-librun/realm-forerunners/chats/0v2.68end.ets6m.29fgc.ntejl.jbeo7
-      :: ?:  &(!force.axn (~(has by timelines) fore))
-      ::   ~&(%forerunners-already-imported `this)
-      :: =+  .^(dump=db-dump:cd %gx /(scot %p our.bowl)/chat-db/(scot %da now.bowl)/db/chat-db-dump)
-      :: ?>  ?=(%tables -.dump)
-      :: =/  tables=(map term table:cd)
-      ::   %-  ~(gas by *(map term table:cd))
-      ::   (turn tables.dump |=(=table:cd [-.table table]))
-      :: =/  =table:cd  (~(got by tables) %messages)
-      :: ?>  ?=(%messages -.table)
-      :: =|  posts=(map path timeline-post)
-      :: =.  posts
-      ::   %-  ~(gas by posts) 
-      ::   %+  murn  (tap:msgon:cd messages-table.table)
-      ::   |=  [* msg-part:cd]
-      ::   ?.  =(fore path)  ~
-      ::   (convert-messages msg-id msg-part-id content metadata)
-      :: =/  =timeline  [fore (sy ~[our.bowl]) posts]
-      :: `this(timelines (~(put by timelines) fore timeline))
+      =/  =cage
+        :-  %db-action  !>
+        :*  %remove  [(scot %p our.bowl) (scot %da now.bowl)]
+            [%timeline-post 0v0]  path.axn  id.axn
+        ==
+      :_(this [%pass / %agent [our.bowl %bedrock] %poke cage]~)
       ::
         %add-forerunners-bedrock
       =/  fore=path  /spaces/~lomder-librun/realm-forerunners/chats/0v2.68end.ets6m.29fgc.ntejl.jbeo7
@@ -225,12 +205,6 @@
       ?.  =(t.pole -.content)  ~
       `[-.content ~(key by metadata)]
     ``timeline-view+!>(types+types)
-    ::
-      [%x %timelines ~]
-    ``timeline-view+!>(timelines+timelines)
-    ::
-      [%x %timeline rest=*]
-    ``timeline-view+!>(timeline+(~(got by timelines) rest.pole))
   ==
 ::
 ++  on-arvo   on-arvo:def

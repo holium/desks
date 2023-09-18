@@ -10,8 +10,6 @@
     ^-  ^json
     %+  frond  -.vyu
     ?-    -.vyu
-      %timelines  (timelines:enjs timelines.vyu)
-      %timeline   (timeline:enjs timeline.vyu)
       %messages   (messages-table:encode:cd msgs.vyu)
         %types
       :-  %a

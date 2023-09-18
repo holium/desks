@@ -213,6 +213,7 @@
 ::
 +$  timeline
   $:  metadata=(map cord cord)
+      public=?
   ==
 ++  timeline-type  `type`[name=%timeline hash=0v0]
 +$  tl-post-stats

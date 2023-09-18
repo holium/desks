@@ -1606,10 +1606,13 @@
   =,  dejs:format
   |%
   ++  action
-    |=  jon=json
-    ^-  ^action
-    =<  (decode jon)
+    =<  action
     |%
+    ++  action
+      |=  jon=json
+      ^-  ^^action
+      (decode jon)
+    ::
     ++  decode
       %-  of
       :~  [%add-peer add-peer]

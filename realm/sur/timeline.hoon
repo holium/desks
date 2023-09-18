@@ -4,20 +4,19 @@
 ::
 +$  timeline-post  timeline-post:common
 ::
-+$  timeline
-  $:  =path
-      curators=(set ship) :: additional permission information?
-      posts=(map path timeline-post):: ((mop @ timeline-post) gth) ? :: @ is time in unix-ms
-  ==
-::
 +$  action
-  $%  [%create-timeline =path curators=(set ship)]
-      [%delete-timeline =path]
+  :: Relay a timeline post from one timeline to another
+  :: React to a timeline post
+  ::
+  $%  [%create-timeline name=@ta]
+      [%delete-timeline name=@ta]
+      [%follow-timeline =path]
+      [%handle-follow-request name=@ta]
+      [%leave-timeline =path]
+      [%handle-leave-request name=@ta]
+      :: [%relay-timeline-post from=path =id:common to=path]
       [%create-timeline-post =path post=timeline-post]
-      [%delete-timeline-post =path key=path]
-      [%add-forerunners force=?]
-      [%create-bedrock-timeline =path]
-      [%create-bedrock-timeline-post =path req-id=[@p @da] post=timeline-post]
+      [%delete-timeline-post =path =id:common]
       [%add-forerunners-bedrock force=?]
       [%add-random-emojis ~]
   ==
@@ -26,7 +25,5 @@
 +$  view
   $%  [%messages msgs=messages-table:cd]
       [%types types=(set [term (set cord)])]
-      [%timeline =timeline]
-      [%timelines timelines=(map path timeline)]
   ==
 --
