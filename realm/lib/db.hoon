@@ -575,7 +575,7 @@
 ::bedrock &db-action [%create-path /target %host ~ ~ ~ ~[[~bus %host] [~fed %member]]]
   |=  [=input-path-row state=state-1 =bowl:gall]
   ^-  (quip card state-1)
-  =/  log1  (maybe-log hide-logs.state "%create-path {<path.input-path-row>} {<peers.input-path-row>}")
+  =/  log1  (maybe-log hide-logs.state "{<dap.bowl>}%create-path {<path.input-path-row>} {<peers.input-path-row>}")
   :: ensure the path doesn't already exist
   =/  pre-existing    (~(get by paths.state) path.input-path-row)
   ?>  =(~ pre-existing)
@@ -653,7 +653,7 @@
 ::   %initiate, every ship in the members list, regardless of role or joined status
   |=  [[=path sp=[=ship space=cord] sr=role:mstore] state=state-1 =bowl:gall]
   ^-  (quip card state-1)
-  =/  log1  (maybe-log hide-logs.state "%create-from-space")
+  =/  log1  (maybe-log hide-logs.state "{<dap.bowl>}%create-from-space")
   =/  members     .^(view:mstore %gx /(scot %p our.bowl)/spaces/(scot %da now.bowl)/(scot %p ship.sp)/(scot %tas space.sp)/members/noun)
   ?>  ?=(%members -.members)
   =/  filtered-members
@@ -791,7 +791,7 @@
   ?>  =(host.original src.bowl)
   :: ensure new path is same as old path
   ?>  =(path.original path.new)
-  =/  log1  (maybe-log hide-logs.state "%put-path: updating {<path.new>} metadata")
+  =/  log1  (maybe-log hide-logs.state "{<dap.bowl>}%put-path: updating {<path.new>} metadata")
 
   :: update paths table
   =.  received-at.new  now.bowl
@@ -841,7 +841,7 @@
 ::bedrock &db-action [%add-peer /example ~fed %member]
   |=  [[=path =ship =role] state=state-1 =bowl:gall]
   ^-  (quip card state-1)
-  =/  log1  (maybe-log hide-logs.state "%add-peer: {<ship>} to {(spud path)} as {<role>}")
+  =/  log1  (maybe-log hide-logs.state "{<dap.bowl>}%add-peer: {<ship>} to {(spud path)} as {<role>}")
   :: ensure the path actually exists
   =/  path-row=path-row    (~(got by paths.state) path)
   =/  is-allowed=?
@@ -894,7 +894,7 @@
   ?>  =(host.path-row our.bowl)
   :: ensure this came from our ship
   ?>  =(our.bowl src.bowl)
-  =/  log1  (maybe-log hide-logs.state "%kick-peer: {(scow %p ship)} from {<path>}")
+  =/  log1  (maybe-log hide-logs.state "{<dap.bowl>}%kick-peer: {(scow %p ship)} from {<path>}")
 
   :: local state updates
   :: update paths table
@@ -924,7 +924,7 @@
 ++  get-path
   |=  [[=path-row peers=ship-roles] state=state-1 =bowl:gall]
   ^-  (quip card state-1)
-  =/  log1  (maybe-log hide-logs.state "%get-path {<path.path-row>}")
+  =/  log1  (maybe-log hide-logs.state "{<dap.bowl>}%get-path {<path.path-row>}")
   :: ensure the path doesn't already exist
   =/  pre-existing    (~(get by paths.state) path.path-row)
   ?>  =(~ pre-existing)
@@ -979,7 +979,7 @@
   |=  [=path state=state-1 =bowl:gall]
   ^-  (quip card state-1)
   :: ensure the path actually exists
-  =/  log1  (maybe-log hide-logs.state "attempting to delete {<path>}")
+  =/  log1  (maybe-log hide-logs.state "{<dap.bowl>}%delete-path: {<path>}")
   =/  path-row=path-row    (~(got by paths.state) path)
   :: ensure this came from host ship
   ?>  =(host.path-row src.bowl)
@@ -1004,7 +1004,7 @@
 ::~bus/bedrock &db-action [%refresh-path now /path]
   |=  [[t=@da =path] state=state-1 =bowl:gall]
   ^-  (quip card state-1)
-  =/  log1  (maybe-log hide-logs.state "%refresh-path {(spud path)}")
+  =/  log1  (maybe-log hide-logs.state "{<dap.bowl>}%refresh-path {(spud path)}")
   :: sanity checking
   =/  path-row=path-row   (~(got by paths.state) path)
   ?>  =(src.bowl host.path-row)
@@ -1023,7 +1023,7 @@
 ::  subs send this to host on a heartbeat to prevent from being skipped
   |=  [=path state=state-1 =bowl:gall]
   ^-  (quip card state-1)
-  =/  log1  (maybe-log hide-logs.state "%keep-alive {<src.bowl>} {(spud path)}")
+  =/  log1  (maybe-log hide-logs.state "{<dap.bowl>}%keep-alive {<src.bowl>} {(spud path)}")
   :: sanity checking
   =/  path-row=path-row   (~(got by paths.state) path)
   =/  old-peers=(list peer)  (~(got by peers.state) path)
@@ -1063,7 +1063,7 @@
   =/  path-row=path-row   (~(got by paths.state) path)
   ?>  =(host.path-row src.bowl)  :: only accept changes from host for now
 
-  =/  log1  (maybe-log hide-logs.state "%handle-changes: on {<path>} => {<changes>}")
+  =/  log1  (maybe-log hide-logs.state "{<dap.bowl>}%handle-changes: on {<path>} => {<changes>}")
 
   =/  index=@ud           0
   =/  result-cards   *(list card)
@@ -1189,7 +1189,7 @@
 ::~zod/bedrock &db-action [%create /example %vote 0 [%vote %.y our %foo [~zod now] /example] ~]
   |=  [[=req-id =input-row] state=state-1 =bowl:gall]
   ^-  (quip card state-1)
-  =/  log4  (maybe-log hide-logs.state "%create: {<req-id>} {<input-row>}")
+  =/  log4  (maybe-log hide-logs.state "{<dap.bowl>}%create: {<req-id>} {<input-row>}")
   =/  vent-path=path  /vent/(scot %p src.req-id)/(scot %da now.req-id)
   =/  kickcard=card  [%give %kick ~[vent-path] ~]
   :: form row from input
@@ -1254,7 +1254,7 @@
 ::db &db-action [%edit [our ~2023.5.22..17.21.47..9d73] /example %foo 0 [%general ~[2 'b']] ~]
   |=  [[=req-id =id:common =input-row] state=state-1 =bowl:gall]
   ^-  (quip card state-1)
-  =/  log1  (maybe-log hide-logs.state "%edit: {<req-id>} {<id>} {<input-row>}")
+  =/  log1  (maybe-log hide-logs.state "{<dap.bowl>}%edit: {<req-id>} {<id>} {<input-row>}")
   =/  vent-path=path  /vent/(scot %p src.req-id)/(scot %da now.req-id)
   =/  kickcard=card  [%give %kick ~[vent-path] ~]
 
@@ -1319,7 +1319,7 @@
   ^-  (quip card state-1)
   =/  vent-path=^path  /vent/(scot %p src.req-id)/(scot %da now.req-id)
   =/  kickcard=card  [%give %kick ~[vent-path] ~]
-  =/  log3  (maybe-log hide-logs.state "%remove: {<req-id>} {<type>} {<path>} {<id>}")
+  =/  log3  (maybe-log hide-logs.state "{<dap.bowl>}%remove: {<req-id>} {<type>} {<path>} {<id>}")
   :: permissions
   =/  pt                  (~(got by tables.state) type)
   =/  tbl                 (~(got by pt) path)
@@ -1369,7 +1369,7 @@
 ::bedrock &db-action [%remove-many %foo /example [[our ~2023.5.22..19.22.29..d0f7] [our ~2023.5.22..19.22.29..d0f7] ~]]
   |=  [[=req-id =path ids=(list [=id:common =type:common])] state=state-1 =bowl:gall]
   ^-  (quip card state-1)
-  =/  log3  (maybe-log hide-logs.state "%remove-many {<path>} {<ids>}")
+  =/  log3  (maybe-log hide-logs.state "{<dap.bowl>}%remove-many {<path>} {<ids>}")
   =/  vent-path=^path  /vent/(scot %p src.req-id)/(scot %da now.req-id)
   =/  kickcard=card  [%give %kick ~[vent-path] ~]
 
@@ -1438,7 +1438,7 @@
 ++  remove-before :: similar to TRUNCATE, removes all rows of a given type and path up to and including a certain timestamp
 ::bedrock &db-action [%remove-before [%foo *@uvH] /example ~2023.5.22..19.22.29..d0f7]
   |=  [[=type:common =path t=@da] state=state-1 =bowl:gall]
-  =/  log1  (maybe-log hide-logs.state "%remove-before")
+  =/  log1  (maybe-log hide-logs.state "{<dap.bowl>}%remove-before {<t>}")
   ^-  (quip card state-1)
 
   :: forward the request if we aren't the host
@@ -1498,7 +1498,7 @@
 ::bedrock &db-action [%relay [~bus now] /target %relay 0 [%relay [~zod ~2023.6.13..15.57.34..aa97] %foo /example 0 %all %.n] ~]
   |=  [[=req-id =input-row] state=state-1 =bowl:gall]
   ^-  (quip card state-1)
-  =/  log1  (maybe-log hide-logs.state "%relay: {<req-id>} {<input-row>}")
+  =/  log1  (maybe-log hide-logs.state "{<dap.bowl>}%relay: {<req-id>} {<input-row>}")
   :: first check that the input is actually a %relay
   ?+  -.data.input-row   !!
     %relay 
@@ -1573,7 +1573,7 @@
 ::  macro for chat-db to force bedrock to refresh all the chat-paths
   |=  [state=state-1 =bowl:gall]
   ^-  (quip card state-1)
-  =/  log1  (maybe-log hide-logs.state "%refresh-chat-paths")
+  =/  log1  (maybe-log hide-logs.state "{<dap.bowl>}%refresh-chat-paths")
   =/  paths=(list path-row)
     %+  skim
       ~(val by paths.state)
