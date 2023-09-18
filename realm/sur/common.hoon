@@ -176,11 +176,11 @@
 ::
 +$  friend
   $:  =ship
-      ::requested = WE asked `ship` to be friend
-      ::pending = `ship` asked US to be friend
+      ::pending-outgoing = WE asked `ship` to be friend
+      ::pending-incoming = `ship` asked US to be friend
       ::friend = pending `ship` accepted to be friend
       ::rejected = pending `ship` rejected to be friend
-      status=?(%requested %pending %friend %rejected)
+      status=?(%pending-outgoing %pending-incoming %friend %rejected)
       pinned=?
       mtd=(map @t @t)
   ==

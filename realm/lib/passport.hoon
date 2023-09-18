@@ -280,7 +280,7 @@
   ^-  (quip card state-0)
   =/  log1  (maybe-log hide-logs.state "%add-friend: {<req-id>} {<ship>}")
 
-  =/  new-fren=friend:common      [ship %requested %.n mtd]
+  =/  new-fren=friend:common      [ship %pending-outgoing %.n mtd]
 
   :: check that we don't already have a friendship with this ship
   =/  frs=(list friend:common)    (get-friends:scries bowl)
@@ -300,7 +300,7 @@
   ^-  (quip card state-0)
   =/  log1  (maybe-log hide-logs.state "%get-friend: {<mtd>} from {<src.bowl>}")
 
-  =/  new-fren=friend:common  [src.bowl %pending %.n mtd]
+  =/  new-fren=friend:common  [src.bowl %pending-incoming %.n mtd]
 
   =/  cards=(list card)
     :~  (req src.bowl dap.bowl)
