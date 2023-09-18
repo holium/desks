@@ -221,38 +221,45 @@
   contact
 ::
 ++  find-contact
-  |=  [c=contact:common ls=(list [=id:common =contact:common])]
+  |=  [c=contact:common ls=(list [=id:common @da =contact:common])]
   ^-  (unit @)
-  =/  ships=(list ship)  (turn ls |=(con=[=id:common =contact:common] ship.contact.con))
+  =/  ships=(list ship)  (turn ls |=(con=[=id:common @da =contact:common] ship.contact.con))
   (find [ship.c ~] ships)
+::
+++  current-contacts
+  |=  =bowl:gall
+  ^-  (list [@da contact:common])
+  =/  ourcontact=contact:common  contact:(our-passport:scries bowl)
+  :-  [now.bowl ourcontact]
+  (turn (our-contacts:scries bowl) |=(c=[id:common @da =contact:common] +.c))
 ::
 :: pokes
 ++  receive-contacts
 :: our ship gets this from another ship when they are giving us some contacts
-::passport &passport-action [%receive-contacts [~zod ~ ~ ~ [~ 'ZOOOD']]~]
-  |=  [contacts=(list contact:common) state=state-0 =bowl:gall]
+::passport &passport-action [%receive-contacts [now [~zod ~ ~ ~ [~ 'ZOOOD']]]~]
+  |=  [contacts=(list [t=@da =contact:common]) state=state-0 =bowl:gall]
   ^-  (quip card state-0)
   =/  log1  (maybe-log hide-logs.state "%receive-contacts: {<contacts>}")
 
   :: loop through the contacts they sent us
-  =/  old=(list [id:common contact:common])  (our-contacts:scries bowl)
+  =/  old=(list [id:common @da contact:common])  (our-contacts:scries bowl)
   =/  cards=(list card)  ~
   |-
     ?:  =(0 (lent contacts))
       [cards state]
-    =/  con=contact:common  (cleanup-contact (snag 0 contacts))
+    =/  con=contact:common  (cleanup-contact contact:(snag 0 contacts))
     ?:  =(our.bowl ship.con)  :: don't create a contact record for ourselves
-      ~&  'skippin self contact'
       $(contacts +.contacts)
     =/  index=(unit @)      (find-contact con old)
-    =/  new-card=card
+    =/  new-card=(unit card)
       ?~  index
-        (create our.bowl contact-type:common [%contact con])
-      =/  old-con=[=id:common =contact:common]   (snag u.index old)
-      (edit our.bowl contact-type:common id.old-con [%contact con])
+        (some (create our.bowl contact-type:common [%contact con]))
+      =/  old-con=[=id:common t=@da =contact:common]   (snag u.index old)
+      ?:  (gth t.old-con t:(snag 0 contacts))  ~  :: if our old record is newer than the one we are getting, ignore it
+      (some (edit our.bowl contact-type:common id.old-con [%contact con]))
     %=  $
-      contacts      +.contacts
-      cards         [new-card cards]
+      contacts  +.contacts
+      cards     ?~(new-card cards [u.new-card cards])
     ==
 ::
 ++  request-contacts
@@ -262,11 +269,7 @@
   ^-  (quip card state-0)
   =/  log1  (maybe-log hide-logs.state "%request-contacts from {<src.bowl>}")
 
-  =/  ourcontact=contact:common  contact:(our-passport:scries bowl)
-  =/  old=(list contact:common)
-  :-  ourcontact
-  (turn (our-contacts:scries bowl) |=(c=[id:common contact:common] +.c))
-  =/  response  !>([%receive-contacts old])
+  =/  response  !>([%receive-contacts (current-contacts bowl)])
   =/  cards=(list card)
     [%pass /contacts %agent [src.bowl dap.bowl] %poke %passport-action response]~
   [cards state]

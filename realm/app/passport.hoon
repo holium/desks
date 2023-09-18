@@ -14,6 +14,7 @@
     =/  default-state=state-0   *state-0
     =/  default-cards=(list card)
       :-  [%pass /selfpoke %agent [our.bowl dap.bowl] %poke %passport-action !>([%init-our-passport ~])]
+      :-  [%pass /db %agent [our.bowl %bedrock] %watch /db] :: watch bedrock for new peers
       ~
     [default-cards this(state default-state)]
   ++  on-save   !>(state)
@@ -83,7 +84,7 @@
     ?+    path  !!
     ::
       [%x %contacts ~]
-        ``passport-contacts+!>((turn (our-contacts:scries bowl) |=(c=[=id:common =contact:common] contact.c)))
+        ``passport-contacts+!>((turn (our-contacts:scries bowl) |=(c=[=id:common @da =contact:common] contact.c)))
     ::
       [%x %friends ~]
         ?.  (test-bedrock-table-existence:scries friend-type:common bowl)
@@ -139,6 +140,36 @@
             ?~  p.sign  `this
             ::~&  >>>  "%db: {<(spat wire)>} selfpoke failed"
             `this
+        ==
+      :: bedrock state changes, we only care about %add-peer
+      [%db ~]
+        ?+    -.sign  `this
+          %fact
+            ?+    p.cage.sign  `this
+              %db-changes
+            =/  changes=db-changes:db  !<(db-changes:db q.cage.sign)
+            =/  cards=(list card)
+            %-  zing
+            %+  turn
+              %+  skim
+                changes
+              |=  ch=db-change:db
+              ^-  ?
+              =(-.ch %add-peer)
+            |=  ch=db-change:db
+            ^-  (list card)
+            ?+  -.ch  ~
+              %add-peer
+            ?:  =(our.bowl ship.peer.ch)  ~ :: skip ourself, duh
+            ~&  >  "sharing contacts with {<ship.peer.ch>}"
+            :: send the new peer a `req`uest for his contacts
+            :~  (req:passport ship.peer.ch dap.bowl)
+            :: and give him all our contacts
+                [%pass /contacts %agent [ship.peer.ch dap.bowl] %poke %passport-action !>([%receive-contacts (current-contacts:passport bowl)])]
+            ==
+            ==
+            [cards this]
+            ==
         ==
     ==
   ::

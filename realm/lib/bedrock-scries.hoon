@@ -140,14 +140,15 @@
 ::
 ++  our-contacts
   |=  =bowl:gall
-  ^-  (list [id:common contact:common])
+  :: @da is updated-at
+  ^-  (list [id:common @da contact:common])
   ?.  (test-bedrock-table-existence contact-type:common bowl)  ~
   %+  turn
     (all-rows-by-path-type contact-type:common /private bowl)
   |=  r=row:bedrock
-  ^-  [id:common contact:common]
+  ^-  [id:common @da contact:common]
   ?+  -.data.r  !!
-    %contact  [id.r +.data.r]
+    %contact  [id.r updated-at.r +.data.r]
   ==
 ::
 ++  is-friend
