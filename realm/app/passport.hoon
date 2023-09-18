@@ -161,6 +161,11 @@
             ?+  -.ch  ~
               %add-peer
             ?:  =(our.bowl ship.peer.ch)  ~ :: skip ourself, duh
+            ?.  ?|  (lte (how-many-peers-in-path:scries path.peer.ch bowl) 50)
+                    =(our.bowl (scry-bedrock-path-host:scries path.peer.ch bowl))
+                ==
+                ~&  >>>  "not sharing contacts for {<path.peer.ch>}, too many peers, and we aren't the host"
+                ~
             ~&  >  "sharing contacts with {<ship.peer.ch>}"
             :: send the new peer a `req`uest for his contacts
             :~  (req:passport ship.peer.ch dap.bowl)

@@ -371,7 +371,7 @@
   [cards state]
 ::
 ++  change-contact
-::passport &passport-action [%change-contact [our now] ~zod [%image 'url'] [~ '#fcfcfc'] [~ 'my bio'] [~ 'ZOOOD']]
+::passport &passport-action [%change-contact [our now] ~zod [~ [%image 'url']] [~ '#fcfcfc'] [~ 'my bio'] [~ 'ZOOOD']]
   |=  [[=req-id c=contact:common] state=state-0 =bowl:gall]
   ^-  (quip card state-0)
   =/  log1  (maybe-log hide-logs.state "%change-contact: {<req-id>} {<c>}")
@@ -383,6 +383,7 @@
   =/  kickcard=card  [%give %kick ~[vent-path] ~]
 
   =/  p=passport:common  (our-passport:scries bowl)
+  =/  old-contact=contact:common  contact.p
   =.  contact.p  (cleanup-contact c)
 
   =/  cards=(list card)
@@ -390,6 +391,15 @@
         [%give %fact ~[vent-path] passport-vent+!>([%passport p])]
         kickcard
     ==
+  =.  cards
+    ?:  =(contact.p old-contact)  cards :: don't poke everyone if the contact is the same as it was
+    %+  weld  cards
+    %+  turn
+      (our-contacts:scries bowl)
+    |=  c=[id:common @da =contact:common]
+    ^-  card
+    [%pass /contacts %agent [ship.contact.c dap.bowl] %poke %passport-action !>([%receive-contacts [[now.bowl contact.p] ~]])]
+
   [cards state]
 ::
 ++  add-link
@@ -404,6 +414,7 @@
   =/  kickcard=card  [%give %kick ~[vent-path] ~]
 
   =/  p=passport:common   (our-passport:scries bowl)
+  =/  old-contact=contact:common  contact.p
   :: TODO verify the link is valid, then save it to bedrock
   :: also probably need to make updates to `crypto.p` and the pki state
 
@@ -495,6 +506,15 @@
         [%give %fact ~[vent-path] passport-vent+!>([%passport p])]
         kickcard
     ==
+  =.  cards
+    ?:  =(contact.p old-contact)  cards :: don't poke everyone if the contact is the same as it was
+    %+  weld  cards
+    %+  turn
+      (our-contacts:scries bowl)
+    |=  c=[id:common @da =contact:common]
+    ^-  card
+    [%pass /contacts %agent [ship.contact.c dap.bowl] %poke %passport-action !>([%receive-contacts [[now.bowl contact.p] ~]])]
+
   [cards state]
 ::
 ++  change-passport

@@ -82,6 +82,20 @@
     ==
   path-row.fp
 ::
+++  how-many-peers-in-path
+  |=  [=path =bowl:gall]
+  ^-  @ud
+  =/  fp
+    .^  fullpath:bedrock
+        %gx
+        %+  weld
+          %+  weld
+            /(scot %p our.bowl)/bedrock/(scot %da now.bowl)/db/path
+          path
+        /noun
+    ==
+  (lent peers.fp)
+::
 ++  scry-first-bedrock-chat
   |=  [=path =bowl:gall]
   ^-  row:bedrock
