@@ -3,7 +3,7 @@
 ::  - constraints via paths-table settings
 /-  *db, common, mstore=membership, sstore=spaces-store
 /-  vstore=visas
-/+  spaces-chat
+/+  spaces-chat, passport-lib=passport
 |%
 ::
 :: helpers
@@ -2281,6 +2281,26 @@
                 ['status' s+status.data.row]
                 ['pinned' b+pinned.data.row]
                 ['mtd' (metadata-to-json mtd.data.row)]
+            ==
+          %passport
+            =/  en-pass  enjs:passport-lib
+            :~  ['contact' (en-contact:en-pass contact.data.row)]
+                ['cover' ?~(cover.data.row ~ s+u.cover.data.row)]
+                ['user-status' s+user-status.data.row]
+                ['discoverable' b+discoverable.data.row]
+                ['nfts' a+(turn nfts.data.row en-linked-nft:en-pass)]
+                ['addresses' a+(turn addresses.data.row en-linked-address:en-pass)]
+                ['default-address' s+default-address.data.row]
+                ['recommendations' a+(turn ~(tap in recommendations.data.row) en-recommendation:en-pass)]
+                ['chain' a+(turn chain.data.row en-link-container:en-pass)]
+                ['crypto' (en-p-crypto:en-pass crypto.data.row)]
+            ==
+          %contact
+            :~  ['ship' s+(scot %p ship.data.row)]
+                ['avatar' (en-avatar:enjs:passport-lib avatar.data.row)]
+                ['color' ?~(color.data.row ~ s+u.color.data.row)]
+                ['bio' ?~(bio.data.row ~ s+u.bio.data.row)]
+                ['display-name' ?~(display-name.data.row ~ s+u.display-name.data.row)]
             ==
         ==
       =/  keyvals

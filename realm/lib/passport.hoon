@@ -554,6 +554,7 @@
   =/  our-contact=contact:common
     %+  snag  0
     (skim contacts |=(c=contact:common =(our.bowl ship.c)))
+  =/  log2  (maybe-log hide-logs.state "%init-our-passport: contact {<our-contact>}")
   =/  p=passport:common
     [our-contact ~ %online %.y ~ ~ '' ~ ~ *passport-crypto:common]
   =/  cards=(list card)
