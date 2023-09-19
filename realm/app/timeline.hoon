@@ -104,6 +104,31 @@
         ==
       :_(this [%pass / %agent [our.bowl %bedrock] %poke cage]~)
       ::
+        %relay-timeline-post
+      =/  =relay:common     [id [%timeline-post 0v0] from 0 %all |]:axn
+      =/  row=input-row:db  [to.axn [%relay 0v0] [%relay relay] ~]
+      =/  =cage
+        :-  %db-action  !>
+        [%relay [(scot %p our.bowl) (scot %da now.bowl)] row]
+      :_(this [%pass / %agent [our.bowl %bedrock] %poke cage]~)
+      ::
+        %create-react
+      =/  =cage
+        :-  %db-action  !>
+        :*  %create   [(scot %p our.bowl) (scot %da now.bowl)]
+            path.axn  [%react 0v0]
+            [%react react.axn]  ~
+        ==
+      :_(this [%pass / %agent [our.bowl %bedrock] %poke cage]~)
+      ::
+        %delete-react
+      =/  =cage
+        :-  %db-action  !>
+        :*  %remove  [(scot %p our.bowl) (scot %da now.bowl)]
+            [%react 0v0]  path.axn  id.axn
+        ==
+      :_(this [%pass / %agent [our.bowl %bedrock] %poke cage]~)
+      ::
         %add-forerunners-bedrock
       =/  fore=path  /spaces/~lomder-librun/realm-forerunners/chats/0v2.68end.ets6m.29fgc.ntejl.jbeo7
       =/  db-fore=path  [%timeline (scot %p our.bowl) fore]
