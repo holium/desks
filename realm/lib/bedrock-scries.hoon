@@ -3,7 +3,14 @@
 ++  our-passport
   |=  =bowl:gall
   ^-  passport:common
-  =/  r=row:bedrock  (first-common passport-type:common /private bowl)
+  =/  r=row:bedrock
+    %+  snag  0
+    %+  skim
+      (all-rows-by-path-type passport-type:common /private bowl)
+    |=  r=row:bedrock  ^-  ?
+    ?+  -.data.r  %.n
+      %passport  =(ship.contact.data.r our.bowl)
+    ==
   ?+  -.data.r  !!
     %passport  +.data.r
   ==
@@ -11,13 +18,27 @@
 ++  our-passport-id
   |=  =bowl:gall
   ^-  id:common
-  =/  r=row:bedrock  (first-common passport-type:common /private bowl)
+  =/  r=row:bedrock
+    %+  snag  0
+    %+  skim
+      (all-rows-by-path-type passport-type:common /private bowl)
+    |=  r=row:bedrock  ^-  ?
+    ?+  -.data.r  %.n
+      %passport  =(ship.contact.data.r our.bowl)
+    ==
   id.r
 ::
 ++  our-contact-id
   |=  =bowl:gall
   ^-  id:common
-  =/  r=row:bedrock  (first-common contact-type:common /private bowl)
+  =/  r=row:bedrock
+    %+  snag  0
+    %+  skim
+      (all-rows-by-path-type contact-type:common /private bowl)
+    |=  r=row:bedrock  ^-  ?
+    ?+  -.data.r  %.n
+      %contact  =(ship.data.r our.bowl)
+    ==
   id.r
 ::
 ++  test-bedrock-path-existence

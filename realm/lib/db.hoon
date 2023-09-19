@@ -89,6 +89,30 @@
       &(=(id.data.rel id.r) =(ship.id.rel our.bowl))
   ==
 ::
+++  meets-constraints-edit
+  |=  [=path-row =row state=state-1 =bowl:gall]
+  ^-  ?
+  =/  tbl=(unit table)    (get-tbl type.row path.path-row state)
+  ?~  tbl  %.y  :: there's nothing in this table, so any row we add is unique along all possible columns
+  =/  uconst=(unit constraint)  (~(get by constraints.path-row) type.row)
+  =/  const=(unit constraint)
+    ?~  uconst  (~(get by default-constraints) type.row)
+    uconst
+  ?~  const  %.y  :: there is neither a defined-constraint nor a default-constraint, thus this "meets constraints"
+  %-  ~(all in uniques.u.const)
+  |=  cols=unique-columns
+  ^-  ?
+  =/  where=(list [column-accessor *])
+    %+  turn
+      ~(tap in cols)
+    |=  ca=column-accessor
+    :-  ca
+    (snag-val-from-row ca row)
+  =/  matches=(list ^row)  (find-from-where u.tbl where)
+  ?&  =(1 (lent matches))
+      =((lent `(list ^row)`(skim matches |=(r=^row =(id.r id.row)))) 1)
+  ==
+::
 ++  meets-constraints
   |=  [=path-row =row state=state-1 =bowl:gall]
   ^-  ?
@@ -1284,12 +1308,6 @@
     ?~  schema.input-row
       (~(got by schemas.state) type.input-row) :: crash if they didn't pass a schema AND we don't already have one
     schema.input-row
-  :: TODO check that new version doesn't violate constraints
-
-  :: update path
-  =.  updated-at.path-row     now.bowl
-  =.  received-at.path-row    now.bowl
-  =.  paths.state             (~(put by paths.state) path.path-row path-row)
 
   :: cleanup input
   =/  row=row  [
@@ -1301,6 +1319,16 @@
     now.bowl
     now.bowl
   ]
+
+  :: ensure that the row meets constraints
+  ?.  (meets-constraints-edit path-row row state bowl)
+    =/  log4  (maybe-log hide-logs.state "{(scow %p src.bowl)} tried to edit a %{(scow %tas name.type.row)} row where they violated constraints")
+    [~[kickcard] state]
+
+  :: update path
+  =.  updated-at.path-row     now.bowl
+  =.  received-at.path-row    now.bowl
+  =.  paths.state             (~(put by paths.state) path.path-row path-row)
 
   =.  state             (add-row-to-db row sch state)
 
