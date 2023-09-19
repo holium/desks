@@ -32,6 +32,14 @@
     ?^  cage
       (pure:m q.u.cage)
     (pure:m !>([%ack ~]))
+  %add-ship-to-chat
+    ~&  %add-ship-to-chat
+    ;<  ~          bind:m  (watch wire [our %chat-db] wire)
+    ;<  ~          bind:m  (poke [our %realm-chat] chat-action+!>([%add-ship-to-chat now +>.u.axn]))
+    ;<  cage=(unit cage)  bind:m  (take-fact-or-kick wire)
+    ?^  cage
+      (pure:m q.u.cage)
+    (pure:m !>([%ack ~]))
 ==
 ::
 ++  take-fact-or-kick

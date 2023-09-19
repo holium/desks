@@ -244,16 +244,6 @@
   ^-  [=ship t=@da]
   [sender.msg-id timestamp.msg-id]
 ::
-++  into-add-peer-pokes
-  |=  [s=ship peers=(list ship) =path]
-  ^-  (list card)
-  %+  turn
-    %+  skip
-      peers
-    |=(p=ship =(p s)) :: skip the peer who matches the root-ship that we are poking
-  |=(peer=ship [%pass /dbpoke %agent [s %chat-db] %poke %chat-db-action !>([%add-peer path peer])])
-  :: |=(peer=ship [%pass (weld /dbpoke path) %agent [s %chat-db] %poke %chat-db-action !>([%add-peer path peer])])
-::
 ++  push-notification-card
   |=  [=bowl:gall state=state-1 =path-row:db title=@t subtitle=@t content=@t unread=@ud avatar=(unit @t) =message:db]
   ^-  card
@@ -412,13 +402,13 @@
   [cards state]
 ::
 ++  add-ship-to-chat
-::realm-chat &chat-action [%add-ship-to-chat /realm-chat/path-id ~bus ~]
-  |=  [act=[=path =ship host=(unit ship)] state=state-1 =bowl:gall]
+::realm-chat &chat-action [%add-ship-to-chat now /realm-chat/path-id ~bus ~]
+  |=  [act=[t=@da =path =ship host=(unit ship)] state=state-1 =bowl:gall]
   ^-  (quip card state-1)
   ?:  &(=(src.bowl our.bowl) =(our.bowl ship.act))  :: if we are trying to add ourselves, then actually we just need to forward this poke to the host
     ?~  host.act  !!  :: have to pass the host if we are adding ourselves
     :_  state
-    [%pass /dbpoke %agent [(need host.act) dap.bowl] %poke %chat-action !>([%add-ship-to-chat path.act ship.act ~])]~
+    [%pass /dbpoke %agent [(need host.act) dap.bowl] %poke %chat-action !>([%add-ship-to-chat t.act path.act ship.act ~])]~
     
   =/  pathrow  (scry-path-row path.act bowl)
   ?>  ?|  =(src.bowl our.bowl)
@@ -441,7 +431,7 @@
         :: we poke all original peers db with add-peer (including ourselves)
         %+  turn
           pathpeers
-        |=(p=peer-row:db [%pass /dbpoke %agent [patp.p %chat-db] %poke %chat-db-action !>([%add-peer path.act ship.act])])
+        |=(p=peer-row:db [%pass /dbpoke %agent [patp.p %chat-db] %poke %chat-db-action !>([%add-peer t.act path.act ship.act])])
       ::  we poke the newly-added ship's db with a create-path,
       ::  since that will automatically handle them joining as a member
       [%pass /dbpoke %agent [ship.act %chat-db] %poke %chat-db-action !>([%create-path pathrow all-peers])]
@@ -790,13 +780,15 @@
     ::
     ++  path-and-ship-and-unit-host
       |=  jon=json
-      ^-  [path ship (unit ship)]
+      ^-  [@da path ship (unit ship)]
       ?>  ?=([%o *] jon)
+      =/  ut    (~(get by p.jon) 't')
       =/  uhost    (~(get by p.jon) 'host')
       =/  host=(unit ship)
         ?~  uhost  ~
         (some (de-ship (need uhost)))
       [
+        ?~(ut *@da (di u.ut))
         (pa (~(got by p.jon) 'path'))
         (de-ship (~(got by p.jon) 'ship'))
         host

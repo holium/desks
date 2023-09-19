@@ -35,6 +35,8 @@
     ?-  -.act  :: each handler function here should return [(list card) state]
       %sync-to-bedrock
         (sync-to-bedrock:core state)
+      %set-creds
+        (set-creds:core +.act state)
     ==
     [cards this]
   ::
@@ -126,4 +128,42 @@
       [%pass /dbpoke %agent [our.bowl %bedrock] %poke %db-action !>(creds)]
   ==
   [cards state]
+::
+++  set-creds
+::api-store &api-store-action [%set-creds set-storage-agent=%.y 'endpoint' 'access-key-id' 'secret-access-key' (silt ['bucket1' ~]) 'current-bucket' 'region']
+  |=  [[set-storage-agent=? =creds:common] state=state-0]
+  ^-  (quip card state-0)
+
+  =/  creds  [%create [our.bowl *@da] [/private creds-type:common [%creds creds] ~]]
+
+  =/  cards=(list card)  
+  :~  [%pass /dbpoke %agent [our.bowl %bedrock] %poke %db-action !>(creds)]
+  ==
+
+  =.  cards
+  ?.  &(.^(? %gu /(scot %p our.bowl)/storage/(scot %da now.bowl)/$) set-storage-agent)
+    cards
+  =/  stoconf=store-conf  ;;(store-conf .^(* %gx /(scot %p our.bowl)/storage/(scot %da now.bowl)/configuration/noun))
+  %+  weld
+    %+  weld  cards
+    %+  weld
+      %+  turn  ~(tap in buckets.stoconf)
+      |=  b=@t
+      (stor-poke !>([%remove-bucket b]))
+    %+  turn  ~(tap in buckets.creds)
+    |=  b=@t
+    (stor-poke !>([%add-bucket b]))
+  :~  (stor-poke !>([%set-endpoint endpoint.creds]))
+      (stor-poke !>([%set-access-key-id access-key-id.creds]))
+      (stor-poke !>([%set-secret-access-key secret-access-key.creds]))
+      (stor-poke !>([%set-current-bucket current-bucket.creds]))
+      (stor-poke !>([%set-region region.creds]))
+  ==
+
+  [cards state]
+
+++  stor-poke
+  |=  =vase
+  ^-  card
+  [%pass /dbpoke %agent [our.bowl %storage] %poke %storage-action vase]
 --
