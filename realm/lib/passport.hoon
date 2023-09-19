@@ -388,6 +388,7 @@
 
   =/  cards=(list card)
     :~  (edit-req our.bowl passport-type:common (our-passport-id:scries bowl) [%passport p] req-id)
+        (edit our.bowl contact-type:common (our-contact-id:scries bowl) [%contact contact.p])
         [%give %fact ~[vent-path] passport-vent+!>([%passport p])]
         kickcard
     ==
@@ -493,6 +494,9 @@
       ?:  =('nfts' name.data.parsed-link)
         =.  nfts.p  (linked-nfts:dejs (need (de-json:html record.data.parsed-link)))
         p
+      ?:  =('contact' name.data.parsed-link)
+        =.  contact.p  (de-contact:dejs (need (de-json:html record.data.parsed-link)))
+        p
       ~&  >>>  'unrecognized NAME_RECORD_SET "name" property'
       !!
       ==
@@ -503,6 +507,7 @@
 
   =/  cards=(list card)
     :~  (edit our.bowl passport-type:common (our-passport-id:scries bowl) [%passport p])
+        (edit our.bowl contact-type:common (our-contact-id:scries bowl) [%contact contact.p])
         [%give %fact ~[vent-path] passport-vent+!>([%passport p])]
         kickcard
     ==
@@ -582,6 +587,7 @@
     [our-contact ~ %online %.y ~ ~ '' ~ ~ *passport-crypto:common]
   =/  cards=(list card)
     :-  (create our.bowl passport-type:common [%passport p])
+    :-  (create our.bowl contact-type:common [%contact contact.p])
     %+  turn
       %+  skip  contacts  :: don't save our own contact as a contact
       |=  c=contact:common
@@ -768,6 +774,50 @@
         ['public_key_to_entity' (om so)]
     ==
   ::
+  ++  de-contact
+    %-  ot
+    :~  [%ship de-ship]
+        [%avatar de-avatar]
+        [%color so:dejs-soft:format]
+        [%bio so:dejs-soft:format]
+        [%display-name so:dejs-soft:format]
+    ==
+  ::
+  ++  de-type
+    %+  cu
+      path-to-type
+    pa
+  ::
+  ++  path-to-type
+    |=  p=path
+    ^-  type:common
+    [`@tas`(slav %tas +2:p) `@uvH`(slav %uv +6:p)]
+  ::
+  ++  de-id
+    %+  cu
+      path-to-id
+    pa
+  ::
+  ++  path-to-id
+    |=  p=path
+    ^-  id:common
+    [`@p`(slav %p +2:p) `@da`(slav %da +6:p)]
+  ::
+  ++  de-space-path
+    %+  cu
+      path-to-space-path
+    pa
+  ::
+  ++  path-to-space-path
+    |=  p=path
+    ^-  [=ship space=cord]
+    [`@p`(slav %p +2:p) `@t`(slav %tas +6:p)]
+  ::
+  ++  de-ship  (su ;~(pfix sig fed:ag))
+  ::
+  ++  dri   :: specify in integer milliseconds, returns a @dr
+    (cu |=(t=@ud ^-(@dr (div (mul ~s1 t) 1.000))) ni)
+  ::
   ++  action
     |=  jon=json
     ^-  ^action
@@ -792,15 +842,6 @@
         (de-id u.request-id)
       :-  id
       (de-contact jon)
-    ::
-    ++  de-contact
-      %-  ot
-      :~  [%ship de-ship]
-          [%avatar de-avatar]
-          [%color so:dejs-soft:format]
-          [%bio so:dejs-soft:format]
-          [%display-name so:dejs-soft:format]
-      ==
     ::
     ++  de-add-friend
       |=  jon=json
@@ -857,41 +898,6 @@
       ?~  rq  `id:common`[`@p`(slav %p (so (~(got by p.jon) 'ship'))) *@da]
       (de-id u.rq)
     ::
-    ++  de-type
-      %+  cu
-        path-to-type
-      pa
-    ::
-    ++  path-to-type
-      |=  p=path
-      ^-  type:common
-      [`@tas`(slav %tas +2:p) `@uvH`(slav %uv +6:p)]
-    ::
-    ::
-    ++  de-id
-      %+  cu
-        path-to-id
-      pa
-    ::
-    ++  path-to-id
-      |=  p=path
-      ^-  id:common
-      [`@p`(slav %p +2:p) `@da`(slav %da +6:p)]
-    ::
-    ++  de-space-path
-      %+  cu
-        path-to-space-path
-      pa
-    ::
-    ++  path-to-space-path
-      |=  p=path
-      ^-  [=ship space=cord]
-      [`@p`(slav %p +2:p) `@t`(slav %tas +6:p)]
-    ::
-    ++  de-ship  (su ;~(pfix sig fed:ag))
-    ::
-    ++  dri   :: specify in integer milliseconds, returns a @dr
-      (cu |=(t=@ud ^-(@dr (div (mul ~s1 t) 1.000))) ni)
     --
   --
 ::
