@@ -131,9 +131,7 @@
       ::
         %add-forerunners-bedrock
       =/  fore=path  /spaces/~lomder-librun/realm-forerunners/chats/0v2.68end.ets6m.29fgc.ntejl.jbeo7
-      =/  db-fore=path  [%timeline (scot %p our.bowl) fore]
-      ?:  &(!force.axn (test-bedrock-path-existence:scries db-fore bowl))
-        ~&(%forerunners-already-imported-to-bedrock `this)
+      =/  db-fore=path  /timeline/(scot %p our.bowl)/forerunners
       =+  .^(dump=db-dump:cd %gx /(scot %p our.bowl)/chat-db/(scot %da now.bowl)/db/chat-db-dump)
       ?>  ?=(%tables -.dump)
       =/  tables=(map term table:cd)
@@ -147,18 +145,22 @@
         ?.  =(fore path)  ~
         (convert-messages our.bowl created-at msg-id msg-part-id content metadata)
       =^  tl-cards  this
-        (on-poke timeline-action+!>([%create-bedrock-timeline fore]))
+        (on-poke timeline-action+!>([%create-timeline %forerunners]))
       =/  post-cards
         %+  turn  posts
         |=  [req-id=[@p @da] post=timeline-post]
         ^-  card
-        =/  =cage  timeline-action+!>([%create-bedrock-timeline-post fore req-id post])
-        [%pass / %agent [our dap]:bowl %poke cage]
+        =/  =cage
+          :-  %db-action  !>
+          :*  %create  req-id
+              db-fore  [%timeline-post 0v0]
+              [%timeline-post post]  ~
+          ==
+        [%pass / %agent [our.bowl %bedrock] %poke cage]
       :_(this (weld tl-cards post-cards))
       ::
         %add-random-emojis
-      =/  fore=path  /spaces/~lomder-librun/realm-forerunners/chats/0v2.68end.ets6m.29fgc.ntejl.jbeo7
-      =/  db-fore=path  [%timeline (scot %p our.bowl) fore]
+      =/  db-fore=path  /timeline/(scot %p our.bowl)/forerunners
       =+  .^  [* pt=pathed-table:db *]  %gx
               ;:  welp
                 /(scot %p our.bowl)/bedrock/(scot %da now.bowl)/db/table-by-path/timeline-post/0v0
