@@ -90,7 +90,7 @@
         %create-timeline-post
       =/  =cage
         :-  %db-action  !>
-        :*  %create   [(scot %p our.bowl) (scot %da now.bowl)]
+        :*  %create   [our now]:bowl
             path.axn  [%timeline-post 0v0]
             [%timeline-post post.axn]  ~
         ==
@@ -99,7 +99,7 @@
         %delete-timeline-post
       =/  =cage
         :-  %db-action  !>
-        :*  %remove  [(scot %p our.bowl) (scot %da now.bowl)]
+        :*  %remove   [our now]:bowl
             [%timeline-post 0v0]  path.axn  id.axn
         ==
       :_(this [%pass / %agent [our.bowl %bedrock] %poke cage]~)
@@ -109,13 +109,13 @@
       =/  row=input-row:db  [to.axn [%relay 0v0] [%relay relay] ~]
       =/  =cage
         :-  %db-action  !>
-        [%relay [(scot %p our.bowl) (scot %da now.bowl)] row]
+        [%relay [our now]:bowl row]
       :_(this [%pass / %agent [our.bowl %bedrock] %poke cage]~)
       ::
         %create-react
       =/  =cage
         :-  %db-action  !>
-        :*  %create   [(scot %p our.bowl) (scot %da now.bowl)]
+        :*  %create   [our now]:bowl
             path.axn  [%react 0v0]
             [%react react.axn]  ~
         ==
@@ -124,7 +124,7 @@
         %delete-react
       =/  =cage
         :-  %db-action  !>
-        :*  %remove  [(scot %p our.bowl) (scot %da now.bowl)]
+        :*  %remove  [our now]:bowl
             [%react 0v0]  path.axn  id.axn
         ==
       :_(this [%pass / %agent [our.bowl %bedrock] %poke cage]~)
