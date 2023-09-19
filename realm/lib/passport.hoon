@@ -7,6 +7,17 @@
 ::
 :: helpers
 ::
+++  prev-link-hash-matches
+  ::  tells us if the previous-link-hash matches what we expect
+  |=  [link=passport-data-link:common chain=passport-chain:common]
+  ^-  ?
+  ?:  =((lent chain) 0)  =('0x00000000000000000000000000000000' previous-link-hash.mtd.link)
+  :: first link in the chain is an "epoch_block" so there's still not a
+  :: real previous linke hash
+  ?:  =((lent chain) 1)  =('0x00000000000000000000000000000000' previous-link-hash.mtd.link)
+  =/  last  (snag (dec (lent chain)) chain)
+  =(hash.last previous-link-hash.mtd.link)
+::
 ++  validate-signing-key
   |=  [p=passport:common ln=passport-link-container:common]
   ^-  ?
@@ -442,6 +453,7 @@
       ?>  (validate-signing-key p ln)   :: only allow keys that are already in the crypto state to add other keys
       :: TODO check previous_link_hash
       =/  parsed-link=passport-data-link:common   (passport-data-link:dejs (need (de-json:html data.ln)))
+      ?>  (prev-link-hash-matches parsed-link chain.p)
       =/  entity=@t     from-entity.mtd.parsed-link
       =/  key=@t        signing-public-key.mtd.parsed-link
       ?+  -.data.parsed-link  !!
@@ -469,6 +481,7 @@
       ?>  (validate-signing-key p ln)   :: only allow keys that are already in the crypto state to update the name_record
       :: TODO check previous_link_hash
       =/  parsed-link=passport-data-link:common   (passport-data-link:dejs (need (de-json:html data.ln)))
+      ?>  (prev-link-hash-matches parsed-link chain.p)
       ?+  -.data.parsed-link  !!
         %name-record-set
       ?:  =('display-name' name.data.parsed-link)
