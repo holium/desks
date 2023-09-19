@@ -226,11 +226,9 @@
   =/  ships=(list ship)  (turn ls |=(con=[=id:common @da =contact:common] ship.contact.con))
   (find [ship.c ~] ships)
 ::
-++  current-contacts
+++  current-contacts  :: includes 'our' contact
   |=  =bowl:gall
   ^-  (list [@da contact:common])
-  =/  ourcontact=contact:common  contact:(our-passport:scries bowl)
-  :-  [now.bowl ourcontact]
   (turn (our-contacts:scries bowl) |=(c=[id:common @da =contact:common] +.c))
 ::
 :: pokes
@@ -396,7 +394,10 @@
     ?:  =(contact.p old-contact)  cards :: don't poke everyone if the contact is the same as it was
     %+  weld  cards
     %+  turn
-      (our-contacts:scries bowl)
+      %+  skip  (our-contacts:scries bowl)
+      |=  c=[id:common @da =contact:common]
+      ^-  ?
+      =(our.bowl ship.contact.c)
     |=  c=[id:common @da =contact:common]
     ^-  card
     [%pass /contacts %agent [ship.contact.c dap.bowl] %poke %passport-action !>([%receive-contacts [[now.bowl contact.p] ~]])]
@@ -515,7 +516,10 @@
     ?:  =(contact.p old-contact)  cards :: don't poke everyone if the contact is the same as it was
     %+  weld  cards
     %+  turn
-      (our-contacts:scries bowl)
+      %+  skip  (our-contacts:scries bowl)
+      |=  c=[id:common @da =contact:common]
+      ^-  ?
+      =(our.bowl ship.contact.c)
     |=  c=[id:common @da =contact:common]
     ^-  card
     [%pass /contacts %agent [ship.contact.c dap.bowl] %poke %passport-action !>([%receive-contacts [[now.bowl contact.p] ~]])]
