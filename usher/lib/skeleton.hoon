@@ -1,1 +1,1 @@
-../../../urbit/pkg/base-dev/lib/skeleton.hoon
+../../urbit/pkg/base-dev/lib/skeleton.hoon

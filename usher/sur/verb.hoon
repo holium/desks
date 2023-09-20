@@ -1,1 +1,1 @@
-../../../urbit/pkg/base-dev/mar/verb.hoon
+../../urbit/pkg/base-dev/sur/verb.hoon

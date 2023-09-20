@@ -1,1 +1,1 @@
-../../../urbit/pkg/base-dev/mar/bill.hoon
+../../urbit/pkg/base-dev/mar/bill.hoon

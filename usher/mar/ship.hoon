@@ -1,1 +1,1 @@
-../../../urbit/pkg/base-dev/mar/ship.hoon
+../../urbit/pkg/base-dev/mar/ship.hoon
