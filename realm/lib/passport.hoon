@@ -581,6 +581,7 @@
 ::  initializers (also pokes)
 ::
 ++  init-our-passport  :: (does nothing if already exists)
+::passport &passport-action [%init-our-passport ~]
   |=  [state=state-0 =bowl:gall]
   ^-  (quip card state-0)
   =/  log1  (maybe-log hide-logs.state "%init-our-passport: at {<now.bowl>}")
@@ -606,10 +607,12 @@
     :-  (create our.bowl passport-type:common [%passport p])
     :-  (create our.bowl contact-type:common [%contact contact.p])
     %+  turn
-      %+  skip  contacts  :: don't save our own contact as a contact
+      %+  skip  contacts  :: don't save our own contact again, or any contacts that are just blank
       |=  c=contact:common
       ^-  ?
-      =(our.bowl ship.c)
+      ?|  =(our.bowl ship.c)
+          &(=(color.c [~ '#000000']) =(avatar.c ~) =(bio.c ~) =(display-name.c ~))
+      ==
     |=  c=contact:common
     (create our.bowl contact-type:common [%contact c])
   [cards state]
@@ -635,6 +638,7 @@
         ?>  ?=([%o *] fr)
         =/  c=(unit json)  (~(get by p.fr) 'contactInfo')
         ?~  c  ~
+        ?~  u.c  ~
         ?>  ?=([%o *] u.c)
         =/  raw-bio   (so (~(got by p.u.c) 'bio'))
         =/  raw-name  (so (~(got by p.u.c) 'nickname'))

@@ -22,7 +22,11 @@
     |=  old-state=vase
     ^-  (quip card _this)
     =/  old  !<(versioned-state old-state)
-    =/  cards=(list card)  ~
+    =/  cards=(list card)
+      :-  [%pass /selfpoke %agent [our.bowl dap.bowl] %poke %passport-action !>([%init-our-passport ~])]
+      ?.  =(wex.bowl ~)  ~
+      :~  [%pass /db %agent [our.bowl %bedrock] %watch /db]
+      ==
     [cards this(state old)]
   ::
   ++  on-poke
