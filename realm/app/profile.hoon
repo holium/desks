@@ -77,10 +77,14 @@
     ++  replace-html
       |=  html=@t
       ^-  (unit @t)
+      =/  pass  .^(passport:common %gx /(scot %p our.bowl)/passport/(scot %da now.bowl)/'our-passport'/noun)
+      =/  discoverable  ?:  discoverable.pass  'true'  'false'
       =/  rus
         %+  rush  html
         %-  star
         ;~  pose
+          :: indicate whether this is a discoverable passport
+          (cold discoverable (jest '{passport-discoverable}'))
           (cold (scot %p ~zod) (jest '{og-title}'))
           (cold %desk (jest '{og-description}'))
           next
@@ -108,6 +112,8 @@
       :: scry the passport agent and only return fields necessary to render the public
       ::  facing UI
       =/  pass  .^(passport:common %gx /(scot %p our.bowl)/passport/(scot %da now.bowl)/'our-passport'/noun)
+      :: only return this data if the passport has been marked discoverable
+      ?.  discoverable.pass  ~  :: 500 if not discoverable
       ``passport+!>(pass)
   ==
 ::
