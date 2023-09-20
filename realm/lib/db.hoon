@@ -1201,7 +1201,7 @@
     src.bowl
   :: create with unique id
   ::
-  =?  created-time  (lth (sub now.bowl now.req-id) ~s30)
+  =?  created-time  (lth (sub now.bowl created-time) ~s30)
     |-
     =/  =id:common  [creator created-time]
     ?~  get=(get-db type.input-row path.input-row id state)
