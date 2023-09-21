@@ -307,7 +307,11 @@
   ^-  (quip card state-1)
   ?>  =(src.bowl our.bowl)
   =/  chat-path  /realm-chat/(scot %uv (sham [our.bowl t.act]))
-  =/  pathrow=path-row:db  [chat-path metadata.c.act type.c.act t.act t.act ~ invites.c.act %.n max-expires-at-duration.c.act now.bowl]
+  =/  pathrow=path-row:db  [chat-path metadata.c.act type.c.act t.act t.act ~ invites.c.act %.n max-expires-at-duration.c.act now.bowl nft.c.act]
+  :: they MUST pass nft info in create, if the type is nft-gated
+  ?>  ?|  ?!(=(type.c.act %nft-gated))
+          ?!(=(nft.c.act ~))
+      ==
   =/  all-ships
     ?:  (~(has in (silt peers.c.act)) our.bowl)  peers.c.act
     [our.bowl peers.c.act]
@@ -623,7 +627,7 @@
   =/  selfpaths=(list path-row:db)  (skim (scry-paths bowl) |=(p=path-row:db =(type.p %self)))
   ?.  =(0 (lent selfpaths))
     `state
-  (create-chat [(notes-to-self bowl) %self ~ %host *@dr] state bowl)
+  (create-chat [(notes-to-self bowl) %self ~ %host *@dr ~] state bowl)
 ::
 ++  notes-to-self  |=(=bowl:gall (malt ~[['title' 'Notes to Self'] ['reactions' 'true'] ['creator' (scot %p our.bowl)] ['description' '']]))
 ::
@@ -743,6 +747,7 @@
           [%peers (ar de-ship)]
           [%invites (se %tas)]
           [%max-expires-at-duration null-or-dri]  :: specify in integer milliseconds, or null for "not set"
+          [%nft (ot ~[contract+so chain+so standard+so]):dejs-soft:format]
       ==
     ::
     ++  edit-chat

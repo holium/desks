@@ -1,7 +1,7 @@
 ::  app/chat-db.hoon
 /-  *versioned-state, sur=chat-db
 /+  dbug, db-lib=chat-db
-=|  state-2
+=|  state-3
 =*  state  -
 :: ^-  agent:gall
 =<
@@ -12,8 +12,8 @@
   ::
   ++  on-init
     ^-  (quip card _this)
-    =/  default-state=state-2
-      [%2 *paths-table:sur *messages-table:sur *peers-table:sur *del-log:sur]
+    =/  default-state=state-3
+      [%3 *paths-table:sur *messages-table:sur *peers-table:sur *del-log:sur]
     :_  this(state default-state)
     [%pass /timer %arvo %b %wait next-expire-time:core]~
   ++  on-save   !>(state)
@@ -36,11 +36,11 @@
 
       %1
         =/  paths
-          %-  ~(gas by *paths-table:sur)
+          %-  ~(gas by *paths-table-2:sur)
           %+  turn
             ~(tap by paths-table-1.old)
           |=  kv=[k=path v=path-row-1:sur]
-          ^-  [k=path:sur v=path-row:sur]
+          ^-  [k=path:sur v=path-row-2:sur]
           [
             k.kv
             [
@@ -110,8 +110,40 @@
           peers
           *del-log:sur :: technically we don't NEED to wipe this in order to upgrade... but who cares about the delete log.
         ]
+        (on-load !>(new-state))
+      %2
+        =/  paths
+          %-  ~(gas by *paths-table:sur)
+          %+  turn
+            ~(tap by paths-table-2.old)
+          |=  kv=[k=path v=path-row-2:sur]
+          ^-  [k=path:sur v=path-row:sur]
+          [
+            k.kv
+            [
+              path.v.kv
+              metadata.v.kv
+              type.v.kv
+              created-at.v.kv
+              updated-at.v.kv
+              pins.v.kv
+              invites.v.kv
+              peers-get-backlog.v.kv
+              max-expires-at-duration.v.kv
+              received-at.v.kv
+              ~
+            ]
+          ]
+
+        =/  new-state  [
+          %3
+          paths
+          messages-table.old
+          peers-table.old
+          *del-log:sur :: technically we don't NEED to wipe this in order to upgrade... but who cares about the delete log.
+        ]
         [default-cards this(state new-state)]
-      %2  [default-cards this(state old)]
+      %3  [default-cards this(state old)]
     ==
   ::
   ++  on-poke

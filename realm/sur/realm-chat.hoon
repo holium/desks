@@ -76,5 +76,12 @@
 
       [%create-notes-to-self-if-not-exists ~]
   ==
-+$  create-chat-data  [metadata=(map cord cord) type=@tas peers=(list ship) invites=@tas max-expires-at-duration=@dr]
++$  create-chat-data
+  $:  metadata=(map cord cord)
+      type=@tas
+      peers=(list ship)
+      invites=@tas
+      max-expires-at-duration=@dr
+      nft=(unit [contract=@t chain=@t standard=@t])
+  ==
 --

@@ -6,6 +6,7 @@
   $%  state-0
       state-1
       state-2
+      state-3
   ==
 +$  state-0
   $:  %0
@@ -23,10 +24,17 @@
   ==
 +$  state-2
   $:  %2
+      =paths-table-2
+      =messages-table
+      =peers-table
+      =del-log-2
+  ==
++$  state-3
+  $:  %3
       =paths-table
       =messages-table
       =peers-table
       =del-log
   ==
-+$  state-and-changes   [s=state-2 ch=db-change]
++$  state-and-changes   [s=state-3 ch=db-change]
 --

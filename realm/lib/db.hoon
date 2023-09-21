@@ -23,7 +23,7 @@
   ==
 ::
 ++  dels-by-path
-  |=  [=path state=state-1]
+  |=  [=path state=state-2]
   ^-  (list [@da db-del-change])
   %+  skim
     ~(tap by del-log.state)
@@ -42,27 +42,27 @@
   ~
 ::
 ++  got-db
-  |=  [=type:common =path =id:common state=state-1]
+  |=  [=type:common =path =id:common state=state-2]
   ^-  row
   (~(got by (~(got by (~(got by tables.state) type)) path)) id)
 ::
 ++  get-db
-  |=  [=type:common =path =id:common state=state-1]
+  |=  [=type:common =path =id:common state=state-2]
   ^-  (unit row)
   =/  tbl   (get-tbl type path state)
   ?~  tbl   ~
   (~(get by u.tbl) id)
 ::
 ++  get-tbl
-  |=  [=type:common =path state=state-1]
+  |=  [=type:common =path state=state-2]
   ^-  (unit table)
   =/  ptbl  (~(get by tables.state) type)
   ?~  ptbl  ~
   (~(get by u.ptbl) path)
 ::
 ++  del-db
-  |=  [=type:common =path =id:common state=state-1 t=@da]
-  ^-  state-1
+  |=  [=type:common =path =id:common state=state-2 t=@da]
+  ^-  state-2
   =/  pt                  (~(got by tables.state) type)
   =/  tbl                 (~(got by pt) path)
   =/  old-row             (~(got by tbl) id) :: old row must first exist
@@ -75,7 +75,7 @@
   state
 ::
 ++  our-matching-relays
-  |=  [r=row state=state-1 =bowl:gall]
+  |=  [r=row state=state-2 =bowl:gall]
   ^-  (list row)
   =/  uptbl=(unit pathed-table)  (~(get by tables.state) relay-type:common)
   ?~  uptbl  `(list row)`~
@@ -90,7 +90,7 @@
   ==
 ::
 ++  meets-constraints-edit
-  |=  [=path-row =row state=state-1 =bowl:gall]
+  |=  [=path-row =row state=state-2 =bowl:gall]
   ^-  ?
   =/  tbl=(unit table)    (get-tbl type.row path.path-row state)
   ?~  tbl  %.y  :: there's nothing in this table, so any row we add is unique along all possible columns
@@ -114,7 +114,7 @@
   ==
 ::
 ++  meets-constraints
-  |=  [=path-row =row state=state-1 =bowl:gall]
+  |=  [=path-row =row state=state-2 =bowl:gall]
   ^-  ?
   =/  tbl=(unit table)    (get-tbl type.row path.path-row state)
   ?~  tbl  %.y  :: there's nothing in this table, so any row we add is unique along all possible columns
@@ -165,22 +165,22 @@
     $(r +:r, i (dec i))
 ::
 ++  has-create-permissions
-  |=  [=path-row =row state=state-1 =bowl:gall]
+  |=  [=path-row =row state=state-2 =bowl:gall]
   ^-  ?
   (has-ced-permissions %create path-row row state bowl)
 ::
 ++  has-edit-permissions
-  |=  [=path-row =row state=state-1 =bowl:gall]
+  |=  [=path-row =row state=state-2 =bowl:gall]
   ^-  ?
   (has-ced-permissions %edit path-row row state bowl)
 ::
 ++  has-delete-permissions
-  |=  [=path-row =row state=state-1 =bowl:gall]
+  |=  [=path-row =row state=state-2 =bowl:gall]
   ^-  ?
   (has-ced-permissions %delete path-row row state bowl)
 ::
 ++  has-ced-permissions
-  |=  [ced=?(%create %edit %delete) =path-row =row state=state-1 =bowl:gall]
+  |=  [ced=?(%create %edit %delete) =path-row =row state=state-2 =bowl:gall]
   ^-  ?
   ::  src.bowl must be in the peers list
   =/  possiblepeers=(list peer)   (skim (~(got by peers.state) path.path-row) |=(=peer =(ship.peer src.bowl)))
@@ -243,7 +243,7 @@
   [%pass /dbpoke %agent [ship %bedrock] %poke %db-action !>([%handle-changes db-changes path])]
 ::
 ++  del-path-in-tables
-  |=  [state=state-1 =path]
+  |=  [state=state-2 =path]
   ^-  tables
   =/  keys    ~(tap in ~(key by tables.state))
   =/  index  0
@@ -257,8 +257,8 @@
 ++  process-db-change
 :: takes a db-change object (that we presumably got as a %fact on a
 :: subscription) and mutates state appropriately
-  |=  [=path ch=db-change state=state-1 =bowl:gall]
-  ^-  state-1
+  |=  [=path ch=db-change state=state-2 =bowl:gall]
+  ^-  state-2
   :: ensure the path exists
   =/  tmp         (~(get by paths.state) path)
   ?:  =(~ tmp)    state
@@ -326,8 +326,8 @@
 ::
 ++  add-row-to-db
 ::  handles the nested tables accessing logic and schema validation
-  |=  [=row =schema state=state-1]
-  ^-  state-1
+  |=  [=row =schema state=state-2]
+  ^-  state-2
   :: schema stuff
   =/  schv  type.row
   ?> :: ensure there is not a conflict between table and the schema we are gonna validate
@@ -413,8 +413,8 @@
   (gth received-at.v t)
 ::
 ++  after-time
-  |=  [st=state-1 t=@da]
-  ^-  state-1
+  |=  [st=state-2 t=@da]
+  ^-  state-2
   ?:  =(0 t)  st
 
   =.  paths.st
@@ -449,8 +449,8 @@
   st
 ::
 ++  spaces-reaction
-  |=  [rct=reaction:sstore state=state-1 =bowl:gall]
-  ^-  (quip card state-1)
+  |=  [rct=reaction:sstore state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
   |^
   ?+  -.rct         `state
     %add            (on-add +.rct)
@@ -499,8 +499,8 @@
   --
 ::
 ++  visas-reaction
-  |=  [rct=reaction:vstore state=state-1 =bowl:gall]
-  ^-  (quip card state-1)
+  |=  [rct=reaction:vstore state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
   |^
   ?+  -.rct             `state
     %invite-accepted    (on-accepted +.rct)
@@ -509,7 +509,7 @@
   ::
   ++  on-accepted
     |=  [path=space-path:sstore =ship =member:mstore]
-    ^-  (quip card state-1)
+    ^-  (quip card state-2)
     ::  only host can modify peers lists
     ?.  =(our.bowl ship.path)    `state
     =/  log1  (maybe-log hide-logs.state "on-accepted, trying to add {<ship>} to relevant paths")
@@ -554,7 +554,7 @@
   ::
   ++  on-kicked
     |=  [path=space-path:sstore =ship]
-    ^-  (quip card state-1)
+    ^-  (quip card state-2)
     ::  only host can modify peers lists
     ?.  =(our.bowl ship.path)    `state
     =/  pathed    (pathify-space-path:spaces-chat path)
@@ -597,8 +597,8 @@
 ++  create-path
 ::bedrock &db-action [%create-path /example %host ~ ~ ~ ~[[~zod %host] [~bus %member]]]
 ::bedrock &db-action [%create-path /target %host ~ ~ ~ ~[[~bus %host] [~fed %member]]]
-  |=  [=input-path-row state=state-1 =bowl:gall]
-  ^-  (quip card state-1)
+  |=  [=input-path-row state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
   =/  log1  (maybe-log hide-logs.state "{<dap.bowl>}%create-path {<path.input-path-row>} {<peers.input-path-row>}")
   :: ensure the path doesn't already exist
   =/  pre-existing    (~(get by paths.state) path.input-path-row)
@@ -675,8 +675,8 @@
 ::   %admin,    %owner or %admin must be in roles, %joined must be status
 ::   %member,   %owner %admin or %member must be in roles, %joined must be status
 ::   %initiate, every ship in the members list, regardless of role or joined status
-  |=  [[=path sp=[=ship space=cord] sr=role:mstore] state=state-1 =bowl:gall]
-  ^-  (quip card state-1)
+  |=  [[=path sp=[=ship space=cord] sr=role:mstore] state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
   =/  log1  (maybe-log hide-logs.state "{<dap.bowl>}%create-from-space")
   =/  members     .^(view:mstore %gx /(scot %p our.bowl)/spaces/(scot %da now.bowl)/(scot %p ship.sp)/(scot %tas space.sp)/members/noun)
   ?>  ?=(%members -.members)
@@ -756,8 +756,8 @@
 ++  edit-path
 ::bedrock &db-action [%edit-path /example %host ~ ~ ~ ~[[~zod %host] [~bus %member]]]
 ::bedrock &db-action [%edit-path /target %host ~ ~ ~ ~[[~bus %host] [~fed %member]]]
-  |=  [=input-path-row state=state-1 =bowl:gall]
-  ^-  (quip card state-1)
+  |=  [=input-path-row state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
   :: ensure the path exists
   =/  path-row    (~(got by paths.state) path.input-path-row)
   :: ensure this came from our ship
@@ -807,8 +807,8 @@
 ::
 ++  put-path
 ::  called by host to tell subs that the path metadata has changed
-  |=  [new=path-row state=state-1 =bowl:gall]
-  ^-  (quip card state-1)
+  |=  [new=path-row state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
   :: ensure the path actually exists
   =/  original=path-row    (~(got by paths.state) path.new)
   :: ensure this came from host ship
@@ -828,8 +828,8 @@
 ::
 ++  remove-path
 ::bedrock &db-action [%remove-path /example]
-  |=  [=path state=state-1 =bowl:gall]
-  ^-  (quip card state-1)
+  |=  [=path state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
   :: ensure the path actually exists
   =/  path-row=path-row    (~(got by paths.state) path)
   :: and that we are the %host of it
@@ -863,8 +863,8 @@
 ::
 ++  add-peer
 ::bedrock &db-action [%add-peer /example ~fed %member]
-  |=  [[=path =ship =role] state=state-1 =bowl:gall]
-  ^-  (quip card state-1)
+  |=  [[=path =ship =role] state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
   =/  log1  (maybe-log hide-logs.state "{<dap.bowl>}%add-peer: {<ship>} to {(spud path)} as {<role>}")
   :: ensure the path actually exists
   =/  path-row=path-row    (~(got by paths.state) path)
@@ -910,8 +910,8 @@
 ::
 ++  kick-peer
 ::bedrock &db-action [%kick-peer /example ~fed]
-  |=  [[=path =ship] state=state-1 =bowl:gall]
-  ^-  (quip card state-1)
+  |=  [[=path =ship] state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
   :: ensure the path actually exists
   =/  path-row=path-row    (~(got by paths.state) path)
   :: and that we are the %host of it
@@ -946,8 +946,8 @@
   [cards state]
 ::
 ++  get-path
-  |=  [[=path-row peers=ship-roles] state=state-1 =bowl:gall]
-  ^-  (quip card state-1)
+  |=  [[=path-row peers=ship-roles] state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
   =/  log1  (maybe-log hide-logs.state "{<dap.bowl>}%get-path {<path.path-row>}")
   :: ensure the path doesn't already exist
   =/  pre-existing    (~(get by paths.state) path.path-row)
@@ -1000,8 +1000,8 @@
 ::
 ++  delete-path
 ::  incoming from host, just need to forward to clients
-  |=  [=path state=state-1 =bowl:gall]
-  ^-  (quip card state-1)
+  |=  [=path state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
   :: ensure the path actually exists
   =/  log1  (maybe-log hide-logs.state "{<dap.bowl>}%delete-path: {<path>}")
   =/  path-row=path-row    (~(got by paths.state) path)
@@ -1026,8 +1026,8 @@
 ::
 ++  refresh-path
 ::~bus/bedrock &db-action [%refresh-path now /path]
-  |=  [[t=@da =path] state=state-1 =bowl:gall]
-  ^-  (quip card state-1)
+  |=  [[t=@da =path] state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
   =/  log1  (maybe-log hide-logs.state "{<dap.bowl>}%refresh-path {(spud path)}")
   :: sanity checking
   =/  path-row=path-row   (~(got by paths.state) path)
@@ -1045,8 +1045,8 @@
 ::
 ++  keep-alive
 ::  subs send this to host on a heartbeat to prevent from being skipped
-  |=  [=path state=state-1 =bowl:gall]
-  ^-  (quip card state-1)
+  |=  [=path state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
   =/  log1  (maybe-log hide-logs.state "{<dap.bowl>}%keep-alive {<src.bowl>} {(spud path)}")
   :: sanity checking
   =/  path-row=path-row   (~(got by paths.state) path)
@@ -1082,8 +1082,8 @@
 ::
 ++  handle-changes
 ::  subs receive this from host when database changes
-  |=  [[changes=db-changes =path] state=state-1 =bowl:gall]
-  ^-  (quip card state-1)
+  |=  [[changes=db-changes =path] state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
   =/  path-row=path-row   (~(got by paths.state) path)
   ?>  =(host.path-row src.bowl)  :: only accept changes from host for now
 
@@ -1211,8 +1211,8 @@
 ::bedrock &db-action [%create /example %vote 0 [%vote [%.y our %foo [~zod now] /example]] ~]
 ::bedrock &db-action [%create /example %foo 1 [%general ~[1 'd' (jam /hello/goodbye)]] ~[['num' 'ud'] ['str' 't'] ['mypath' 'path']]]
 ::~zod/bedrock &db-action [%create /example %vote 0 [%vote %.y our %foo [~zod now] /example] ~]
-  |=  [[=req-id =input-row] state=state-1 =bowl:gall]
-  ^-  (quip card state-1)
+  |=  [[=req-id =input-row] state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
   =/  log4  (maybe-log hide-logs.state "{<dap.bowl>}%create: {<req-id>} {<input-row>}")
   =/  vent-path=path  /vent/(scot %p src.req-id)/(scot %da now.req-id)
   =/  kickcard=card  [%give %kick ~[vent-path] ~]
@@ -1285,8 +1285,8 @@
 ++  edit  :: falls back to existing db schema if schema from poke input is null
 :: generally, you'd only bother passing the schema if you are changing the version of the row
 ::db &db-action [%edit [our ~2023.5.22..17.21.47..9d73] /example %foo 0 [%general ~[2 'b']] ~]
-  |=  [[=req-id =id:common =input-row] state=state-1 =bowl:gall]
-  ^-  (quip card state-1)
+  |=  [[=req-id =id:common =input-row] state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
   =/  log1  (maybe-log hide-logs.state "{<dap.bowl>}%edit: {<req-id>} {<id>} {<input-row>}")
   =/  vent-path=path  /vent/(scot %p src.req-id)/(scot %da now.req-id)
   =/  kickcard=card  [%give %kick ~[vent-path] ~]
@@ -1352,8 +1352,8 @@
 ::
 ++  remove
 ::bedrock &db-action [%remove [our now] [%friend 0v0] /private [our ~2023.9.15..19.23.10..46c2]]
-  |=  [[=req-id =type:common =path =id:common] state=state-1 =bowl:gall]
-  ^-  (quip card state-1)
+  |=  [[=req-id =type:common =path =id:common] state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
   =/  vent-path=^path  /vent/(scot %p src.req-id)/(scot %da now.req-id)
   =/  kickcard=card  [%give %kick ~[vent-path] ~]
   =/  log3  (maybe-log hide-logs.state "{<dap.bowl>}%remove: {<req-id>} {<type>} {<path>} {<id>}")
@@ -1404,8 +1404,8 @@
 ::
 ++  remove-many :: only works on ids from same path
 ::bedrock &db-action [%remove-many %foo /example [[our ~2023.5.22..19.22.29..d0f7] [our ~2023.5.22..19.22.29..d0f7] ~]]
-  |=  [[=req-id =path ids=(list [=id:common =type:common])] state=state-1 =bowl:gall]
-  ^-  (quip card state-1)
+  |=  [[=req-id =path ids=(list [=id:common =type:common])] state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
   =/  log3  (maybe-log hide-logs.state "{<dap.bowl>}%remove-many {<path>} {<ids>}")
   =/  vent-path=^path  /vent/(scot %p src.req-id)/(scot %da now.req-id)
   =/  kickcard=card  [%give %kick ~[vent-path] ~]
@@ -1474,9 +1474,9 @@
 ::
 ++  remove-before :: similar to TRUNCATE, removes all rows of a given type and path up to and including a certain timestamp
 ::bedrock &db-action [%remove-before [%foo *@uvH] /example ~2023.5.22..19.22.29..d0f7]
-  |=  [[=type:common =path t=@da] state=state-1 =bowl:gall]
+  |=  [[=type:common =path t=@da] state=state-2 =bowl:gall]
   =/  log1  (maybe-log hide-logs.state "{<dap.bowl>}%remove-before {<t>}")
-  ^-  (quip card state-1)
+  ^-  (quip card state-2)
 
   :: forward the request if we aren't the host
   =/  path-row=path-row   (~(got by paths.state) path)
@@ -1533,8 +1533,8 @@
   :: supposed to be used by the sharer, poking their own ship,
   :: regardless of if they are the host of either original or target path
 ::bedrock &db-action [%relay [~bus now] /target %relay 0 [%relay [~zod ~2023.6.13..15.57.34..aa97] %foo /example 0 %all %.n] ~]
-  |=  [[=req-id =input-row] state=state-1 =bowl:gall]
-  ^-  (quip card state-1)
+  |=  [[=req-id =input-row] state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
   =/  log1  (maybe-log hide-logs.state "{<dap.bowl>}%relay: {<req-id>} {<input-row>}")
   :: first check that the input is actually a %relay
   ?+  -.data.input-row   !!
@@ -1553,7 +1553,7 @@
     :: if we have not previously relayed this thing, publish to remote-scry
     =/  cards  [%pass /remote-scry/callback %grow /(scot %p ship.obj-id)/(scot %da t.obj-id) row-and-schema+[obj sch]]~
     =.  revision.data.input-row  0 :: force to 0 because we are publishing for first time
-    =/  qcs=(quip card state-1)  (create [req-id input-row] state bowl)
+    =/  qcs=(quip card state-2)  (create [req-id input-row] state bowl)
     [(weld cards -.qcs) +.qcs]
   :: else, the thing is already published, so use the pre-existing revision number
   =/  first-prev=row             (snag 0 `(list row)`prev)
@@ -1566,15 +1566,15 @@
 ::
 ++  toggle-hide-logs
 ::bedrock &db-action [%toggle-hide-logs %.n]
-  |=  [toggle=? state=state-1 =bowl:gall]
-  ^-  (quip card state-1)
+  |=  [toggle=? state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
   =.  hide-logs.state  toggle
   `state
 ::
 ++  create-initial-spaces-paths
 ::  on-init selfpoke
-  |=  [state=state-1 =bowl:gall]
-  ^-  (quip card state-1)
+  |=  [state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
   =/  spaces-scry   .^(view:sstore %gx /(scot %p our.bowl)/spaces/(scot %da now.bowl)/all/noun)
   ?>  ?=(%spaces -.spaces-scry)
 
@@ -1584,7 +1584,7 @@
       ~(tap in ~(key by spaces.spaces-scry))
     |=(=space-path:sstore =(ship.space-path our.bowl))
 
-  =/  cs=(quip card state-1)  [~ state]
+  =/  cs=(quip card state-2)  [~ state]
   |-
     ?:  =(index (lent keys))
       [-.cs +.cs]
@@ -1608,8 +1608,8 @@
 ::
 ++  refresh-chat-paths
 ::  macro for chat-db to force bedrock to refresh all the chat-paths
-  |=  [state=state-1 =bowl:gall]
-  ^-  (quip card state-1)
+  |=  [state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
   =/  log1  (maybe-log hide-logs.state "{<dap.bowl>}%refresh-chat-paths")
   =/  paths=(list path-row)
     %+  skim
@@ -1939,6 +1939,7 @@
           [%invites (se %tas)]
           [%peers-get-backlog bo]
           [%max-expires-at-duration null-or-dri]
+          [%nft (ot ~[contract+so chain+so standard+so]):dejs-soft:format]
       ==
     ::
     ++  de-message
@@ -2137,7 +2138,7 @@
       |=  st=versioned-state
       ^-  json
       ?+  -.st  !!
-          %1
+          %2
         %-  pairs
         :~  ['state-version' (numb `@`-.st)]
             ['data-tables' (en-tables tables.st schemas.st)]
@@ -2512,23 +2513,23 @@
 ::
 ++  transform-tables-0-to-tables
   |=  [old=tables-0 s=schemas-0]
-  ^-  tables
-  =/  new=tables  *tables
-  =/  all-rows=(list row)
+  ^-  tables-1
+  =/  new=tables-1  *tables-1
+  =/  all-rows=(list row-1)
     %-  zing
     %+  turn
       ~(val by old)
     |=  pt=pathed-table-0
-    ^-  (list row)
+    ^-  (list row-1)
     %-  zing
     %+  turn
       ~(val by pt)
     |=  t=table-0
-    ^-  (list row)
+    ^-  (list row-1)
     %+  turn
       ~(val by t)
     |=  r=row-0
-    ^-  row
+    ^-  row-1
     =/  hash=@uvH   (hash-for-type type.r (~(get by s) [type.r v.r]))
     [
       path.r
@@ -2542,7 +2543,7 @@
   |-
     ?:  =(0 (lent all-rows))
       new
-    =/  rw=row  (snag 0 all-rows)
+    =/  rw=row-1  (snag 0 all-rows)
     =.  new
       ?:  (~(has by new) type.rw)
         =/  ptbl    (~(got by new) type.rw)
@@ -2553,12 +2554,12 @@
           =.  ptbl    (~(put by ptbl) path.rw tbl)
           (~(put by new) type.rw ptbl)
         :: new path in existing type-tbl
-        =/  tbl     (~(put by *table) id.rw rw)
+        =/  tbl     (~(put by *table-1) id.rw rw)
         =.  ptbl    (~(put by ptbl) path.rw tbl)
         (~(put by new) type.rw ptbl)
       :: new type, initialize both type and path
-      =/  tbl     (~(put by *table) id.rw rw)
-      =/  ptbl    (~(put by *pathed-table) path.rw tbl)
+      =/  tbl     (~(put by *table-1) id.rw rw)
+      =/  ptbl    (~(put by *pathed-table-1) path.rw tbl)
       (~(put by new) type.rw ptbl)
 
     $(new new, all-rows +.all-rows)
@@ -2582,7 +2583,7 @@
 ::
 ++  cols-0-to-cols
   |=  [cols=columns-0 s=schemas-0]
-  ^-  columns
+  ^-  columns-1
   ?-  -.cols
       %general
     cols
@@ -2672,5 +2673,88 @@
         received-at.v
       ]
     $(kvs +.kvs, new (~(put by new) k new-val))
+::
+++  transform-tables-1-to-tables
+  |=  [old=tables-1]
+  ^-  tables
+  =/  new=tables  *tables
+  =/  all-rows=(list row)
+    %-  zing
+    %+  turn
+      ~(val by old)
+    |=  pt=pathed-table-1
+    ^-  (list row)
+    %-  zing
+    %+  turn
+      ~(val by pt)
+    |=  t=table-1
+    ^-  (list row)
+    %+  turn
+      ~(val by t)
+    |=  r=row-1
+    ^-  row
+    [
+      path.r
+      id.r
+      type.r
+      (cols-1-to-cols data.r)
+      created-at.r
+      updated-at.r
+      received-at.r
+    ]
+  |-
+    ?:  =(0 (lent all-rows))
+      new
+    =/  rw=row  (snag 0 all-rows)
+    =.  new
+      ?:  (~(has by new) type.rw)
+        =/  ptbl    (~(got by new) type.rw)
+        ?:  (~(has by ptbl) path.rw)
+          :: type + path already exist so just update them
+          =/  tbl     (~(got by ptbl) path.rw)
+          =.  tbl     (~(put by tbl) id.rw rw)
+          =.  ptbl    (~(put by ptbl) path.rw tbl)
+          (~(put by new) type.rw ptbl)
+        :: new path in existing type-tbl
+        =/  tbl     (~(put by *table) id.rw rw)
+        =.  ptbl    (~(put by ptbl) path.rw tbl)
+        (~(put by new) type.rw ptbl)
+      :: new type, initialize both type and path
+      =/  tbl     (~(put by *table) id.rw rw)
+      =/  ptbl    (~(put by *pathed-table) path.rw tbl)
+      (~(put by new) type.rw ptbl)
+
+    $(new new, all-rows +.all-rows)
+::
+++  cols-1-to-cols
+  |=  [cols=columns-1]
+  ^-  columns
+  ?-  -.cols
+    %general    cols
+    %vote       cols
+    %rating     cols
+    %comment    cols
+    %tag        cols
+    %link       cols
+    %follow     cols
+    %relay      cols
+    %react      cols
+    %creds      cols
+    %message    cols
+    %passport   cols
+    %friend     cols
+    %contact    cols
+    %chat
+  [
+    %chat
+    metadata.cols
+    type.cols
+    pins.cols
+    invites.cols
+    peers-get-backlog.cols
+    max-expires-at-duration.cols
+    ~
+  ]
+  ==
 ::
 --

@@ -4,6 +4,7 @@
 +$  versioned-state
   $%  state-0
       state-1
+      state-2
   ==
 +$  state-0
   $:  %0
@@ -16,6 +17,15 @@
   ==
 +$  state-1
   $:  %1
+      =tables-1
+      =schemas
+      =paths
+      =peers
+      =del-log
+      hide-logs=?  :: default hidden %.y
+  ==
++$  state-2
+  $:  %2
       =tables
       =schemas
       =paths
@@ -264,4 +274,34 @@
       db-path-del-change
   ==
 +$  del-log-0  (map @da db-del-change-0)
+
++$  tables-1          (map type:common pathed-table-1)
++$  pathed-table-1    (map path table-1)
++$  table-1     (map id:common row-1)
++$  row-1
+  $:  =path
+      =id:common
+      =type:common
+      data=columns-1
+      created-at=@da
+      updated-at=@da
+      received-at=@da
+  ==
++$  columns-1
+  $%  [%general cols=(list @)]
+      [%vote vote:common]
+      [%rating rating:common]
+      [%comment comment:common]
+      [%tag tag:common]
+      [%link link:common]
+      [%follow follow:common]
+      [%relay relay:common]
+      [%react react:common]
+      [%creds creds:common]
+      [%chat chat-0:common]
+      [%message message:common]
+      [%passport passport:common]
+      [%friend friend:common]
+      [%contact contact:common]
+  ==
 --

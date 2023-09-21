@@ -65,7 +65,7 @@
     ==
   =/  metadata=(map cord cord)   (~(gas by *(map cord cord)) metadata-settings)
   ::  TODO when making new channels make sure we can disable chat history for new members or enable it
-  =/  pathrow=path-row:chat-db  [chat-path metadata %space t t ~ %host %.y *@dr *@da]
+  =/  pathrow=path-row:chat-db  [chat-path metadata %space t t ~ %host %.y *@dr *@da ~]
   =/  all-peers=ship-roles:chat-db
       %+  turn  (skim-init-members members)
       |=  kv=[k=ship v=member:mstore]
