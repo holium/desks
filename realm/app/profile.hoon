@@ -123,32 +123,6 @@
 ++  handle-http-request
   |=  [eyre-id=@ta inbound-request:eyre]
   ^-  (quip card _state)
-  :: ^-  simple-payload:http
-  :: |^
-  :: =*  req       request.inbound-request
-  :: =*  headers   header-list.req
-  :: =/  req-line  (parse-request-line url.req)
-
-
-  :: ?.  =(method.req %'GET')  not-found:gen
-  :: :: /passport page request? extract index.html page from the file-server and use string interpolation
-  :: ::   to set this ship's values
-  :: ~&  >>  "{<dap.bowl>}: {<url.req>}"
-  :: ?:  =(url.req '/passport')
-  ::   =/  scry-start=path  /(scot %p our.bowl)/[q.byk.bowl]/(scot %da now.bowl)
-  ::     :: :*  (scot %p our.bowl)
-  ::     ::     q.byk.bowl
-  ::     ::     (scot %da now.bowl)
-  ::     :: ==
-  ::   =/  scry-path  (weld scry-start /app/passport/index/html)
-  ::   ~&  (spat scry-path)
-  ::   :: =/  file  (as-octs:mimes:html .^(@ %cx scry-path))
-  ::   =/  file      .^(@ %cx scry-path)
-  ::   =/  content   (replace-html `@t`file)
-  ::   ?~  content   not-found:gen
-  ::   (html-response:gen (as-octs:mimes:html u.content))
-  :: not-found:gen
-  :: --
   ::
   =;  [payload=simple-payload:http caz=(list card) =_state]
     :_  state
@@ -182,13 +156,14 @@
       [[200 ~] `(upload-page ~)]
     ::
         [[%passport ~] ?(~ [~ %html])]
-        ~&  >>>  "index"
-      %+  payload-from-glob
+      =/  content  %+  payload-from-glob
         %passport
       [[ext=[~ ~.html] site=site.req-line] args=~]
-      ::
+      ?~  data.content  content
+      =/  bod=[t=@ud c=@t]  ^-([@ud @t] u.data.content)
+      [response-header.content (replace-html c.bod)]
+    ::
         [[%passport @ *] *]
-        ~&  >>>  "general"
       %+  payload-from-glob
         %passport
       req-line(site (slag 1 site.req-line))
@@ -385,20 +360,16 @@
     ~[max-1-wk:gen]
   :: Thomas (nod to ~dister-dozzod-niblyx-malnus)
   ++  replace-html
-    |=  html=@t
-    ^-  (unit @t)
-    =/  pass  .^(passport:common %gx /(scot %p our.bowl)/passport/(scot %da now.bowl)/'our-passport'/noun)
-    =/  discoverable  ?:  discoverable.pass  'true'  'false'
+    |=  htm=@t
+    ^-  (unit octs)
     =/  rus
-      %+  rush  html
+      %+  rush  htm
       %-  star
       ;~  pose
-        :: indicate whether this is a discoverable passport
-        (cold discoverable (jest '{passport-discoverable}'))
-        (cold (scot %p ~zod) (jest '{og-title}'))
-        (cold %desk (jest '{og-description}'))
+        (cold (scot %p our.bowl) (jest '{og-title}'))
+        (cold 'passport bio here' (jest '{og-description}'))
         next
       ==
-    ?~(rus ~ `(rap 3 u.rus))
+    ?~(rus ~ (some (as-octs:mimes:html (rap 3 u.rus)))) :: `(rap 3 u.rus))
   --
 --
