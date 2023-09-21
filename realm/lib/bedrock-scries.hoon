@@ -1,6 +1,46 @@
 /-  bedrock=db, common
 |%
-
+++  our-passport
+  |=  =bowl:gall
+  ^-  passport:common
+  =/  r=row:bedrock
+    %+  snag  0
+    %+  skim
+      (all-rows-by-path-type passport-type:common /private bowl)
+    |=  r=row:bedrock  ^-  ?
+    ?+  -.data.r  %.n
+      %passport  =(ship.contact.data.r our.bowl)
+    ==
+  ?+  -.data.r  !!
+    %passport  +.data.r
+  ==
+::
+++  our-passport-id
+  |=  =bowl:gall
+  ^-  id:common
+  =/  r=row:bedrock
+    %+  snag  0
+    %+  skim
+      (all-rows-by-path-type passport-type:common /private bowl)
+    |=  r=row:bedrock  ^-  ?
+    ?+  -.data.r  %.n
+      %passport  =(ship.contact.data.r our.bowl)
+    ==
+  id.r
+::
+++  our-contact-id
+  |=  =bowl:gall
+  ^-  id:common
+  =/  r=row:bedrock
+    %+  snag  0
+    %+  skim
+      (all-rows-by-path-type contact-type:common /private bowl)
+    |=  r=row:bedrock  ^-  ?
+    ?+  -.data.r  %.n
+      %contact  =(ship.data.r our.bowl)
+    ==
+  id.r
+::
 ++  test-bedrock-path-existence
   |=  [=path =bowl:gall]
   ^-  ?
@@ -27,6 +67,19 @@
         /(scot %p our.bowl)/bedrock/(scot %da now.bowl)/loobean/row/(scot %t name.type)/(scot %uv hash.type)/(scot %p s.id)/(scot %da t.id)
       path
     /noun
+  ==
+::
+++  test-bedrock-table-existence
+  |=  [=type:common =bowl:gall]
+  ^-  ?
+  .=  %.y
+  .^
+    @ud
+    %gx
+    %+  weld
+      /(scot %p our.bowl)/bedrock/(scot %da now.bowl)/loobean/table
+    :-  name.type
+    /(scot %uv hash.type)/noun
   ==
 ::
 ++  scry-bedrock-path-host
@@ -56,21 +109,106 @@
     ==
   path-row.fp
 ::
+++  how-many-peers-in-path
+  |=  [=path =bowl:gall]
+  ^-  @ud
+  =/  fp
+    .^  fullpath:bedrock
+        %gx
+        %+  weld
+          %+  weld
+            /(scot %p our.bowl)/bedrock/(scot %da now.bowl)/db/path
+          path
+        /noun
+    ==
+  (lent peers.fp)
+::
 ++  scry-first-bedrock-chat
   |=  [=path =bowl:gall]
   ^-  row:bedrock
-  =/  all-chats=[=type:common pt=pathed-table:bedrock =schemas:bedrock]
+  (first-common chat-type:common path bowl)
+::
+++  first-common
+  |=  [=type:common =path =bowl:gall]
+  ^-  row:bedrock
+  =/  rows=(list row:bedrock)
+    (all-rows-by-path-type type path bowl)
+  (snag 0 rows)
+::
+++  all-rows-by-path-type
+  |=  [=type:common =path =bowl:gall]
+  ^-  (list row:bedrock)
+  =/  all-rows=[=type:common pt=pathed-table:bedrock =schemas:bedrock]
     .^
       [=type:common pt=pathed-table:bedrock =schemas:bedrock]
       %gx
       %+  weld
         %+  weld
-          /(scot %p our.bowl)/bedrock/(scot %da now.bowl)/db/table-by-path/chat/(scot %uv hash:chat-type:common)
+          /(scot %p our.bowl)/bedrock/(scot %da now.bowl)/db/table-by-path/(scot %tas name.type)/(scot %uv hash.type)
         path
       /noun
     ==
-  =/  rows=(list row:bedrock)  ~(val by (~(got by pt.all-chats) path))
-  (snag 0 rows)
+  ~(val by (~(got by pt.all-rows) path))
+::
+++  get-friend
+  |=  [=ship =bowl:gall]
+  ^-  [=id:common =friend:common]
+  =/  rows=(list row:bedrock)  (all-rows-by-path-type friend-type:common /private bowl)
+  =/  r=row:bedrock
+    %+  snag  0
+    %+  skim  rows
+    |=  r=row:bedrock
+    ^-  ?
+    ?+  -.data.r  !!
+      %friend  =(ship.data.r ship)
+    ==
+  :-  id.r
+  ?+  -.data.r  !!
+    %friend  +.data.r
+  ==
+::
+++  get-friends
+  |=  =bowl:gall
+  ^-  (list friend:common)
+  ?.  (test-bedrock-table-existence friend-type:common bowl)  ~
+  =/  rows=(list row:bedrock)  (all-rows-by-path-type friend-type:common /private bowl)
+  %+  turn  rows
+  |=  r=row:bedrock
+  ^-  friend:common
+  ?+  -.data.r  !!
+    %friend  +.data.r
+  ==
+::
+++  our-contacts
+  |=  =bowl:gall
+  :: @da is updated-at
+  ^-  (list [id:common @da contact:common])
+  ?.  (test-bedrock-table-existence contact-type:common bowl)  ~
+  %+  turn
+    (all-rows-by-path-type contact-type:common /private bowl)
+  |=  r=row:bedrock
+  ^-  [id:common @da contact:common]
+  ?+  -.data.r  !!
+    %contact  [id.r updated-at.r +.data.r]
+  ==
+::
+++  is-friend
+  |=  [=ship =bowl:gall]
+  ^-  ?
+  ?.  (test-bedrock-table-existence friend-type:common bowl)  %.n
+  =/  rows=(list row:bedrock)
+    %+  skim
+      (all-rows-by-path-type friend-type:common /private bowl)
+    |=  r=row:bedrock
+    ^-  ?
+    ?+  -.data.r  !!
+      %friend  =(ship.data.r ship)
+    ==
+  ?.  (gth (lent rows) 0)  %.n
+  =/  r=row:bedrock  (snag 0 rows)
+  ?+  -.data.r  %.n
+    %friend  =(status.data.r %friend)
+  ==
 ::
 ++  scry-bedrock-message
   |=  [id=[=ship t=@da] =path =bowl:gall]

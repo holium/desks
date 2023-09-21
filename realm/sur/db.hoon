@@ -66,6 +66,9 @@
       [%chat chat:common]
       [%message message:common]
       [%timeline-post timeline-post:common]
+      [%passport passport:common]
+      [%friend friend:common]
+      [%contact contact:common]
   ==
 +$  row-and-schema  [=row =schema] :: the row and the schema for the row
 
@@ -96,10 +99,14 @@
 +$  check         ~  :: I want check to be the mold for a gate that takes in a row and produces %.y or %.n, which will allow applications to specify arbitrary check functions to constrain their data
 ++  default-vote-constraint  [vote-type:common (silt ~[(~(gas in *unique-columns) ~[1 2 3 "ship.id"])]) ~]
 ++  default-rating-constraint  [rating-type:common (silt ~[(~(gas in *unique-columns) ~[3 4 5 "ship.id" 2])]) ~]
+++  default-contact-constraint  [contact-type:common (silt ~[(~(gas in *unique-columns) ~[0])]) ~]
+++  default-friend-constraint  [friend-type:common (silt ~[(~(gas in *unique-columns) ~[0])]) ~]
 ++  default-constraints
   %-  ~(gas by *constraints)
   :~  [vote-type:common default-vote-constraint]
       [rating-type:common default-rating-constraint]
+      [contact-type:common default-contact-constraint]
+      [friend-type:common default-friend-constraint]
   ==
 +$  column-accessor  ?(@ud tape)
 :: used for dumping the current state of every row on a given path

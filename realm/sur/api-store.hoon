@@ -1,3 +1,4 @@
+/-  common
 |%
 +$  card  card:agent:gall
 +$  versioned-state
@@ -11,5 +12,6 @@
 +$  store-conf  [%configuration buckets=(set @t) current-bucket=@t region=@t]
 +$  action
   $%  [%sync-to-bedrock ~]
+      [%set-creds set-storage-agent=? =creds:common]
   ==
 --
