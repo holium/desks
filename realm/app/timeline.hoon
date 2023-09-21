@@ -46,7 +46,7 @@
       ?>  =(src our):bowl
       =/  =path  /timeline/(scot %p our.bowl)/[name.axn]
       ?:  (test-bedrock-path-existence:scries path bowl)
-        ~&(%timeline-already-exists `this)
+        ~&(>> %timeline-already-exists `this)
       =|  row=input-path-row:db
       =:  path.row         path
           replication.row  %host
@@ -133,7 +133,7 @@
       =/  fore=path  /spaces/~lomder-librun/realm-forerunners/chats/0v2.68end.ets6m.29fgc.ntejl.jbeo7
       =/  db-fore=path  /timeline/(scot %p our.bowl)/forerunners
       ?:  &(!force.axn (test-bedrock-path-existence:scries db-fore bowl))
-        ~&(%timeline-already-exists `this)
+        ~&(>> %timeline-already-exists `this)
       =+  .^(dump=db-dump:cd %gx /(scot %p our.bowl)/chat-db/(scot %da now.bowl)/db/chat-db-dump)
       ?>  ?=(%tables -.dump)
       =/  tables=(map term table:cd)
