@@ -4,93 +4,64 @@
 :: purpose: http/web interface into passport profile
 ::
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-/-  *passport, common
-/+  *server, default-agent, dbug, verb
+/-  *passport, common, *docket
+/+  *server, default-agent, multipart, dbug, verb
 :: =*  card  card:agent:gall
 |%
 +$  card  card:agent:gall
++$  versioned-state
+    $%  state-0
+    ==
++$  state-0
+  $:  %0
+      toc=glob
+  ==
 --
 %-  agent:dbug
 ^-  agent:gall
+%+  verb  |
+=|  state-0
+=*  state  -
+=<
 |_  =bowl:gall
 +*  this      .
     def   ~(. (default-agent this %|) bowl)
+    ext   ~(. +> bowl)
 ::
 ++  on-init
   ^-  (quip card _this)
   ~&  >>  "on-init"
-  `this
-  :: :_  this
-  :: ::  bind this agent to requests to /passport route
-  :: :~  [%pass /passport-route %arvo %e %connect `/'passport' %profile]
-  :: ==
-++  on-save  on-save:def
-++  on-load
-  |=  =vase
-  ^-  (quip card:agent:gall agent:gall)
-  ~&  >>  "on-load"
+  :: `this
   :_  this
   ::  bind this agent to requests to /passport route
-  :~  [%pass /passport-route %arvo %e %connect `/'profile' %profile]
+  :~  [%pass /passport-route %arvo %e %connect `/'passport' %profile]
+  ==
+++  on-save
+    ^-  vase
+    !>(state)
+::
+++  on-load
+  |=  old-state=vase
+  ~&  >>  "on-load"
+  ^-  (quip card _this)
+  =/  old  !<(versioned-state old-state)
+  :_  this(state old)
+  ::  bind this agent to requests to /passport route
+  :~  [%pass /passport-route %arvo %e %connect `/'passport' %profile]
   ==
 ::
 ++  on-poke
   |=  [=mark =vase]
   ^-  (quip card _this)
-  |^
-  ?+  mark  (on-poke:def mark vase)
-      %handle-http-request
-    =+  !<([id=@ta req=inbound-request:eyre] vase)
-    ~&  >>  [id req]
-    :_  this
-    %+  give-simple-payload:app  id
-    (handle-http-request req)
-  ==
-  ::
-  ++  handle-http-request
-    |=  =inbound-request:eyre
-    ^-  simple-payload:http
-    |^
-    =*  req       request.inbound-request
-    =*  headers   header-list.req
-    =/  req-line  (parse-request-line url.req)
-    ?.  =(method.req %'GET')  not-found:gen
-    :: /passport page request? extract index.html page from the file-server and use string interpolation
-    ::   to set this ship's values
-    ~&  >>  "{<dap.bowl>}: {<url.req>}"
-    ?:  =(url.req '/profile')
-      =/  scry-start=path  /(scot %p our.bowl)/[q.byk.bowl]/(scot %da now.bowl)
-        :: :*  (scot %p our.bowl)
-        ::     q.byk.bowl
-        ::     (scot %da now.bowl)
-        :: ==
-      =/  scry-path  (weld scry-start /app/passport/index/html)
-      ~&  (spat scry-path)
-      :: =/  file  (as-octs:mimes:html .^(@ %cx scry-path))
-      =/  file      .^(@ %cx scry-path)
-      =/  content   (replace-html `@t`file)
-      ?~  content   not-found:gen
-      (html-response:gen (as-octs:mimes:html u.content))
-    not-found:gen
-    --
-    :: Thomas (nod to ~dister-dozzod-niblyx-malnus)
-    ++  replace-html
-      |=  html=@t
-      ^-  (unit @t)
-      =/  pass  .^(passport:common %gx /(scot %p our.bowl)/passport/(scot %da now.bowl)/'our-passport'/noun)
-      =/  discoverable  ?:  discoverable.pass  'true'  'false'
-      =/  rus
-        %+  rush  html
-        %-  star
-        ;~  pose
-          :: indicate whether this is a discoverable passport
-          (cold discoverable (jest '{passport-discoverable}'))
-          (cold (scot %p ~zod) (jest '{og-title}'))
-          (cold %desk (jest '{og-description}'))
-          next
-        ==
-      ?~(rus ~ `(rap 3 u.rus))
-  --
+  :: |^
+  =^  cards  state
+    ?+  mark  (on-poke:def mark vase)
+    ::
+        %handle-http-request
+      =+  !<([id=@ta req=inbound-request:eyre] vase)
+      (handle-http-request:ext id req)
+    ==
+  [cards this]
 ::
 ++  on-watch
   |=  =path
@@ -99,8 +70,9 @@
     (on-watch:def path)
   ::
       [%http-response *]
-    %-  (slog leaf+"Eyre subscribed to {(spud path)}." ~)
-    `this
+        ?>  (team:title [our src]:bowl)
+        %-  (slog leaf+"Eyre subscribed to {(spud path)}." ~)
+        `this
   ==
 ++  on-leave  on-leave:def
 ++  on-peek
@@ -115,6 +87,19 @@
       :: only return this data if the passport has been marked discoverable
       ?.  discoverable.pass  ~  :: 500 if not discoverable
       ``passport+!>(pass)
+
+      [%x %dbug %state ~]
+    =-  ``noun+!>(-)
+    %_  state
+        toc
+      :: %-  ~(run by charges)
+      :: |=  =charge
+      :: =?  chad.charge  ?=(%glob -.chad.charge)
+        :: :-  %glob
+        %-  ~(run by toc)
+        |=(=mime mime(q.q 1.337))
+      :: t
+    ==
   ==
 ::
 ++  on-agent  on-agent:def
@@ -130,4 +115,290 @@
   %-  (slog leaf+"Binding /passport-route failed!" ~)
   `this
 ++  on-fail   on-fail:def
+--
+::
+|_  =bowl:gall
+++  def   ~(. (default-agent state %|) bowl)
+::
+++  handle-http-request
+  |=  [eyre-id=@ta inbound-request:eyre]
+  ^-  (quip card _state)
+  :: ^-  simple-payload:http
+  :: |^
+  :: =*  req       request.inbound-request
+  :: =*  headers   header-list.req
+  :: =/  req-line  (parse-request-line url.req)
+
+
+  :: ?.  =(method.req %'GET')  not-found:gen
+  :: :: /passport page request? extract index.html page from the file-server and use string interpolation
+  :: ::   to set this ship's values
+  :: ~&  >>  "{<dap.bowl>}: {<url.req>}"
+  :: ?:  =(url.req '/passport')
+  ::   =/  scry-start=path  /(scot %p our.bowl)/[q.byk.bowl]/(scot %da now.bowl)
+  ::     :: :*  (scot %p our.bowl)
+  ::     ::     q.byk.bowl
+  ::     ::     (scot %da now.bowl)
+  ::     :: ==
+  ::   =/  scry-path  (weld scry-start /app/passport/index/html)
+  ::   ~&  (spat scry-path)
+  ::   :: =/  file  (as-octs:mimes:html .^(@ %cx scry-path))
+  ::   =/  file      .^(@ %cx scry-path)
+  ::   =/  content   (replace-html `@t`file)
+  ::   ?~  content   not-found:gen
+  ::   (html-response:gen (as-octs:mimes:html u.content))
+  :: not-found:gen
+  :: --
+  ::
+  =;  [payload=simple-payload:http caz=(list card) =_state]
+    :_  state
+    %+  weld  caz
+    (give-simple-payload:app eyre-id payload)
+  ::
+  ::NOTE  we don't use +require-authorization-simple here because we want
+  ::      to short-circuit all the below logic for the unauthenticated case.
+  ?.  authenticated
+    :_  [~ state]
+    =-  [[307 ['location' -]~] ~]
+    (cat 3 '/~/login?redirect=' url.request)
+  ::
+  =*  headers   header-list.request
+  =/  req-line  (parse-request-line url.request)
+  ::
+  |^  ?+  method.request  [[405^~ ~] ~ state]
+        %'GET'   [handle-get-request ~ state]
+        %'POST'  handle-upload
+      ==
+  ::
+  ++  handle-get-request
+    ^-  simple-payload:http
+    ~&  >>  req-line
+    ?+  [site ext]:req-line  (redirect:gen '/apps/grid/')
+        [[%session ~] [~ %js]]
+      %-  inline-js-response
+      (rap 3 'window.ship = "' (rsh 3 (scot %p our.bowl)) '";' ~)
+    ::
+        [[%passport %upload ~] ?(~ [~ %html])]
+      [[200 ~] `(upload-page ~)]
+    ::
+        [[%passport ~] ?(~ [~ %html])]
+        ~&  >>>  "index"
+      %+  payload-from-glob
+        %passport
+      [[ext=[~ ~.html] site=site.req-line] args=~]
+      ::
+        [[%passport @ *] *]
+        ~&  >>>  "general"
+      %+  payload-from-glob
+        %passport
+      req-line(site (slag 1 site.req-line))
+    ==
+  ::
+  ++  upload-page
+    |=  msg=(list @t)
+    ^-  octs
+    %-  as-octt:mimes:html
+    %-  en-xml:html
+    ^-  manx
+    ::  desks: with local globs, eligible for upload
+    ::
+    =/  desks=(list desk)
+      :~  %realm  ==
+    ::   %+  murn  ~(tap by charges)
+    ::   |=  [d=desk [docket *]]
+    ::   ^-  (unit desk)
+    ::   ?:(?=(%glob -.href) `d ~)
+    ::
+    ;html
+      ;head
+        ;title:"%passport globulator"
+        ;meta(charset "utf-8");
+        ;style:'''
+               * { font-family: monospace; margin-top: 1em; }
+               li { margin-top: 0.5em; }
+               '''
+      ==
+      ;body
+        ;h2:"%passport globulator"
+        ;+  ?.  =(~ msg)
+              :-  [%p ~]
+              (join `manx`;br; (turn msg |=(m=@t `manx`:/"{(trip m)}")))
+            :: ;ol(start "0")
+            ::   ;li:"""
+            ::       from realm/web-holium-com, run 'yarn install'
+            ::       """
+            ::   ;li:"from realm/web-holium-com, run 'yarn build'"
+            ::   ;li:"""
+            ::       for 'data' below, select the ./web-holium-com/out folder as the input
+            ::       """
+            ::   ;li:"glob!"
+            :: ==
+            ;div:"- clone the realm repo to <folder>"
+            ;div:"- navigate to <folder>/web-holium-com"
+            ;div:"- run 'yarn install'"
+            ;div:"- run 'yarn build'"
+            ;div:"- select the <folder>/web-holium-com/out folder as input below"
+            (safari and internet explorer do not support uploading directory
+            trees properly. please glob from other browsers.)
+        ;+  ?:  =(~ desks)
+              ;p:"no desks eligible for glob upload"
+            ;form(method "post", enctype "multipart/form-data")
+              :: ;label
+              ::   ;+  :/"desk: "
+              ::   ;select(name "desk")
+              ::     ;*  %+  turn  desks
+              ::         |=(d=desk =+((trip d) ;option(value -):"{-}"))
+              ::   ==
+              :: ==
+              :: ;br;
+              ;label
+                ;+  :/"data: "
+                ;input
+                  =type             "file"
+                  =name             "glob"
+                  =directory        ""
+                  =webkitdirectory  ""
+                  =mozdirectory     "";
+              ==
+              ;br;
+              ;button(type "submit"):"glob!"
+            ==
+      ==
+    ==
+  ::
+  ++  handle-upload
+    ^-  [simple-payload:http (list card) _state]
+    ?.  ?=([[%passport %upload ~] ?(~ [~ %html])] [site ext]:req-line)
+      [[404^~ ~] [~ state]]
+    ::
+    =;  [=glob err=(list @t)]
+      =*  error-result
+        :_  [~ state]
+        [[400 ~] `(upload-page err)]
+      ::
+      ?.  =(~ err)  error-result
+      ::
+      :: =*  cha      ~(. ch desk)
+      :: =/  =charge  (~(got by charges) desk)
+      ::
+      =?  err  =(~ glob)
+        ['no files in glob' err]
+      :: =?  err  !?=(%glob -.href.docket.charge)
+        :: ['desk does not use glob' err]
+      ::
+      ?.  =(~ err)  error-result
+      :-  [[200 ~] `(upload-page 'successfully globbed' ~)]
+      :: ?>  ?=(%glob -.href.docket.charge)
+      ::
+      :: =.  charges  (new-chad:cha glob+glob)
+      :: =.  by-base
+      ::   =-  (~(put by by-base) - desk)
+      ::   base.href.docket.charge
+      :: =.  toc  glob
+      ::
+      `state(toc glob)
+    ::
+    ?~  parts=(de-request:multipart [header-list body]:request)
+      ~&  headers=header-list.request
+      [*glob 'failed to parse submitted data' ~]
+    ::
+    %+  roll  u.parts
+    |=  [[name=@t part:multipart] =glob err=(list @t)]
+    ^+  [glob err]
+    ?:  =('desk' name)
+      ::  must be a desk with existing charge
+      ::
+      ?.  ((sane %ta) body)
+        [glob (cat 3 'invalid desk: ' body) err]
+      ?.  =(body 'passport')
+        [glob (cat 3 'unknown desk: ' body) err]
+      [glob err]
+    :: :-  desk
+    ::  all submitted files must be complete
+    ::
+    ?.  =('glob' name)  [glob (cat 3 'weird part: ' name) err]
+    ?~  file            [glob 'file without filename' err]
+    ?~  type            [glob (cat 3 'file without type: ' u.file) err]
+    ?^  code            [glob (cat 3 'strange encoding: ' u.code) err]
+    =/  filp            (rush u.file fip)
+    ?~  filp            [glob (cat 3 'strange filename: ' u.file) err]
+    ::  ignore metadata files and other "junk"
+    ::TODO  consider expanding coverage
+    ::
+    ?:  =('.DS_Store' (rear `path`u.filp))
+      [glob err]
+    ::  make sure to exclude the top-level dir from the path
+    ::
+    :_  err
+    %+  ~(put by glob)  (slag 1 `path`u.filp)
+    ~&  >>  [u.type (slag 1 `path`u.filp)]
+    [u.type (as-octs:mimes:html body)]
+  ::
+  ++  fip
+    =,  de-purl:html
+    ;:  cook
+      |=(pork (weld q (drop p)))
+      deft
+      |=(a=cord (rash a (more fas smeg)))
+      crip
+      (star ;~(pose (cold '%20' (just ' ')) next))
+    ==
+  ::
+  ++  inline-js-response
+    |=  js=cord
+    ^-  simple-payload:http
+    %.  (as-octs:mimes:html js)
+    %*  .  js-response:gen
+      cache  %.n
+    ==
+  ::
+  ++  payload-from-glob
+    |=  [from=@ta what=request-line]
+    ^-  simple-payload:http
+    ~&  >>  [from what]
+    :: ~&  >>  [from what]
+    :: =/  des=(unit desk)
+    ::   (~(get by by-base) from)
+    :: ?~  des  not-found:gen
+    :: =/  cha=(unit charge)
+    ::   (~(get by charges) u.des)
+    :: ?~  cha  not-found:gen
+    :: ?.  ?=(%glob -.chad.u.cha)  not-found:gen
+    :: =*  glob  glob.chad.u.cha
+    =/  suffix=^path
+      (weld site.what (drop ext.what))
+    ~&  >  suffix
+    ?:  =(suffix /desk/js)
+      %-  inline-js-response
+      (rap 3 'window.desk = "' q.byk.bowl '";' ~)
+    =/  requested
+      ?:  (~(has by toc) suffix)  suffix
+      /index/html
+    ~&  >  requested
+    =/  data=mime
+      (~(got by toc) requested)
+    =/  mime-type=@t  (rsh 3 (crip <p.data>))
+    =;  headers
+      [[200 headers] `q.data]
+    :-  content-type+mime-type
+    ?:  =(/index/html requested)  ~
+    ~[max-1-wk:gen]
+  :: Thomas (nod to ~dister-dozzod-niblyx-malnus)
+  ++  replace-html
+    |=  html=@t
+    ^-  (unit @t)
+    =/  pass  .^(passport:common %gx /(scot %p our.bowl)/passport/(scot %da now.bowl)/'our-passport'/noun)
+    =/  discoverable  ?:  discoverable.pass  'true'  'false'
+    =/  rus
+      %+  rush  html
+      %-  star
+      ;~  pose
+        :: indicate whether this is a discoverable passport
+        (cold discoverable (jest '{passport-discoverable}'))
+        (cold (scot %p ~zod) (jest '{og-title}'))
+        (cold %desk (jest '{og-description}'))
+        next
+      ==
+    ?~(rus ~ `(rap 3 u.rus))
+  --
 --
