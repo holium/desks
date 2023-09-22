@@ -78,13 +78,14 @@
       |=  html=@t
       ^-  (unit @t)
       =/  pass  .^(passport:common %gx /(scot %p our.bowl)/passport/(scot %da now.bowl)/'our-passport'/noun)
-      =/  discoverable  ?:  discoverable.pass  'true'  'false'
+      =/  site-url  "https://{<(scot %p our.bowl)>}/passport/profile"
+      :: =/  discoverable  ?:  discoverable.pass  'true'  'false'
       =/  rus
         %+  rush  html
         %-  star
         ;~  pose
           :: indicate whether this is a discoverable passport
-          (cold discoverable (jest '{passport-discoverable}'))
+          :: (cold discoverable (jest '{passport-discoverable}'))
           (cold (scot %p ~zod) (jest '{og-title}'))
           (cold %desk (jest '{og-description}'))
           next
