@@ -70,7 +70,7 @@
 ::
 ++  scry-first-bedrock-chat
   |=  [=path =bowl:gall]
-  ^-  row:bedrock
+  ^-  (unit row:bedrock)
   =/  all-chats=[=type:common pt=pathed-table:bedrock =schemas:bedrock]
     .^
       [=type:common pt=pathed-table:bedrock =schemas:bedrock]
@@ -82,7 +82,8 @@
       /noun
     ==
   =/  rows=(list row:bedrock)  ~(val by (~(got by pt.all-chats) path))
-  (snag 0 rows)
+  ?:  =(0 (lent rows))  ~
+  (some (snag 0 rows))
 ::
 ++  scry-bedrock-message
   |=  [id=[=ship t=@da] =path =bowl:gall]

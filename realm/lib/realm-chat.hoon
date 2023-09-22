@@ -158,13 +158,14 @@
 ++  edit-chat-bedrock-poke
   |=  [host=ship act=[=path metadata=(map cord cord) peers-get-backlog=? invites=@tas max-expires-at-duration=@dr] =bowl:gall]
   ^-  card
-  =/  bedrock-chat=row:bedrock  (scry-first-bedrock-chat:db-scry path.act bowl)
-  ?+  -.data.bedrock-chat  !!
+  =/  bedrock-chat=(unit row:bedrock)  (scry-first-bedrock-chat:db-scry path.act bowl)
+  ?~  bedrock-chat  *card
+  ?+  -.data.u.bedrock-chat  !!
       %chat
     =/  chat  [
       metadata.act
-      type.data.bedrock-chat
-      pins.data.bedrock-chat
+      type.data.u.bedrock-chat
+      pins.data.u.bedrock-chat
       invites.act
       peers-get-backlog.act
       max-expires-at-duration.act
@@ -176,7 +177,7 @@
       [host %bedrock]
       %poke
       %db-action
-      !>([%edit id.bedrock-chat path.act chat-type:common [%chat chat] ~])
+      !>([%edit id.u.bedrock-chat path.act chat-type:common [%chat chat] ~])
     ]
   ==
 ::
@@ -487,8 +488,9 @@
       chat-db-pokes
     ?.  (test-bedrock-table-existence:db-scry chat-type:common bowl)
       chat-db-pokes
-    =/  bedrock-chat=row:bedrock  (scry-first-bedrock-chat:db-scry path.act bowl)
-    :-  (create-bedrock-message-poke (scry-bedrock-path-host:db-scry path.act bowl) +.act official-time id.bedrock-chat)
+    ::=/  bedrock-chat=(unit row:bedrock)  (scry-first-bedrock-chat:db-scry path.act bowl)
+    ::?~  bedrock-chat  chat-db-pokes
+    :::-  (create-bedrock-message-poke (scry-bedrock-path-host:db-scry path.act bowl) +.act official-time id.u.bedrock-chat)
     chat-db-pokes
   :: then send pokes to all the peers about inserting a message
   [cards state]
