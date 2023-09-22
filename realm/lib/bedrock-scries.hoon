@@ -1,6 +1,18 @@
 /-  bedrock=db, common
 |%
-
+++  test-bedrock-table-existence
+  |=  [=type:common =bowl:gall]
+  ^-  ?
+  .=  %.y
+  .^
+    @ud
+    %gx
+    %+  weld
+      /(scot %p our.bowl)/bedrock/(scot %da now.bowl)/loobean/table
+    :-  name.type
+    /(scot %uv hash.type)/noun
+  ==
+::
 ++  test-bedrock-path-existence
   |=  [=path =bowl:gall]
   ^-  ?

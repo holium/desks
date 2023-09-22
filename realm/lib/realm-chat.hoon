@@ -485,6 +485,8 @@
   =/  cards=(list card)
     ?.  (test-bedrock-path-existence:db-scry path.act bowl)
       chat-db-pokes
+    ?.  (test-bedrock-table-existence:db-scry chat-type:common bowl)
+      chat-db-pokes
     =/  bedrock-chat=row:bedrock  (scry-first-bedrock-chat:db-scry path.act bowl)
     :-  (create-bedrock-message-poke (scry-bedrock-path-host:db-scry path.act bowl) +.act official-time id.bedrock-chat)
     chat-db-pokes
