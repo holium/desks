@@ -20,6 +20,6 @@ done
 echo "Watching for changes to copy to ${PIER}..."
 while [ 0 ]
   do
-  rsync -rL --del --exclude '.*' --exclude '*.sh' --exclude '*.md' --exclude '/usher' * $PIER/
+  rsync -rL --del --exclude '.*' --exclude '*.sh' --exclude '*.md' * $PIER/
   sleep 0.8
 done
