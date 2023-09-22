@@ -1860,6 +1860,10 @@
             ?:  =(hash.data-type hash:message-type:common)
               [%message (de-message (~(got by p.jon) 'data'))]
             [%general ((de-cols schema) (~(got by p.jon) 'data'))]
+          %timeline
+            ?:  =(hash.data-type hash:timeline-post-type:common)
+              [%timeline (de-timeline (~(got by p.jon) 'data'))]
+            [%general ((de-cols schema) (~(got by p.jon) 'data'))]
           %timeline-post
             ?:  =(hash.data-type hash:timeline-post-type:common)
               [%timeline-post (de-timeline-post (~(got by p.jon) 'data'))]
@@ -1985,6 +1989,12 @@
           [%link so]
           [%custom (ot ~[[%name so] [%value so]])]
           [%status so]
+      ==
+    ::
+    ++  de-timeline
+      %-  ot
+      :~  metadata+(om so)
+          public+bo
       ==
     ::
     ++  de-timeline-post
@@ -2423,6 +2433,10 @@
                 ['content' a+(turn content.data.row en-msg-part)]
                 ['sender' s+(scot %p ship.id.row)]
             ==
+          %timeline
+            :~  ['metadata' o+(malt (turn ~(tap by metadata.data.row) |=([k=@t v=@t] [k s+v])))]
+                ['public' b+public.data.row]
+            ==
           %timeline-post
             :~  ['parent' ?~(parent.data.row ~ (parent-to-json u.parent.data.row))]
                 ['app' ?~(app.data.row ~ (app-to-json u.app.data.row))]
@@ -2809,6 +2823,7 @@
         %relay          0v0
         %react          0v0
         %creds          0v0
+        %timeline       0v0
         %timeline-post  0v0
     ==
   (sham u.sch)

@@ -24,5 +24,6 @@
 +$  view
   $%  [%messages msgs=messages-table:cd]
       [%types types=(set [term (set cord)])]
+      [%paths paths=(list path)]
   ==
 --

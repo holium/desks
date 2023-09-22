@@ -10,6 +10,7 @@
     ^-  ^json
     %+  frond  -.vyu
     ?-    -.vyu
+      %paths  a+(turn paths.vyu path)
       %messages   (messages-table:encode:cd msgs.vyu)
         %types
       :-  %a

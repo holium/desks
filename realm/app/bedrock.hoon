@@ -27,10 +27,14 @@
   ::
   ++  on-init
     ^-  (quip card _this)
-    =/  default-state=state-1   *state-1
+    =|  default-state=state-1
     :: make sure the relay table exists on-init
     =.  tables.default-state
-    (~(gas by *^tables) ~[[relay-type:common *pathed-table] [vote-type:common *pathed-table] [react-type:common *pathed-table]])
+      %-  ~(gas by *^tables)
+      :~  [relay-type:common *pathed-table]
+          [vote-type:common *pathed-table]
+          [react-type:common *pathed-table]
+      ==
     =/  default-cards
       :~  [%pass /spaces %agent [our.bowl %spaces] %watch /updates]
           [%pass /selfpoke %agent [our.bowl dap.bowl] %poke %db-action !>([%create-initial-spaces-paths ~])]

@@ -52,8 +52,19 @@
           replication.row  %host
           peers.row        ~[[our.bowl %host]]
         ==
-      =/  =cage  db-action+!>([%create-path row])
-      :_(this [%pass / %agent [our.bowl %bedrock] %poke cage]~)
+      :_  this
+      :~
+        =/  =cage  db-action+!>([%create-path row])
+        [%pass / %agent [our.bowl %bedrock] %poke cage]
+        =/  =cage
+          :-  %db-action  !>
+          :*  %create  [our now]:bowl
+              path     [%timeline 0v0]
+              :: for now defaults to public: true
+              [%timeline ~ &]  ~
+          ==
+        [%pass / %agent [our.bowl %bedrock] %poke cage]
+      ==
       :: 
         %delete-timeline
       ?>  =(src our):bowl
@@ -195,6 +206,25 @@
   |=  =(pole knot)
   ^-  (unit (unit cage))
   ?+    pole  (on-peek:def pole)
+      [%x %timelines ~]
+    =+  .^(=state-1:db %gx /(scot %p our.bowl)/bedrock/(scot %da now.bowl)/db/db-state)
+    =/  paths=(list path)
+      :: if timeline type doesn't exist, no valid timelines
+      ::
+      ?~  tim=(~(get by tables.state-1) [%timeline 0v0])  ~
+      :: for each path
+      ::
+      %+  murn  ~(tap in ~(key by paths.state-1))
+      |=  =(^pole knot)
+      :: check the timeline path format is correct
+      ::
+      ?.  ?=([%timeline ship=@ta @ta ~] pole)  ~
+      ?~  (rush ship.pole ;~(pfix sig fed:ag))  ~
+      :: check the timeline type exists on that path
+      ::
+      ?.((~(has by u.tim) pole) ~ `pole)
+    ``timeline-view+!>(paths+paths)
+    ::
       [%x %chat-db ~]
     =+  .^(dump=db-dump:cd %gx /(scot %p our.bowl)/chat-db/(scot %da now.bowl)/db/chat-db-dump)
     ?>  ?=(%tables -.dump)
