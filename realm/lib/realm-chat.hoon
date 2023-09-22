@@ -488,9 +488,9 @@
       chat-db-pokes
     ?.  (test-bedrock-table-existence:db-scry chat-type:common bowl)
       chat-db-pokes
-    ::=/  bedrock-chat=(unit row:bedrock)  (scry-first-bedrock-chat:db-scry path.act bowl)
-    ::?~  bedrock-chat  chat-db-pokes
-    :::-  (create-bedrock-message-poke (scry-bedrock-path-host:db-scry path.act bowl) +.act official-time id.u.bedrock-chat)
+    =/  bedrock-chat=(unit row:bedrock)  (scry-first-bedrock-chat:db-scry path.act bowl)
+    ?~  bedrock-chat  chat-db-pokes
+    :-  (create-bedrock-message-poke (scry-bedrock-path-host:db-scry path.act bowl) +.act official-time id.u.bedrock-chat)
     chat-db-pokes
   :: then send pokes to all the peers about inserting a message
   [cards state]

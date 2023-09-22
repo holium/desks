@@ -81,7 +81,9 @@
         path
       /noun
     ==
-  =/  rows=(list row:bedrock)  ~(val by (~(got by pt.all-chats) path))
+  =/  chat=(unit table:bedrock)  (~(get by pt.all-chats) path)
+  ?~  chat  ~
+  =/  rows=(list row:bedrock)  ~(val by u.chat)
   ?:  =(0 (lent rows))  ~
   (some (snag 0 rows))
 ::
