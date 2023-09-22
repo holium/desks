@@ -22,7 +22,7 @@
   |=  [p=passport:common ln=passport-link-container:common]
   ^-  ?
   :: only allow keys that are already in the crypto state to add other keys
-  =/  parsed-link=passport-data-link:common   (passport-data-link:dejs (need (de-json:html data.ln)))
+  =/  parsed-link=passport-data-link:common   (passport-data-link:dejs (need (de:json:html data.ln)))
   =/  entity=@t     from-entity.mtd.parsed-link
   =/  key=@t        signing-public-key.mtd.parsed-link
   =/  keys=(list @t)  (~(got by entity-to-public-keys.pki-state.crypto.p) entity)
@@ -54,7 +54,8 @@
     %+  weld
     (trip '\19Ethereum Signed Message:\0a')
     %+  weld
-    (en-json:html (numb:enjs:format (lent (trip msg))))
+    %-  trip
+    (en:json:html (numb:enjs:format (lent (trip msg))))
     (trip msg)
     ::export function hashMessage(message: Bytes | string): string {
     ::    if (typeof(message) === "string") { message = toUtf8Bytes(message); }
@@ -98,13 +99,13 @@
   |=  ln=passport-link-container:common
   ^-  @t
   ?:  =('PASSPORT_ROOT' link-type.ln)
-    =/  pr=passport-crypto:common           (passport-root:dejs (need (de-json:html data.ln)))
+    =/  pr=passport-crypto:common           (passport-root:dejs (need (de:json:html data.ln)))
     signing-key.sig-chain-settings.pr
   ?:  ?|  =('KEY_ADD' link-type.ln)
           =('KEY_REMOVE' link-type.ln)
           =('NAME_RECORD_SET' link-type.ln)
       ==
-    =/  pd=passport-data-link:common  (passport-data-link:dejs (need (de-json:html data.ln)))
+    =/  pd=passport-data-link:common  (passport-data-link:dejs (need (de:json:html data.ln)))
     signing-public-key.mtd.pd
   !!
 ::
@@ -493,7 +494,7 @@
   =.  p
     ?:  =('PASSPORT_ROOT' link-type.ln)
       ?>  =((lent chain.p) 0) :: only allow passport_root as first link in chain
-      =.  crypto.p   (passport-root:dejs (need (de-json:html data.ln)))
+      =.  crypto.p   (passport-root:dejs (need (de:json:html data.ln)))
       =.  default-address.p   addr
       =/  pk=@ux        (recover-pub-key hash.ln hash-signature.ln addr)
       =/  t-pk=@t       (crip (num-to-hex:eth pk))
@@ -503,7 +504,7 @@
     ?:  =('KEY_ADD' link-type.ln)
       ?>  (validate-signing-key p ln)   :: only allow keys that are already in the crypto state to add other keys
       :: TODO check previous_link_hash
-      =/  parsed-link=passport-data-link:common   (passport-data-link:dejs (need (de-json:html data.ln)))
+      =/  parsed-link=passport-data-link:common   (passport-data-link:dejs (need (de:json:html data.ln)))
       ?>  (prev-link-hash-matches parsed-link chain.p)
       =/  entity=@t     from-entity.mtd.parsed-link
       =/  key=@t        signing-public-key.mtd.parsed-link
@@ -531,7 +532,7 @@
     ?:  =('NAME_RECORD_SET' link-type.ln)
       ?>  (validate-signing-key p ln)   :: only allow keys that are already in the crypto state to update the name_record
       :: TODO check previous_link_hash
-      =/  parsed-link=passport-data-link:common   (passport-data-link:dejs (need (de-json:html data.ln)))
+      =/  parsed-link=passport-data-link:common   (passport-data-link:dejs (need (de:json:html data.ln)))
       ?>  (prev-link-hash-matches parsed-link chain.p)
       ?+  -.data.parsed-link  !!
         %name-record-set
@@ -557,10 +558,10 @@
         =.  discoverable.p  =(record.data.parsed-link 'true')
         p
       ?:  =('nfts' name.data.parsed-link)
-        =.  nfts.p  (linked-nfts:dejs (need (de-json:html record.data.parsed-link)))
+        =.  nfts.p  (linked-nfts:dejs (need (de:json:html record.data.parsed-link)))
         p
       ?:  =('contact' name.data.parsed-link)
-        =.  contact.p  (de-contact:dejs (need (de-json:html record.data.parsed-link)))
+        =.  contact.p  (de-contact:dejs (need (de:json:html record.data.parsed-link)))
         p
       ~&  >>>  'unrecognized NAME_RECORD_SET "name" property'
       !!
