@@ -17,11 +17,13 @@
       [%get =req-id]  :: when a client wants to threadpoke and get a full passport for a given ship
       [%add-friend =req-id =ship mtd=(map @t @t)]     :: client to ship
       [%get-friend mtd=(map @t @t)]                   :: ship to ship
+      [%cancel-friend-request =req-id =ship]      :: client to ship
+      [%revoke-friend-request ~]                  :: ship to ship
       [%handle-friend-request =req-id accept=? =ship] :: client to ship
       [%respond-to-friend-request accept=?]           :: ship to ship
 
       [%change-contact =req-id c=contact:common]   :: client to ship, we change our own contact info
-      [%add-link =req-id ln=passport-link-container:common]  :: client to ship, we add a passport link
+      [%add-link =req-id ln=passport-link-container:common wallet-source=(unit @t)]  :: client to ship, we add a passport link
       [%change-passport =req-id p=passport:common]  :: client->ship, DOES NOT UPDATE `chain` or `crypto`, MUST use %add-link for that
 
       [%toggle-hide-logs toggle=?]

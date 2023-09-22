@@ -661,6 +661,8 @@
           ['data' (mtd data.notif)]
           ['include_player_ids' a+(turn player-ids |=([id=@t] s+id))]
           ['headings' (contents title.notif)]
+          ['ios_badgeType' s+'SetTo']
+          ['ios_badgeCount' (numb unread.data.notif)]
       ==
       =/  extended-list
         ?~  subtitle.notif  base-list
@@ -680,7 +682,6 @@
       %-  pairs
       :~
         ['path-row' (path-row:encode:chat-db path-row.mtd)]
-        ['unread_count' (numb unread.mtd)]
         ['avatar' ?~(avatar.mtd ~ s+u.avatar.mtd)]
         ['msg' a+(turn message.mtd |=(m=msg-part:db (messages-row:encode:chat-db [msg-id.m msg-part-id.m] m)))]
       ==

@@ -22,7 +22,11 @@
     |=  old-state=vase
     ^-  (quip card _this)
     =/  old  !<(versioned-state old-state)
-    =/  cards=(list card)  ~
+    =/  cards=(list card)
+      :-  [%pass /selfpoke %agent [our.bowl dap.bowl] %poke %passport-action !>([%init-our-passport ~])]
+      ?.  =(wex.bowl ~)  ~
+      :~  [%pass /db %agent [our.bowl %bedrock] %watch /db]
+      ==
     [cards this(state old)]
   ::
   ++  on-poke
@@ -36,6 +40,10 @@
         (add-friend:passport +.act state bowl)
       %get-friend
         (get-friend:passport +.act state bowl)
+      %cancel-friend-request  :: for us to cancel a pending request we sent out
+        (cancel-friend-request:passport +.act state bowl)
+      %revoke-friend-request  :: for another ship to tell us they canceled their request
+        (revoke-friend-request:passport state bowl)
       %handle-friend-request
         (handle-friend-request:passport +.act state bowl)
       %respond-to-friend-request
