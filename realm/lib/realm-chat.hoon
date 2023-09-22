@@ -266,7 +266,6 @@
       body.request
         :-  ~
         %-  as-octt:mimes:html
-        %-  trip
         %-  en-json:html
         %+  notify-request:encode
           note
