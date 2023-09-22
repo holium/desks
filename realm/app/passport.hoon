@@ -99,6 +99,7 @@
           ``passport-friends+!>(~)
         ``passport-friends+!>((get-friends:scries bowl))
     ::
+    :: for getting the list of friend requests you need to respond to
       [%x %pending-friends ~]
         ?.  (test-bedrock-table-existence:scries friend-type:common bowl)
           ``passport-friends+!>(~)
@@ -107,7 +108,7 @@
             (get-friends:scries bowl)
           |=  =friend:common
           ^-  ?
-          =(%pending status.friend)
+          =(%pending-incoming status.friend)
         ``passport-friends+!>(friends)
     ::
     :: .^([[@p * (unit @t) *] (unit @t) @t *] %gx /=/passport/=/our-passport/noun)
