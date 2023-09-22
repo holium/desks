@@ -266,7 +266,8 @@
       body.request
         :-  ~
         %-  as-octt:mimes:html
-        %-  en-json:html
+        %-  trip
+        %-  en:json:html
         %+  notify-request:encode
           note
         devices.state
