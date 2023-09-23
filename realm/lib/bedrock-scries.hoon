@@ -1,6 +1,18 @@
 /-  bedrock=db, common
 |%
-
+++  test-bedrock-table-existence
+  |=  [=type:common =bowl:gall]
+  ^-  ?
+  .=  %.y
+  .^
+    @ud
+    %gx
+    %+  weld
+      /(scot %p our.bowl)/bedrock/(scot %da now.bowl)/loobean/table
+    :-  name.type
+    /(scot %uv hash.type)/noun
+  ==
+::
 ++  test-bedrock-path-existence
   |=  [=path =bowl:gall]
   ^-  ?
@@ -58,7 +70,7 @@
 ::
 ++  scry-first-bedrock-chat
   |=  [=path =bowl:gall]
-  ^-  row:bedrock
+  ^-  (unit row:bedrock)
   =/  all-chats=[=type:common pt=pathed-table:bedrock =schemas:bedrock]
     .^
       [=type:common pt=pathed-table:bedrock =schemas:bedrock]
@@ -69,8 +81,11 @@
         path
       /noun
     ==
-  =/  rows=(list row:bedrock)  ~(val by (~(got by pt.all-chats) path))
-  (snag 0 rows)
+  =/  chat=(unit table:bedrock)  (~(get by pt.all-chats) path)
+  ?~  chat  ~
+  =/  rows=(list row:bedrock)  ~(val by u.chat)
+  ?:  =(0 (lent rows))  ~
+  (some (snag 0 rows))
 ::
 ++  scry-bedrock-message
   |=  [id=[=ship t=@da] =path =bowl:gall]

@@ -258,6 +258,15 @@
         ?~  thepathrow
           ``ud+!>(1)  :: false
         ``ud+!>(0)    :: true, because the pathrow exsits
+         :: test existence of given type
+    ::
+      [%x %loobean %table @ @ ~]
+        =/  tblname=@tas      i.t.t.t.path
+        =/  typ=type:common   [tblname (slav %uv i.t.t.t.t.path)]
+        =/  thetbl  (~(get by tables.state) typ)
+        ?~  thetbl
+          ``ud+!>(1)  :: false
+        ``ud+!>(0)    :: true, because the pathrow exsits
     ::
     :: /x/db/start-ms/[unix ms].json
     :: all tables, but only with received-at after <time>
