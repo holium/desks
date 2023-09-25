@@ -40,7 +40,7 @@
         [%leave-timeline (ot ~[path+pa])]
         [%create-timeline-post (ot ~[path+pa post+de-timeline-post])]
         [%delete-timeline-post (ot ~[path+pa id+de-id])]
-        [%relay-timeline-post (ot ~[from+pa id+de-id to+pa])]
+        [%relay-timeline-post (ot ~[from+pa id+de-id to+(ar pa)])]
     ==
   --
 --

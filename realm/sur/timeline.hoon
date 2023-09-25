@@ -13,7 +13,7 @@
       [%handle-leave-request name=@ta]
       [%create-timeline-post =path post=timeline-post]
       [%delete-timeline-post =path =id:common]
-      [%relay-timeline-post from=path =id:common to=path]
+      [%relay-timeline-post from=path =id:common to=(list path)]
       [%create-react =path =react:common]
       [%delete-react =path =id:common]
       [%add-forerunners-bedrock force=?]

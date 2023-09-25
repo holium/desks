@@ -116,12 +116,15 @@
       :_(this [%pass / %agent [our.bowl %bedrock] %poke cage]~)
       ::
         %relay-timeline-post
-      =/  =relay:common     [id [%timeline-post 0v0] from 0 %all |]:axn
-      =/  row=input-row:db  [to.axn [%relay 0v0] [%relay relay] ~]
-      =/  =cage
-        :-  %db-action  !>
-        [%relay [our now]:bowl row]
-      :_(this [%pass / %agent [our.bowl %bedrock] %poke cage]~)
+      =;  cards
+        [cards this]
+      =/  =relay:common  [id [%timeline-post 0v0] from 0 %all |]:axn
+      %+  turn  to.axn
+      |=  to=path
+      ^-  card
+      =/  row=input-row:db  [to [%relay 0v0] [%relay relay] ~]
+      =/  =cage  db-action+!>([%relay [our now]:bowl row])
+      [%pass / %agent [our.bowl %bedrock] %poke cage]
       ::
         %create-react
       =/  =cage
