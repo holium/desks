@@ -74,7 +74,7 @@
       ?>  =(src our):bowl
       =/  =path  /timeline/(scot %p our.bowl)/[name.axn]
       ?.  (test-bedrock-path-existence:scries path bowl)
-        ~&(%timeline-does-not-exist `this)
+        ~&(>> %timeline-does-not-exist `this)
       =/  =cage  db-action+!>([%delete-path path])
       :_(this [%pass / %agent [our.bowl %bedrock] %poke cage]~)
       ::
