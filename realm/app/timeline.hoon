@@ -98,12 +98,15 @@
       =/  =cage  db-action+!>([%kick-peer path src.bowl])
       :_(this [%pass / %agent [our.bowl %bedrock] %poke cage]~)
       ::
-        %create-timeline-post
+        %create-timeline-posts
       =/  =cage
         :-  %db-action  !>
-        :*  %create   [our now]:bowl
-            path.axn  [%timeline-post 0v0]
-            [%timeline-post post.axn]  ~
+        :-  %create-many
+        %+  turn  posts.axn
+        |=  post=timeline-post
+        :*  [our now]:bowl  path.axn
+            [%timeline-post 0v0]
+            [%timeline-post post]  ~
         ==
       :_(this [%pass / %agent [our.bowl %bedrock] %poke cage]~)
       ::

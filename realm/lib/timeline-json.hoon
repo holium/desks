@@ -38,7 +38,7 @@
         [%delete-timeline (ot ~[name+seta])]
         [%follow-timeline (ot ~[path+pa])]
         [%leave-timeline (ot ~[path+pa])]
-        [%create-timeline-post (ot ~[path+pa post+de-timeline-post])]
+        [%create-timeline-posts (ot ~[path+pa posts+(ar de-timeline-post)])]
         [%delete-timeline-post (ot ~[path+pa id+de-id])]
         [%relay-timeline-post (ot ~[from+pa id+de-id to+(ar pa)])]
     ==
