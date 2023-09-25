@@ -1,6 +1,6 @@
 /-  *timeline, db
-/+  scries=bedrock-scries, *timeline, timeline-json, cd=chat-db,
-    dbug, verb, default-agent
+/+  *timeline, timeline-json, cd=chat-db, scries=bedrock-scries,
+    vio=ventio, dbug, verb, default-agent
 ::
 /=  tv-  /mar/timeline/view
 /=  ta-  /mar/timeline/action
@@ -38,6 +38,10 @@
 ++  on-poke
   |=  [=mark =vase]
   ^-  (quip card _this)
+  :: forward vent requests directly to the vine
+  ::
+  ?:  ?=(%vent-request mark)  :_(this ~[(to-vine:vio vase bowl)])
+  ::
   ?+    mark  (on-poke:def mark vase)
       %timeline-action
     =+  !<(axn=action vase)
@@ -205,7 +209,13 @@
     ==
   ==
 ::
-++  on-watch  on-watch:def
+++  on-watch
+  |=  =(pole knot)
+  ^-  (quip card _this)
+  ?+    pole  (on-watch:def pole)
+    [%vent @ @ ~]       `this
+  ==
+::
 ++  on-agent  on-agent:def
 ::
 ++  on-peek
@@ -272,7 +282,16 @@
     ``timeline-view+!>(types+types)
   ==
 ::
-++  on-arvo   on-arvo:def
+++  on-arvo
+  |=  [=(pole knot) sign=sign-arvo]
+  ^-  (quip card:agent:gall _this)
+  ?+    pole  (on-arvo:def pole sign)
+      [%vent p=@ta q=@ta ~]
+    ?.  ?=([%khan %arow *] sign)  (on-arvo:def pole sign)
+    %-  (slog ?:(?=(%.y -.p.sign) ~ p.p.sign))
+    :_(this (vent-arow:vio pole p.sign))
+  ==
+::
 ++  on-leave  on-leave:def
 ++  on-fail   on-fail:def
 --
