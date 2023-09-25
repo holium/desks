@@ -179,6 +179,7 @@
       :: any peer in the path can send these pokes to the %host
       :: if they have right permissions, host will propagate the data
       [%create =req-id =input-row]          :: sends %add-row to all subs
+      [%create-many args=(list [req-id input-row])]
       [%edit =req-id =id:common =input-row] :: sends %upd-row to all subs
       [%remove =req-id =type:common =path =id:common]      :: %host deleting the row, sends %delete to all peers
       [%remove-many =req-id =path ids=(list [=id:common =type:common])]      :: delete many records at once
