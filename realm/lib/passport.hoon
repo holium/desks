@@ -376,7 +376,10 @@
   =/  kickcard=card  [%give %kick ~[vent-path] ~]
 
   =/  new-fren                  (get-friend:scries ship bowl)
-  ?>  =(status.friend.new-fren %pending-incoming) :: we can only handle pending-incoming requests
+  ?>  ?|  =(status.friend.new-fren %pending-incoming) :: we can only handle pending-incoming requests
+          =(status.friend.new-fren %friend) :: or %friend (in order to end a friendship)
+          =(status.friend.new-fren %rejected) :: or %rejected (in order to change our mind about starting a friendship)
+      ==
   =.  status.friend.new-fren    ?:(accept %friend %rejected)
 
   =/  cards=(list card)
