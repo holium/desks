@@ -26,4 +26,10 @@
       [%types types=(set [term (set cord)])]
       [%paths paths=(list path)]
   ==
+::
++$  vent
+  $@  ~
+  $%  [%timeline =path]
+      [%timeline-post =id:common]
+  ==
 --

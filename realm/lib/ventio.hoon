@@ -63,6 +63,8 @@
   (pure:m [mark q:(tube !>(body))])
 :: generic thread for vent-based "thread-pokes"
 ::   flexible but less performant
+::   performance issues ameliorated with tube-warming:
+::     https://github.com/tinnus-napbus/tube-warmer
 :: /ted/venter.hoon
 :: /+  *ventio
 :: venter

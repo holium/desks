@@ -22,6 +22,16 @@
     |=  [k=^path v=timeline-post:tl]
     ^-  [@t json]
     [(spat k) (timeline-post v)]
+  ::
+  ++  vent
+    |=  =vent:tl
+    ^-  json
+    ?~  vent  ~
+    %+  frond  -.vent
+    ?-  -.vent
+      %timeline       (path path.vent)
+      %timeline-post  (row-id-to-json:enjs:db id.vent)
+    ==
   --
 ::
 ++  dejs
