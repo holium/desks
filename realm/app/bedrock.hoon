@@ -42,7 +42,31 @@
   ++  on-load
     |=  old-state=vase
     ^-  (quip card _this)
-    =/  old  !<(versioned-state old-state)
+    =/  uold=(unit versioned-state)
+      (mole |.(!<(versioned-state old-state)))
+    =/  old=versioned-state
+    ?~  uold
+      ::  types failed to nest, so fallback to empty tables,
+      ::  same paths and peers
+      =/  old-paths-and-peers     !<(minimal-state old-state)
+      ?-  -.old-paths-and-peers
+        %0
+      =/  default-state=state-0   *state-0
+      =.  paths.default-state     paths.old-paths-and-peers
+      =.  peers.default-state     peers.old-paths-and-peers
+      =.  tables.default-state
+      (~(gas by *tables-0) ~[[%relay *pathed-table-0] [%vote *pathed-table-0] [%react *pathed-table-0]])
+      default-state
+        %1
+      =/  default-state=state-1   *state-1
+      =.  paths.default-state     paths.old-paths-and-peers
+      =.  peers.default-state     peers.old-paths-and-peers
+      =.  tables.default-state
+      (~(gas by *^tables) ~[[relay-type:common *pathed-table] [vote-type:common *pathed-table] [react-type:common *pathed-table]])
+      default-state
+      ==
+    :: types DO nest, so just read it out
+    !<(versioned-state old-state)
     :: do a quick check to make sure we are subbed to /updates in %spaces
     =/  cards
       :-  [%pass /timer %arvo %b %rest next-refresh-time:core]
