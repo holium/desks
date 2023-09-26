@@ -48,7 +48,7 @@
   :: propagate this back to eyre
   ::
   =+  handle-http-response+!>([eyre-id (extract-simple-payload a b)])
-  ;<  ~  bind:m  (poke [our %calendar] -)
+  ;<  ~  bind:m  (poke [our dap] -)
   (pure:m !>(~))
 ==
 :: accepts trailing fas
@@ -65,7 +65,7 @@
 ++  fullpath
   |=  [host=ship name=@ta]
   .^  fullpath:db  %gx
-    /(scot %p our)/calendar/(scot %da now)/bedrock/db/timeline/(scot %p host)/[name]/db-path
+    /(scot %p our)/bedrock/(scot %da now)/db/path/timeline/(scot %p host)/[name]/db-path
   ==
 ::
 ++  is-public
@@ -81,6 +81,7 @@
   =/  =row:db  i.rows
   ?>  ?=(%timeline -.data.row)
   public.data.row
+:: TODO: probably don't give the whole table, but a minimal version
 ::
 ++  give-public-scry
   |=  [host=ship name=@ta]

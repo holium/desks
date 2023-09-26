@@ -48,6 +48,14 @@
   ?:  ?=(%vent-request mark)  :_(this ~[(to-vine:vio vase bowl)])
   ::
   ?+    mark  (on-poke:def mark vase)
+      %handle-http-request
+    :: re-interpret as vent-request
+    :: necessary -- %eyre hits %timeline with a poke
+    ::
+    =^  cards  this
+      (on-poke vent-request+!>([[our '' now]:bowl mark q.vase]))
+    [cards this]
+    ::
       %handle-http-response
     =+  !<([eyre-id=@ta pay=simple-payload:http] vase)
     :_(this (give-simple-payload:app:server eyre-id pay))
