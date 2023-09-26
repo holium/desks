@@ -47,8 +47,6 @@
   ?+    mark  (on-poke:def mark vase)
       %tally-vent
     ~&  %venter-tallying
-    :: TODO: use this scry to clear dead vent-ids (use the tid)
-    :: ~&  .^((list path) %gx /(scot %p our.bowl)/spider/(scot %da now.bowl)/tree/noun)
     =+  !<([=dock vid=vent-id] vase)
     `this(vents (~(put ju vents) dock vid))
     ::
@@ -56,6 +54,23 @@
     ~&  %venter-clearing
     =+  !<([=dock vid=vent-id] vase)
     `this(vents (~(del ju vents) dock vid))
+    ::
+      %clear-dead
+    =+  .^(pats=(list path) %gx /(scot %p our.bowl)/spider/(scot %da now.bowl)/tree/noun)
+    =/  tids=(set tid:rand)  (~(gas in *(set tid:rand)) (turn pats rear))
+    :-  ~
+    %=    this
+        vents
+      %-  ~(gas by *vents:vio)
+      %+  murn  ~(tap by vents)
+      |=  [=dock vids=(set vent-id)]
+      =;  new=(set vent-id)
+        ?:(?=(~ new) ~ `[dock new])
+      %-  ~(gas in *(set vent-id))
+      %+  murn  ~(tap in vids)
+      |=  vid=vent-id
+      ?.((~(has in tids) q.vid) ~ `vid)
+    ==
   ==
 ::
 ++  on-watch  on-watch:def
