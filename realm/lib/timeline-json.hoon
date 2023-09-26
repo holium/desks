@@ -1,4 +1,4 @@
-/-  tl=timeline, common
+/-  tl=timeline, common, cd=chat-db
 /+  db
 |%
 ++  enjs
@@ -41,6 +41,14 @@
   :: since (se %ta) doesn't work...
   ::
   ++  seta  (cu |=(=@t ?>(((sane %ta) t) t)) so)
+  ++  msg-id
+    %+  cu
+      |=  =path
+      ^-  msg-id:cd
+      ?>  ?=([@ta @ta ~] path)
+      [(slav %da i.path) (slav %p i.t.path)]
+    pa
+  ::
   ++  action
     ^-  $-(json action:tl)
     %-  of
@@ -51,6 +59,7 @@
         [%create-timeline-posts (ot ~[path+pa posts+(ar de-timeline-post)])]
         [%delete-timeline-post (ot ~[path+pa id+de-id])]
         [%relay-timeline-post (ot ~[from+pa id+de-id to+(ar pa)])]
+        [%convert-message (ot ~[msg-id+msg-id msg-part-id+ni to+(ar pa)])]
     ==
   --
 --

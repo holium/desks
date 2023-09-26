@@ -17,6 +17,7 @@
       [%create-react =path =react:common]
       [%delete-react =path =id:common]
       [%add-forerunners-bedrock force=?]
+      [%convert-message =msg-id:cd =msg-part-id:cd to=(list path)]
       [%add-random-emojis ~]
   ==
 ::

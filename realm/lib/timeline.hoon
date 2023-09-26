@@ -1,6 +1,6 @@
 /-  *timeline, cd=chat-db
 |%
-++  convert-messages
+++  convert-message
   |=  $:  our=@p
           created-at=@da
           =msg-id:cd

@@ -167,6 +167,31 @@
         ==
       :_(this [%pass / %agent [our.bowl %bedrock] %poke cage]~)
       ::
+        %convert-message
+      =+  .^(dump=db-dump:cd %gx /(scot %p our.bowl)/chat-db/(scot %da now.bowl)/db/chat-db-dump)
+      ?>  ?=(%tables -.dump)
+      =/  tables=(map term table:cd)
+        %-  ~(gas by *(map term table:cd))
+        (turn tables.dump |=(=table:cd [-.table table]))
+      =/  =table:cd  (~(got by tables) %messages)
+      ?>  ?=(%messages -.table)
+      =/  post=(unit [req-id=[@p @da] post=timeline-post])
+        =+  (got:msgon:cd messages-table.table [msg-id msg-part-id]:axn)
+        (convert-message our.bowl created-at msg-id msg-part-id content metadata)
+      ?~  post
+        ~&(>>> %failed-to-process-message-part `this)
+      :_  this
+      %+  turn  to.axn
+      |=  to=path
+      ^-  card
+      =/  =cage
+        :-  %db-action  !>
+        :*  %create  req-id.u.post
+            to  [%timeline-post 0v0]
+            [%timeline-post post.u.post]  ~
+        ==
+      [%pass / %agent [our.bowl %bedrock] %poke cage]
+      ::
         %add-forerunners-bedrock
       =/  fore=path  /spaces/~lomder-librun/realm-forerunners/chats/0v2.68end.ets6m.29fgc.ntejl.jbeo7
       =/  db-fore=path  /timeline/(scot %p our.bowl)/forerunners
@@ -183,7 +208,7 @@
         %+  murn  (tap:msgon:cd messages-table.table)
         |=  [* msg-part:cd]
         ?.  =(fore path)  ~
-        (convert-messages our.bowl created-at msg-id msg-part-id content metadata)
+        (convert-message our.bowl created-at msg-id msg-part-id content metadata)
       =^  tl-cards  this
         (on-poke timeline-action+!>([%create-timeline %forerunners]))
       =/  post-cards
