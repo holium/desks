@@ -2072,7 +2072,7 @@
         ++  video
           %-  ot 
           :~  size+size
-              type+(cu ?(%youtube %file) so)
+              video-type+(cu ?(%youtube %file) so)
               :-  %orientation
               |=  jon=json
               ?~(jon ~ `((cu ?(%portrait %landscape) so) jon))

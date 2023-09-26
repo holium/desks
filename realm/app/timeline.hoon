@@ -1,9 +1,11 @@
 /-  *timeline, db
 /+  *timeline, timeline-json, cd=chat-db, scries=bedrock-scries,
-    vio=ventio, dbug, verb, default-agent
+    vio=ventio, server, dbug, verb, default-agent
+:: Import during development to force compilation...
 ::
 /=  tv-  /mar/timeline/view
 /=  ta-  /mar/timeline/action
+/=  td-  /ted/vines/timeline
 ::
 |%
 +$  state-0  [%0 ~]
@@ -22,7 +24,10 @@
   ^-  (quip card _this)
   =^  cards  this
     (on-poke timeline-action+!>([%add-forerunners-bedrock &]))
-  [cards this]
+  :_  this
+  %+  welp
+    cards
+  [%pass /eyre/connect %arvo %e %connect `/apps/timeline dap.bowl]~
 ::
 ++  on-save  !>(state)
 ::
@@ -43,6 +48,10 @@
   ?:  ?=(%vent-request mark)  :_(this ~[(to-vine:vio vase bowl)])
   ::
   ?+    mark  (on-poke:def mark vase)
+      %handle-http-response
+    =+  !<([eyre-id=@ta pay=simple-payload:http] vase)
+    :_(this (give-simple-payload:app:server eyre-id pay))
+    ::
       %timeline-action
     =+  !<(axn=action vase)
     ?-    -.axn
@@ -214,6 +223,7 @@
   ^-  (quip card _this)
   ?+    pole  (on-watch:def pole)
     [%vent @ @ ~]       `this
+    [%http-response *]  `this
   ==
 ::
 ++  on-agent  on-agent:def
@@ -290,6 +300,12 @@
     ?.  ?=([%khan %arow *] sign)  (on-arvo:def pole sign)
     %-  (slog ?:(?=(%.y -.p.sign) ~ p.p.sign))
     :_(this (vent-arow:vio pole p.sign))
+    ::
+      [%eyre %connect ~]
+    ?>  ?=([%eyre %bound *] sign)
+    ?:  accepted.sign
+      ((slog leaf+"/apps/timeline bound successfully!" ~) `this)
+    ((slog leaf+"Binding /apps/timeline failed!" ~) `this)
   ==
 ::
 ++  on-leave  on-leave:def
