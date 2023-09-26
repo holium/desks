@@ -2,7 +2,7 @@
 ::  TODO:
 ::  - constraints via paths-table settings
 /-  *passport, common, db
-/+  scries=bedrock-scries, eth=ethereum
+/+  scries=bedrock-scries, crypto-helper
 |%
 ::
 :: helpers
@@ -28,72 +28,6 @@
   =/  keys=(list @t)  (~(got by entity-to-public-keys.pki-state.crypto.p) entity)
   ?~  (find [key]~ keys)  %.n  ::invalid signing key
   %.y
-::
-++  split-sig
-  |=  sig=@
-  ^-  [v=@ r=@ s=@]
-  |^
-    =^  v  sig  (take 3)
-    =^  s  sig  (take 3 32)
-    =^  r  sig  (take 3 32)
-    =?  v  (gte v 27)  (sub v 27)
-    [v r s]
-  ::
-  ++  take
-    |=  =bite
-    [(end bite sig) (rsh bite sig)]
-  --
-::
-++  recover-pub-key
-  |=  [msg=@t sig=@t addr=@t]  ^-  @ux
-  =/  hashed-msg=@ux
-    %-  keccak-256:keccak:crypto
-    %-  as-octs:mimes:html
-    %-  crip
-    ^-  tape
-    %+  weld
-    (trip '\19Ethereum Signed Message:\0a')
-    %+  weld
-    %-  trip
-    (en:json:html (numb:enjs:format (lent (trip msg))))
-    (trip msg)
-    ::export function hashMessage(message: Bytes | string): string {
-    ::    if (typeof(message) === "string") { message = toUtf8Bytes(message); }
-    ::    return keccak256(concat([
-    ::        toUtf8Bytes(messagePrefix),
-    ::        toUtf8Bytes(String(message.length)),
-    ::        message]));
-  =/  ux-sig=@ux  (hex-to-num:eth sig)
-  =/  vrs         (split-sig ux-sig)
-  ::SigningKey.recoverPublicKey(digest, signature)
-  %-  serialize-point:secp256k1:secp:crypto
-  (ecdsa-raw-recover:secp256k1:secp:crypto hashed-msg vrs)
-::
-++  verify-message
-  |=  [msg=@t sig=@t addr=@t]  ^-  ?
-  =/  pubkey=@ux  (recover-pub-key msg sig addr)
-  ~&  >>>  pubkey
-  ~&  >>>  "addr {<addr>} address-from-pub {<(address-from-pub:key:eth pubkey)>}"
-
-  :: if the passed in address equals the address for the the recovered public key of the sig, then it is verified
-  =((hex-to-num:eth addr) (address-from-pub:key:eth pubkey))
-::
-++  ether-hash-to-ux
-  |=  str=@t
-  ^-  @ux
-  =/  ta=tape  (cass (slag 2 (trip str)))
-  =/  reordered=tape  ""
-  =/  i=@ud  0
-  =/  ready=tape
-    |-
-      ?:  =(0 (lent ta))
-        +.reordered
-      =/  b1=@t  (snag 0 ta)
-      =/  b2=@t  (snag 1 ta)
-      ?:  =(1 (mod i 2))
-        $(reordered ['.' b1 b2 reordered], ta +.+.ta, i +(i))
-      $(reordered [b1 b2 reordered], ta +.+.ta, i +(i))
-  `@ux`(slav %ux (crip ['0' 'x' ready]))
 ::
 ++  parse-signing-key
   |=  ln=passport-link-container:common
@@ -487,20 +421,20 @@
   :: also probably need to make updates to `crypto.p` and the pki state
 
   :: validate the hash of data is what the payload claims it is
-  ?>  =((shax data.ln) (ether-hash-to-ux hash.ln))
+  ?>  =((shax data.ln) (ether-hash-to-ux:crypto-helper hash.ln))
 
   :: parse the signer address
   =/  addr=@t  (parse-signing-key ln)
   :: and verify that the signing key matches the signature and the message
-  ?>  (verify-message hash.ln hash-signature.ln addr)
+  ?>  (verify-message:crypto-helper hash.ln hash-signature.ln addr)
 
   =.  p
     ?:  =('PASSPORT_ROOT' link-type.ln)
       ?>  =((lent chain.p) 0) :: only allow passport_root as first link in chain
       =.  crypto.p   (passport-root:dejs (need (de:json:html data.ln)))
       =.  default-address.p   addr
-      =/  pk=@ux        (recover-pub-key hash.ln hash-signature.ln addr)
-      =/  t-pk=@t       (crip (num-to-hex:eth pk))
+      =/  pk=@ux        (recover-pub-key:crypto-helper hash.ln hash-signature.ln addr)
+      =/  t-pk=@t       (crip (num-to-hex:crypto-helper pk))
       =/  sig=crypto-signature:common  [data.ln hash.ln hash-signature.ln t-pk]
       =.  addresses.p   [(need wallet-source) addr t-pk sig]~
       p
@@ -526,8 +460,8 @@
       :: set new-key nonce to 0
       =.  public-key-to-nonce.pki-state.crypto.p    (~(put by public-key-to-nonce.pki-state.crypto.p) new-key 0)
       :: update known addresses
-      =/  pk=@ux  (recover-pub-key hash.ln hash-signature.ln addr)
-      =/  t-pk=@t  (crip (num-to-hex:eth pk))
+      =/  pk=@ux  (recover-pub-key:crypto-helper hash.ln hash-signature.ln addr)
+      =/  t-pk=@t  (crip (num-to-hex:crypto-helper pk))
       =/  sig=crypto-signature:common  [data.ln hash.ln hash-signature.ln t-pk]
       =.  addresses.p  (snoc addresses.p [new-key-type new-key t-pk sig])
       p

@@ -61,6 +61,13 @@
       =/  default-state=state-1   *state-1
       =.  paths.default-state     paths.old-paths-and-peers
       =.  peers.default-state     peers.old-paths-and-peers
+      =.  tables-1.default-state
+      (~(gas by *tables-1) ~[[relay-type:common *pathed-table-1] [vote-type:common *pathed-table-1] [react-type:common *pathed-table-1]])
+      default-state
+        %2
+      =/  default-state=state-2   *state-2
+      =.  paths.default-state     paths.old-paths-and-peers
+      =.  peers.default-state     peers.old-paths-and-peers
       =.  tables.default-state
       (~(gas by *^tables) ~[[relay-type:common *pathed-table] [vote-type:common *pathed-table] [react-type:common *pathed-table]])
       default-state

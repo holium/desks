@@ -33,7 +33,7 @@
       peers-get-backlog=?
       max-expires-at-duration=@dr  :: optional chat-wide enforced expires-at on messages. 0 or *@dr means "not set"
       received-at=time
-      nft=(unit [contract=@t chain=@t standard=@t]) :: contrach is the 0x789... address, chain is "eth-mainnet" or whatever, standard is "ERC-721"
+      nft=(unit [contract=@t chain=@t standard=@t]) :: contract is the 0x789... address, chain is "eth-mainnet" or whatever, standard is "ERC-721"
   ==
 ::
 +$  paths-table  (map path path-row)
@@ -116,7 +116,7 @@
       [%edit =edit-message-action]
       [%delete =msg-id]
       [%delete-backlog =path before=time]
-      [%add-peer t=@da =path patp=ship]
+      [%add-peer t=@da =path patp=ship signature=(unit [sig=@t addr=@t])]
       [%kick-peer =path patp=ship]
       [%dump-to-bedrock ~]
       [%dump-to-bedrock-messages our-paths=(list path-row)]

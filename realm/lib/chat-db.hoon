@@ -4,7 +4,7 @@
 ::    to/from json from types stored in courier sur.
 ::
 /-  *versioned-state, sur=chat-db, common, db
-/+  db-scry=bedrock-scries
+/+  db-scry=bedrock-scries, crypto-helper
 |%
 ::
 ::  random helpers
@@ -459,13 +459,22 @@
   [gives state]
 ::
 ++  add-peer
-::  :chat-db &db-action [%add-peer now /a/path/to/a/chat ~bus]
-  |=  [act=[t=@da =path patp=ship] state=state-3 =bowl:gall]
+::chat-db &db-action [%add-peer now /a/path/to/a/chat ~bus]
+  |=  [act=[t=@da =path patp=ship signature=(unit [sig=@t addr=@t])] state=state-3 =bowl:gall]
   ^-  (quip card state-3)
 
   =/  original-peers-list   (~(got by peers-table.state) path.act)
   =/  pathrow               (~(got by paths-table.state) path.act)
   ?>  (is-valid-inviter pathrow original-peers-list src.bowl patp.act)
+  ?>  ?.  =(type.pathrow %nft-gated)  %.y
+      :: we need to verify
+      :: 1. that they own the addr they passed in (with the signature verification)
+      :: TODO #2
+      :: 2. that `addr` owns the nft (which we do via calling outside api)
+      ?~  signature.act  %.n
+      ?~  nft.pathrow  %.n
+      =/  msg=@t  (crip ['I own the nft, let me in to ' (spat path.pathrow) ~])
+      (verify-message:crypto-helper msg sig.u.signature.act addr.u.signature.act)
 
   =/  row=peer-row:sur   [
     path.act
