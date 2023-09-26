@@ -66,7 +66,7 @@
 ::   performance issues SIGNIFICANTLY ameliorated with tube-warming:
 ::     https://github.com/tinnus-napbus/tube-warmer
 ::   check this with: |pass [%c %stir %verb 1]
-:: /ted/venter.hoon
+:: /ted/vent.hoon
 :: /+  *ventio
 :: venter
 ::
@@ -79,8 +79,14 @@
   =/  pak=(unit package)  !<((unit package) arg)
   ?~  pak  (strand-fail %no-arg ~)
   =+  u.pak :: expose dock, input, output, and body
-  ;<  =page  bind:m  (unpackage body input)
-  ((vent-dyn output) dock page)
+  ;<  =page       bind:m  (unpackage body input)
+  ;<  =vase       bind:m  ((vent-dyn output) dock page)
+  :: convert to json - this allows for generic
+  :: /spider/realm/venter-package/vent/json thread format
+  ::
+  ;<  =tube:clay  bind:m
+    (scry tube:clay /cc/[desk.output]/[mark.output]/json)
+  (pure:m (tube vase))
 ::
 ++  vent
   |*  a=mold
