@@ -3,7 +3,7 @@
 ::  Chat message lib within Realm. Mostly handles [de]serialization
 ::    to/from json from types stored in courier sur.
 ::
-/-  *versioned-state, sur=chat-db, common
+/-  *versioned-state, sur=chat-db, common, db
 /+  db-scry=bedrock-scries
 |%
 ::
@@ -609,7 +609,9 @@
       messages-to-dump
     |=  =msg-part:sur
     ^-  card
-    =/  chat-id=[=ship t=@da]  id:(scry-first-bedrock-chat:db-scry path.msg-part bowl)
+    =/  chat=(unit row:db)  (scry-first-bedrock-chat:db-scry path.msg-part bowl)
+    ?~  chat  *card
+    =/  chat-id=[=ship t=@da]  id.u.chat
     =/  msg  [
       chat-id
       ?~(reply-to.msg-part ~ (some [-.u.reply-to.msg-part (swap-id-parts q.u.reply-to.msg-part)]))

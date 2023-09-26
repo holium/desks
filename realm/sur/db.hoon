@@ -33,6 +33,10 @@
       =del-log
       hide-logs=?  :: default hidden %.y
   ==
++$  minimal-state
+  $%  [%0 * * paths=paths-0 =peers *]
+      [%1 * * =paths =peers *]
+  ==
 
 +$  schemas   (map type:common schema)
 +$  schema    (list [name=@t t=@t])  :: list of [column-name type-code]

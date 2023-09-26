@@ -158,13 +158,14 @@
 ++  edit-chat-bedrock-poke
   |=  [host=ship act=[=path metadata=(map cord cord) peers-get-backlog=? invites=@tas max-expires-at-duration=@dr] =bowl:gall]
   ^-  card
-  =/  bedrock-chat=row:bedrock  (scry-first-bedrock-chat:db-scry path.act bowl)
-  ?+  -.data.bedrock-chat  !!
+  =/  bedrock-chat=(unit row:bedrock)  (scry-first-bedrock-chat:db-scry path.act bowl)
+  ?~  bedrock-chat  *card
+  ?+  -.data.u.bedrock-chat  !!
       %chat
     =/  chat  [
       metadata.act
-      type.data.bedrock-chat
-      pins.data.bedrock-chat
+      type.data.u.bedrock-chat
+      pins.data.u.bedrock-chat
       invites.act
       peers-get-backlog.act
       max-expires-at-duration.act
@@ -176,7 +177,7 @@
       [host %bedrock]
       %poke
       %db-action
-      !>([%edit [~zod *@da] id.bedrock-chat path.act chat-type:common [%chat chat] ~])
+      !>([%edit [~zod *@da] id.u.bedrock-chat path.act chat-type:common [%chat chat] ~])
     ]
   ==
 ::
@@ -319,7 +320,7 @@
   ?:  (dm-already-exists type.c.act all-ships bowl)
     =/  log1  (maybe-log hide-debug.state "dm between {<all-ships>} already exists")
     `state
-  =/  all-peers=ship-roles:db  
+  =/  all-peers=ship-roles:db
     %+  turn
       all-ships
     |=  s=ship
@@ -355,7 +356,7 @@
   =/  host-peer   (snag 0 (skim pathpeers |=(p=peer-row:db =(role.p %host))))
   =/  ogpath      (scry-path-row path.act bowl)
 
-  =/  cards  
+  =/  cards
     ?:  &(=(type.ogpath %dm) ?!(=(patp.host-peer our.bowl)))
       :: non-hosts are allowed to edit %dm type chats, but can only do
       :: so by relaying the request through the host-peer, since chat-db
@@ -383,7 +384,7 @@
     (~(del in pins.pathrow) msg-id.act)
 
   =/  pathpeers  (scry-peers path.act bowl)
-  =/  cards  
+  =/  cards
     :: we poke all peers/members' db with edit-path-pins (including ourselves)
     %:  turn
       pathpeers
@@ -414,7 +415,7 @@
     ?~  host.act  !!  :: have to pass the host if we are adding ourselves
     :_  state
     [%pass /dbpoke %agent [(need host.act) dap.bowl] %poke %chat-action !>([%add-ship-to-chat t.act path.act ship.act ~])]~
-    
+
   =/  pathrow  (scry-path-row path.act bowl)
   ?>  ?|  =(src.bowl our.bowl)
           &(?!(=(src.bowl our.bowl)) =(invites.pathrow %open))
@@ -490,8 +491,11 @@
   =/  cards=(list card)
     ?.  (test-bedrock-path-existence:db-scry path.act bowl)
       chat-db-pokes
-    =/  bedrock-chat=row:bedrock  (scry-first-bedrock-chat:db-scry path.act bowl)
-    :-  (create-bedrock-message-poke (scry-bedrock-path-host:db-scry path.act bowl) +.act official-time id.bedrock-chat)
+    ?.  (test-bedrock-table-existence:db-scry chat-type:common bowl)
+      chat-db-pokes
+    =/  bedrock-chat=(unit row:bedrock)  (scry-first-bedrock-chat:db-scry path.act bowl)
+    ?~  bedrock-chat  chat-db-pokes
+    :-  (create-bedrock-message-poke (scry-bedrock-path-host:db-scry path.act bowl) +.act official-time id.u.bedrock-chat)
     chat-db-pokes
   :: then send pokes to all the peers about inserting a message
   [cards state]
@@ -661,7 +665,7 @@
       ^-  json
       =/  player-ids  ~(val by devices)
       =/  base-list
-      :~  
+      :~
           ['app_id' s+app-id.notif]
           ['data' (mtd data.notif)]
           ['include_player_ids' a+(turn player-ids |=([id=@t] s+id))]
@@ -681,7 +685,7 @@
         ['contents' (contents contents.notif)]
         extended-list
     ::
-    ++  mtd 
+    ++  mtd
       |=  mtd=push-mtd
       ^-  json
       %-  pairs
@@ -691,7 +695,7 @@
         ['msg' a+(turn message.mtd |=(m=msg-part:db (messages-row:encode:chat-db [msg-id.m msg-part-id.m] m)))]
       ==
     ::
-    ++  contents 
+    ++  contents
       |=  contents=(map cord cord)
       ^-  json
       =/  message   (~(got by contents) 'en')
@@ -702,7 +706,7 @@
       |=  =devices
       ^-  json
       %-  pairs
-      :~  
+      :~
         :-  %devices
         %-  pairs
         %+  turn  ~(tap by devices)
@@ -803,14 +807,14 @@
     ::
     ++  path-and-ship
       %-  ot
-      :~  
+      :~
           [%path pa]
           [%ship de-ship]
       ==
     ::
     ++  de-edit-info
       %-  ot
-      :~  
+      :~
           [%msg-id de-msg-id]
           [%path pa]
           de-frag
@@ -831,7 +835,7 @@
     ::
     ++  path-and-fragments
       %-  ot
-      :~  
+      :~
           [%path pa]
           de-frag
           [%expires-in null-or-dri]
@@ -839,7 +843,7 @@
     ::
     ++  de-content
       %-  of
-      :~  
+      :~
           [%plain so]
           [%markdown so]
           [%bold so]
@@ -864,14 +868,14 @@
     ::
     ++  path-and-msg-id
       %-  ot
-      :~  
+      :~
           [%path pa]
           [%msg-id de-msg-id]
       ==
     ::
     ++  pin-message
       %-  ot
-      :~  
+      :~
           [%path pa]
           [%msg-id de-msg-id]
           [%pin bo]

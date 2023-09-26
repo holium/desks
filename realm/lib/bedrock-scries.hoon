@@ -125,8 +125,22 @@
 ::
 ++  scry-first-bedrock-chat
   |=  [=path =bowl:gall]
-  ^-  row:bedrock
-  (first-common chat-type:common path bowl)
+  ^-  (unit row:bedrock)
+  =/  all-chats=[=type:common pt=pathed-table:bedrock =schemas:bedrock]
+    .^
+      [=type:common pt=pathed-table:bedrock =schemas:bedrock]
+      %gx
+      %+  weld
+        %+  weld
+          /(scot %p our.bowl)/bedrock/(scot %da now.bowl)/db/table-by-path/chat/0v0
+        path
+      /noun
+    ==
+  =/  chat=(unit table:bedrock)  (~(get by pt.all-chats) path)
+  ?~  chat  ~
+  =/  rows=(list row:bedrock)  ~(val by u.chat)
+  ?:  =(0 (lent rows))  ~
+  (some (snag 0 rows))
 ::
 ++  first-common
   |=  [=type:common =path =bowl:gall]
@@ -149,6 +163,21 @@
       /noun
     ==
   ~(val by (~(got by pt.all-rows) path))
+::
+++  scry-bedrock-message
+  |=  [id=[=ship t=@da] =path =bowl:gall]
+  ^-  row:bedrock
+  =/  rs=[=row:bedrock =schemas:bedrock]
+    .^
+      [row:bedrock schemas:bedrock]
+      %gx
+      %+  weld
+        %+  weld
+          /(scot %p our.bowl)/bedrock/(scot %da now.bowl)
+        /row/message/(scot %uv hash:message-type:common)/(scot %p ship.id)/(scot %da t.id)
+      /noun
+    ==
+  row.rs
 ::
 ++  get-friend
   |=  [=ship =bowl:gall]
@@ -210,20 +239,4 @@
     %friend  =(status.data.r %friend)
   ==
 ::
-++  scry-bedrock-message
-  |=  [id=[=ship t=@da] =path =bowl:gall]
-  ^-  row:bedrock
-  =/  rs=[=row:bedrock =schemas:bedrock]
-    .^
-      [row:bedrock schemas:bedrock]
-      %gx
-      %+  weld
-        %+  weld
-          /(scot %p our.bowl)/bedrock/(scot %da now.bowl)
-        /row/message/(scot %uv hash:message-type:common)/(scot %p ship.id)/(scot %da t.id)
-      /noun
-    ==
-  row.rs
-::
-
 --

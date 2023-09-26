@@ -133,7 +133,7 @@
       =/  matches     (skim pathpeers |=(p=peer-row:chat-db =(patp.p ship)))
       ?:  (gth (lent matches) 0)  ~  :: this ship is already in this chat, so no need to add them
       :~
-        [%pass /rcpoke %agent [our.bowl %realm-chat] %poke %chat-action !>([%add-ship-to-chat k.kv ship ~])]
+        [%pass /rcpoke %agent [our.bowl %realm-chat] %poke %chat-action !>([%add-ship-to-chat *@da k.kv ship ~])]
         [%pass / %agent [ship %spaces-chat] %poke %spaces-chat-action !>([%create-channel space-path v.kv])]
       ==
   ==
