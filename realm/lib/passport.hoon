@@ -648,19 +648,30 @@
   :: TODO ask %pals for as many contacts to prepopulate as we can and
   :: TODO create a poke to auto-add friends from mutuals in %pals
   =/  old-friends  .^(json %gx /(scot %p our.bowl)/friends/(scot %da now.bowl)/all/noun)
+  =/  frens=(list friend:common)  (new-friends-from-old:dejs old-friends)
   =/  contacts=(list contact:common)
     %+  turn
       (contacts-from-friends:dejs old-friends)
     cleanup-contact
-  =/  our-contact=contact:common
-    %+  snag  0
+  =/  maybe-our-contacts
     (skim contacts |=(c=contact:common =(our.bowl ship.c)))
+  =/  our-contact=contact:common
+    ?:  =((lent maybe-our-contacts) 0)
+      [our.bowl ~ [~ '#000000'] ~ ~]
+    (snag 0 maybe-our-contacts)
   =/  log2  (maybe-log hide-logs.state "%init-our-passport: contact {<our-contact>}")
   =/  p=passport:common
     [our-contact ~ %online %.y ~ ~ '' ~ ~ *passport-crypto:common]
   =/  cards=(list card)
     :-  (create our.bowl passport-type:common [%passport p])
     :-  (create our.bowl contact-type:common [%contact contact.p])
+    ^-  (list card)
+    %+  weld
+      ^-  (list card)
+      %+  turn  frens
+      |=  f=friend:common
+      (create our.bowl friend-type:common [%friend f])
+    ^-  (list card)
     %+  turn
       %+  skip  contacts  :: don't save our own contact again, or any contacts that are just blank
       |=  c=contact:common
@@ -678,6 +689,40 @@
 ++  dejs
   =,  dejs:format
   |%
+  ++  new-friends-from-old
+    |=  jon=json
+    ^-  (list friend:common)
+    ?>  ?=([%o *] jon)
+    =/  jn=json  (~(got by p.jon) 'friends')
+    ?>  ?=([%o *] jn)
+    %+  turn
+      %+  skim
+        %+  turn
+          ~(tap by p.jn)
+        |=  [shp=@t fr=json]
+        ^-  (unit friend:common)
+        ?>  ?=([%o *] fr)
+        =/  status=@tas  ((se %tas) (~(got by p.fr) 'status'))
+        ?:  =(%contact status)  ~
+        ?:  =(%our status)      ~
+        %-  some
+        ^-  friend:common
+        :*  `@p`(slav %p shp)
+            ?+  status    %rejected
+              %fren       %friend
+              %follower   %pending-incoming
+              %following  %pending-outgoing
+            ==
+            (bo (~(got by p.fr) 'pinned'))
+            ~
+        ==
+      |=  uf=(unit friend:common)
+      ^-  ?
+      ?~(uf %.n %.y)
+    |=  uf=(unit friend:common)
+    ^-  friend:common
+    (need uf)
+  ::
   ++  contacts-from-friends
     |=  jon=json
     ^-  (list contact:common)

@@ -132,7 +132,7 @@
       %gx
       %+  weld
         %+  weld
-          /(scot %p our.bowl)/bedrock/(scot %da now.bowl)/db/table-by-path/(scot %tas name.type)/(scot %uv hash.type)
+          /(scot %p our.bowl)/bedrock/(scot %da now.bowl)/db/table-by-path/chat/0v0
         path
       /noun
     ==
