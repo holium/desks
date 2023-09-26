@@ -222,7 +222,7 @@
   |=  =(pole knot)
   ^-  (quip card _this)
   ?+    pole  (on-watch:def pole)
-    [%vent @ @ ~]       `this
+    [%vent @ @ @ ~]       `this
     [%http-response *]  `this
   ==
 ::
@@ -296,7 +296,7 @@
   |=  [=(pole knot) sign=sign-arvo]
   ^-  (quip card:agent:gall _this)
   ?+    pole  (on-arvo:def pole sign)
-      [%vent p=@ta q=@ta ~]
+      [%vent @ @ @ ~]
     ?.  ?=([%khan %arow *] sign)  (on-arvo:def pole sign)
     %-  (slog ?:(?=(%.y -.p.sign) ~ p.p.sign))
     :_(this (vent-arow:vio pole p.sign))

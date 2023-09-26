@@ -47,6 +47,8 @@
   ?+    mark  (on-poke:def mark vase)
       %tally-vent
     ~&  %venter-tallying
+    :: TODO: use this scry to clear dead vent-ids (use the tid)
+    :: ~&  .^((list path) %gx /(scot %p our.bowl)/spider/(scot %da now.bowl)/tree/noun)
     =+  !<([=dock vid=vent-id] vase)
     `this(vents (~(put ju vents) dock vid))
     ::

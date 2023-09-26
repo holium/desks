@@ -1,7 +1,7 @@
 /-  spider
 /+  *strandio
 |%
-+$  vent-id  (pair @p @da)
++$  vent-id  (trel @p tid:rand @da)
 +$  request  (pair vent-id page)
 +$  package
   $:  =dock     :: destination ship/agent
@@ -16,13 +16,13 @@
 ++  en-path
   |=  vid=vent-id
   ^-  path
-  /vent/(scot %p p.vid)/(scot %da q.vid)
+  /vent/(scot %p p.vid)/[q.vid]/(scot %da r.vid)
 ::
 ++  de-path
   |=  =path
   ^-  vent-id
-  =+  ;;([%vent p=@ta q=@ta ~] path)
-  [(slav %p p.-) (slav %da q.-)]
+  =+  ;;([%vent p=@ta q=@ta r=@ta ~] path)
+  [(slav %p p.-) q.- (slav %da r.-)]
 :: forward vent requests directly to the vine
 ::
 ++  to-vine
@@ -128,7 +128,7 @@
   :: define the vent id
   ::
   ;<  =bowl:strand  bind:m  get-bowl
-  =/  vid=vent-id   (unique-vent dock vents [our now]:bowl)
+  =/  vid=vent-id   (unique-vent dock vents [our tid now]:bowl)
   :: listen for updates along this path
   ::
   =/  vent-path=path  (en-path vid)
@@ -154,10 +154,10 @@
   (strand-fail !<(goof q.rep))
 ::
 ++  unique-vent
-  |=  [=dock =vents our=@p now=@da]
+  |=  [=dock =vents our=@p =tid:rand now=@da]
   ^-  vent-id
-  ?.  (~(has ju vents) dock [our now])
-    [our now]
+  ?.  (~(has ju vents) dock [our tid now])
+    [our tid now]
   $(now +(now))
 :: miscellaneous utils
 ::
