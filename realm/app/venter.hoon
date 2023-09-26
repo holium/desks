@@ -21,8 +21,11 @@
     def   ~(. (default-agent this %|) bowl)
 ++  on-init
   ^-  (quip card _this)
+  =/  =@ud  +(ud:.^(cass:clay %cw /(scot %p our.bowl)/realm/(scot %da now.bowl)))
   :_  this
-  [%pass /tube-warmer %arvo %k %fard %realm %tube-warmer noun+!>(`%realm)]~
+  :~  [%pass /next %arvo %c %warp our.bowl %realm ~ %many %.y ud+ud ud+ud /]
+      [%pass /tube-warmer %arvo %k %fard %realm %tube-warmer noun+!>(`%realm)]
+  ==
 ::
 ++  on-save   !>(state)
 ::
@@ -31,8 +34,11 @@
   ^-  (quip card _this)
   =/  old=state-0  !<(state-0 ole)
   =.  state  old
+  =/  =@ud  +(ud:.^(cass:clay %cw /(scot %p our.bowl)/realm/(scot %da now.bowl)))
   :_  this
-  [%pass /tube-warmer %arvo %k %fard %realm %tube-warmer noun+!>(`%realm)]~
+  :~  [%pass /next %arvo %c %warp our.bowl %realm ~ %many %.y ud+ud ud+ud /]
+      [%pass /tube-warmer %arvo %k %fard %realm %tube-warmer noun+!>(`%realm)]
+  ==
 ::
 ++  on-poke
   |=  [=mark =vase]
@@ -70,6 +76,15 @@
     ?.  ?=([%khan %arow *] sign)  (on-arvo:def pole sign)
     %-  (slog ?:(?=(%.y -.p.sign) ~ p.p.sign))
     `this
+    ::
+      [%next ~]
+    ?.  ?=([%clay %writ ~] sign)  `this
+    =/  =@ud  +(ud:.^(cass:clay %cw /(scot %p our.bowl)/realm/(scot %da now.bowl)))
+    ~&  next+ud
+    :_  this
+    :~  [%pass /next %arvo %c %warp our.bowl %realm ~ %many %.y ud+ud ud+ud /]
+        [%pass /tube-warmer %arvo %k %fard %realm %tube-warmer noun+!>(`%realm)]
+    ==
   ==
 ::
 ++  on-fail   on-fail:def
