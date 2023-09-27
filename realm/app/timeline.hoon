@@ -9,7 +9,8 @@
 ::
 |%
 +$  state-0  [%0 ~]
-+$  card  card:agent:gall
++$  card     card:agent:gall
++$  vent-id  vent-id:vio
 --
 =|  state-0
 =*  state  -
@@ -53,7 +54,7 @@
     :: necessary -- %eyre hits %timeline with a poke
     ::
     =^  cards  this
-      (on-poke vent-request+!>([[our '' now]:bowl mark q.vase]))
+      (on-poke vent-request+!>([*vent-id mark q.vase]))
     [cards this]
     ::
       %handle-http-response
