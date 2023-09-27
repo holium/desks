@@ -1933,6 +1933,14 @@
           [%parent-path pa]
       ==
     ::
+    ++  de-react
+      %-  ot
+      :~  [%react so]
+          [%parent-type de-type]
+          [%parent-id de-id]
+          [%parent-path pa]
+      ==
+    ::
     ++  de-relay
       %-  ot
       :~  [%id de-id]

@@ -91,13 +91,9 @@
 ++  vent
   |*  a=mold
   =/  m  (strand ,a)
- :: accept a cage for historical reasons;
- :: nested vases don't do well when converting between marks
- :: so ultimately a page is used instead of a cage here
- ::
-  |=  [=dock =cage]
+  |=  [=dock =page]
   ^-  form:m
-  ;<  =vase  bind:m  (vent-raw dock p.cage q.q.cage)
+  ;<  =vase  bind:m  (vent-raw dock p.page q.page)
   (pure:m ;;(a q.vase))
 ::
 ++  unpage

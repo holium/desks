@@ -1,4 +1,6 @@
 :: https://github.com/tinnus-napbus/tube-warmer
+:: Tube-warming measurably boosts performance where several successive
+:: mark conversions happen with high frequency.
 ::
 /-  spider
 /+  *strandio

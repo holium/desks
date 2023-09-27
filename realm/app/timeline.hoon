@@ -168,6 +168,23 @@
         ==
       :_(this [%pass / %agent [our.bowl %bedrock] %poke cage]~)
       ::
+        %create-comment
+      =/  =cage
+        :-  %db-action  !>
+        :*  %create   [our now]:bowl
+            path.axn  [%comment 0v0]
+            [%comment comment.axn]  ~
+        ==
+      :_(this [%pass / %agent [our.bowl %bedrock] %poke cage]~)
+      ::
+        %delete-comment
+      =/  =cage
+        :-  %db-action  !>
+        :*  %remove  [our now]:bowl
+            [%comment 0v0]  path.axn  id.axn
+        ==
+      :_(this [%pass / %agent [our.bowl %bedrock] %poke cage]~)
+      ::
         %convert-message
       =+  .^(dump=db-dump:cd %gx /(scot %p our.bowl)/chat-db/(scot %da now.bowl)/db/chat-db-dump)
       ?>  ?=(%tables -.dump)
