@@ -59,7 +59,7 @@
   |=  [body=json =desk =mark]
   =/  m  (strand ,page)
   ^-  form:m
-  ;<  =tube:clay  bind:m  (scry tube:clay /cc/[desk]/json/[mark])
+  ;<  =tube:clay  bind:m  (build-our-tube desk %json mark)
   (pure:m [mark q:(tube !>(body))])
 :: generic thread for vent-based "thread-pokes"
 ::   flexible but less performant
@@ -84,8 +84,7 @@
   :: convert to json - this allows for generic
   :: /spider/realm/venter-package/vent/json thread format
   ::
-  ;<  =tube:clay  bind:m
-    (scry tube:clay /cc/[desk.output]/[mark.output]/json)
+  ;<  =tube:clay  bind:m  (build-our-tube desk.output mark.output %json)
   (pure:m (tube vase))
 ::
 ++  vent
@@ -101,7 +100,7 @@
   =/  m  (strand ,vase)
   ^-  form:m
   ;<  byk=beak:spider  bind:m  get-beak
-  ;<  =tube:clay       bind:m  (scry tube:clay /cc/[q.byk]/noun/[p.page])
+  ;<  =tube:clay       bind:m  (build-our-tube q.byk %noun p.page)
   ;<  ~                bind:m  (trace (cat 3 'mark: ' p.page) ~)
   (pure:m (tube !>(q.page)))
 ::
@@ -111,7 +110,7 @@
   =/  m  (strand ,vase)
   ^-  form:m
   ;<  =vase       bind:m  (vent-raw dock page)
-  ;<  =tube:clay  bind:m  (scry tube:clay /cc/[desk]/noun/[mark])
+  ;<  =tube:clay  bind:m  (build-our-tube desk %noun mark)
   (pure:m (tube vase))
 ::
 ++  vent-raw
@@ -175,4 +174,12 @@
       `[%skip ~]
     `[%done a]
   ==
+::
+++  build-our-tube
+  |=  [des=desk =mars:clay]
+  =/  m  (strand ,tube:clay)
+  ^-  form:m
+  ;<  our=ship  bind:m  get-our
+  ;<  now=time  bind:m  get-time
+  (build-tube [our des da+now] mars)
 --
