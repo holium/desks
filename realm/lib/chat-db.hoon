@@ -208,7 +208,7 @@
 ::
 :: MUST EXPLICITLY INCLUDE SELF, this function will not add self into peers list
 ++  create-path
-::chat-db &db-action [%create-path /a/path/to/a/chat ~ %chat *@da *@da ~ %host *@dr *@dr ~[[~zod %host] [~bus %member]]]
+::chat-db &chat-db-action [%create-path [/example ~ %nft-gated *@da *@da ~ %host %.y *@dr *@da (some ['0x000386E3F7559d9B6a2F5c46B4aD1A9587D59Dc3' 'eth-mainnet' 'ERC721'])] ~[[~zod %host] [~bus %member]]]
   |=  [[row=path-row:sur peers=ship-roles:sur] state=state-3 =bowl:gall]
   ^-  (quip card state-3)
 
@@ -459,7 +459,7 @@
   [gives state]
 ::
 ++  add-peer
-::chat-db &db-action [%add-peer now /a/path/to/a/chat ~bus]
+::chat-db &chat-db-action [%add-peer now /example ~fed (some ['' '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'])]
   |=  [act=[t=@da =path patp=ship signature=(unit [sig=@t addr=@t])] state=state-3 =bowl:gall]
   ^-  (quip card state-3)
 
@@ -475,6 +475,24 @@
       ?~  nft.pathrow  %.n
       =/  msg=@t  (crip ['I own the nft, let me in to ' (spat path.pathrow) ~])
       (verify-message:crypto-helper msg sig.u.signature.act addr.u.signature.act)
+  ?:  =(type.pathrow %nft-gated)
+    =/  url=@t
+    %-  crip
+    :~  'https://'
+      chain:(need nft.pathrow)
+      '.g.alchemy.com/nft/v3/REPLACE_KEY/getContractsForOwner?withMetadata=false&pageSize=100&owner='
+      addr:(need signature.act)
+    ==
+    =/  =request:http  [%'GET' url ~ ~]
+    =/  return-wire
+    %+  weld
+      /nft-verify/(scot %p patp.act)/(scot %da t.act)
+    path.act
+    ~&  "sending {<url>}"
+    :_  state
+    :_  ~
+    ^-  card
+    [%pass return-wire %arvo %i %request request *outbound-config:iris]
 
   =/  row=peer-row:sur   [
     path.act

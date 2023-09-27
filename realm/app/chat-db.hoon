@@ -365,6 +365,49 @@
           [[%pass /timer %arvo %b %rest next-expire-time:core] [%pass /timer %arvo %b %wait next-expire-time:core] ~]
           this
         ]
+      [%nft-verify @ @ *]
+        =/  act=[t=@da =path patp=ship]
+        :*  `@da`(slav %da i.t.t.wire)
+            `path`t.t.t.wire
+            `@p`(slav %p i.t.wire)
+        ==
+        =/  original-peers-list   (~(got by peers-table.state) path.act)
+        =/  pathrow               (~(got by paths-table.state) path.act)
+        ?>  ?=(%iris -.sign-arvo)
+        =/  i  +.sign-arvo
+        ?>  ?=(%http-response -.i)
+        ?>  ?=(%finished -.+.i)
+        =/  payload  full-file.client-response.i
+        ?~  payload  `this
+        =/  contracts=(list @t)
+          (parse-alchemy-json (need (de:json:html q.data.u.payload)))
+        ?>  |-
+          ?:  =((lent contracts) 0)
+            %.n
+          ?:  =(contract:(need nft.pathrow) (snag 0 contracts))
+            ~&  >  "found matching contract {<nft.pathrow>} {<(snag 0 contracts)>}"
+            %.y
+          $(contracts +.contracts)
+        :: WARNING MUST KEEP LOGIC IN SYNC WITH add-peer
+        =/  row=peer-row:sur   [
+          path.act
+          patp.act
+          %member
+          now.bowl
+          now.bowl
+          now.bowl
+        ]
+        =/  peers  (snoc original-peers-list row)
+        =.  peers-table.state  (~(put by peers-table.state) path.act peers)
+        =/  thechange  chat-db-change+!>(~[[%add-row [%peers row]]])
+        =/  vent-path=path  /chat-vent/(scot %da t.act)
+        =/  gives  :~
+          [%give %fact [/db (weld /db/path path.act) ~] thechange]
+          :: give vent response
+          [%give %fact ~[vent-path] chat-vent+!>([%path (~(got by paths-table.state) path.act)])]
+          [%give %kick ~[vent-path] ~]
+        ==
+        [gives this]
     ==
   ::
   ++  on-fail
@@ -379,4 +422,16 @@
 ++  next-expire-time  `@da`(add (mul (div now.bowl ~m1) ~m1) ~m1)  :: TODO decide on actual timer interval
 ++  all-tables
   [[%paths paths-table.state] [%messages messages-table.state] [%peers peers-table.state] ~]
+++  parse-alchemy-json
+  |=  jon=json
+  ^-  (list @t)
+  ?>  ?=([%o *] jon)
+  =/  contracts=json  (~(got by p.jon) 'contracts')
+  ?>  ?=([%a *] contracts)
+  %+  turn  p.contracts
+  |=  jn=json
+  ^-  @t
+  ?>  ?=([%o *] jn)
+  =/  address=json  (~(got by p.jn) 'address')
+  (so:dejs:format address)
 --
