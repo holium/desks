@@ -1,45 +1,44 @@
-/-  spider
-/+  *ventio, db, server
+/-  spider, *timeline
+/+  *ventio, db, server, scries=bedrock-scries
+=>  |%
+    +$  gowl     bowl:gall
+    +$  sowl     bowl:spider
+    --
 =,  strand=strand:spider
 ^-  thread:spider
 |=  arg=vase
 =/  m  (strand ,vase)
 ^-  form:m
 ::
-=/  dap=dude:gall  %timeline
-=/  req=(unit [ship request])  !<((unit [ship request]) arg)
+=+  !<(req=(unit [gowl request]) arg)
 ?~  req  (strand-fail %no-arg ~)
-=/  [src=ship vid=vent-id =mark =noun]  u.req
-;<  =vase         bind:m  (unpage mark noun)
-;<  =bowl:spider  bind:m  get-bowl
-=/  [our=ship now=@da eny=@uvJ byk=beak]  [our now eny byk]:bowl
-:: expose bedrock state
-::
-=+  .^(state-1:db %gx /(scot %p our)/bedrock/(scot %da now)/db/db-state)
-=*  bedrock-state  -
+=/  [=gowl vid=vent-id =mark =noun]  u.req
+;<  =vase  bind:m  (unpage mark noun)
 ::
 ;<  ~  bind:m  (trace %running-timeline-vine ~)
 ::
 |^
-=,  bedrock-state
-?+    mark  (punt [our dap] mark vase) :: poke normally
+?+    mark  (punt [our dap]:gowl mark vase) :: poke normally
     %handle-http-request
   =+  !<([eyre-id=@ta req=inbound-request:eyre] vase)
-  ?^  cat=(catch-public-scry url.request.req)
+  ;<  cat=(unit simple-payload:http)  bind:m
+    (catch-public-scry url.request.req)
+  ?^  cat
     =+  handle-http-response+!>([eyre-id u.cat])
-    ;<  ~  bind:m  (poke [our dap] -)
+    ;<  ~  bind:m  (poke [our dap]:gowl -)
     (pure:m !>(~))
   :: watch the http-response path on docket
   ::
   =/  docket-path  /http-response/[eyre-id]
-  ;<  ~  bind:m  (watch docket-path [our %docket] docket-path)
+  ;<  ~  bind:m  (watch docket-path [our.gowl %docket] docket-path)
   :: poke %docket with a spoofed %handle-http-request
   ::
   ~&  [url.request.req (authenticate url.request.req)]
   ::
-  =?  req  (authenticate url.request.req)  req(authenticated &)
+  ;<  aut=?  bind:m  (authenticate url.request.req)
+  =?  req  aut  req(authenticated &)
   =+  handle-http-request+!>([eyre-id req])
-  ;<  ~  bind:m  (poke [our %docket] -)
+  ;<  ~  bind:m  (poke [our.gowl %docket] -)
   :: accept the response
   ::
   ;<  a=cage    bind:m  (take-fact docket-path)
@@ -48,59 +47,108 @@
   :: propagate this back to eyre
   ::
   =+  handle-http-response+!>([eyre-id (extract-simple-payload a b)])
-  ;<  ~  bind:m  (poke [our dap] -)
+  ;<  ~  bind:m  (poke [our dap]:gowl -)
   (pure:m !>(~))
+  ::
+    %timeline-action
+  =+  !<(axn=action vase)
+  ?+    -.axn  (punt [our dap]:gowl mark vase)
+      %create-timeline
+    ?>  =(src our):gowl
+    =/  =path  /timeline/(scot %p our.gowl)/[name.axn]
+    ?:  (test-bedrock-path-existence:scries path gowl)
+      ~&(>> %timeline-already-exists (pure:m !>(~)))
+    =|  row=input-path-row:db
+    =:  path.row         path
+        replication.row  %host
+        peers.row        ~[[our.gowl %host]]
+      ==
+    :: create the timeline path in bedrock
+    ::
+    ;<  ~  bind:m
+      (poke [our.gowl %bedrock] db-action+!>([%create-path row]))
+    :: add the %timeline entry at this path
+    ::
+    =/  new-tl=cage
+      :-  %db-action  !>
+      :*  %create  [our now]:gowl
+          path     [%timeline 0v0]
+          :: for now defaults to public: true
+          [%timeline ~ &]  ~
+      ==
+    ;<  ~  bind:m  (poke [our.gowl %bedrock] new-tl)
+    :: return created path
+    ::
+    (pure:m !>([%timeline path]))
+  ==
 ==
+::
+++  bedrock-state
+  =/  m  (strand ,state-1:db)
+  ^-  form:m
+  (scry state-1:db /gx/bedrock/db/db-state)
 :: accepts trailing fas
 ::
 ++  purl  |=(url=@t (rash url ;~(pfix fas (most fas urs:ab))))
 ::
 ++  catch-public-scry
   |=  url=@t
-  ^-  (unit simple-payload:http)
   =/  =(pole knot)  (purl url)
-  ?.  ?=([%apps %timeline %scry %timeline host=@ta name=@ta ~] pole)  ~
-  `(give-public-scry [(slav %p host.pole) name.pole])
+  =/  m  (strand ,(unit simple-payload:http))
+  ^-  form:m
+  ?.  ?=([%apps %timeline %scry %timeline host=@ta name=@ta ~] pole)
+    (pure:m ~)
+  ;<  pub=simple-payload:http  bind:m
+    (give-public-scry [(slav %p host.pole) name.pole])
+  (pure:m `pub)
 ::
 ++  fullpath
   |=  [host=ship name=@ta]
-  .^  fullpath:db  %gx
-    /(scot %p our)/bedrock/(scot %da now)/db/path/timeline/(scot %p host)/[name]/db-path
-  ==
+  =/  m  (strand ,fullpath:db)
+  ^-  form:m
+  (scry fullpath:db /gx/bedrock/db/path/timeline/(scot %p host)/[name]/db-path)
 ::
 ++  is-public
   |=  [host=ship name=@ta]
-  ^-  ?
   =/  =path  /timeline/(scot %p host)/[name]
+  =/  m  (strand ,?)
+  ^-  form:m
+  ;<  state-1:db  bind:m  bedrock-state
   :: if timeline type doesn't exist, no valid timelines
   ::
-  ?~  tim=(~(get by tables) [%timeline 0v0])  |
-  ?~  get=(~(get by u.tim) path)  |
+  ?~  tim=(~(get by tables) [%timeline 0v0])  (pure:m |)
+  ?~  get=(~(get by u.tim) path)  (pure:m |)
   =/  rows=(list row:db)  ~(val by u.get)
   ?>  &(=(1 (lent rows)) ?=(^ rows))
   =/  =row:db  i.rows
   ?>  ?=(%timeline -.data.row)
-  public.data.row
+  (pure:m public.data.row)
+::
+++  http-fail
+  =/  m  (strand ,simple-payload:http)
+  ^-  form:m
+  %-  pure:m
+  :-  [500 [['content-type' 'application/json'] ~]]
+  `(as-octs:mimes:html (en:json:html ~))
 :: TODO: probably don't give the whole table, but a minimal version
 ::
 ++  give-public-scry
   |=  [host=ship name=@ta]
-  |^   ^-  simple-payload:http
-  ?.  (is-public host name)  fail
-  (json-response:gen:server (en-fullpath:enjs:db (fullpath host name)))
-  ++  fail
-    ^-  simple-payload:http
-    :-  [500 [['content-type' 'application/json'] ~]]
-    `(as-octs:mimes:html (en:json:html ~))
-  --
+  =/  m  (strand ,simple-payload:http)
+  ^-  form:m
+  ;<  is-public=?  bind:m  (is-public host name)
+  ?.  is-public  http-fail
+  ;<  =fullpath:db  bind:m  (fullpath host name)
+  (pure:m (json-response:gen:server (en-fullpath:enjs:db fullpath)))
 ::
 ++  authenticate
   |=  url=@t
-  ^-  ?
   =/  =(pole knot)  (purl url)
-  ?:  ?=([%apps %timeline %'desk.js' ~] pole)  &
-  ?:  ?=([%apps %timeline %assets *] pole)  &
-  ?.  ?=([%apps %timeline %public host=@ta name=@ta *] pole)  |
+  =/  m  (strand ,?)
+  ^-  form:m
+  ?:  ?=([%apps %timeline %'desk.js' ~] pole)  (pure:m &)
+  ?:  ?=([%apps %timeline %assets *] pole)  (pure:m &)
+  ?.  ?=([%apps %timeline %public host=@ta name=@ta *] pole)  (pure:m |)
   (is-public (slav %p host.pole) name.pole)
 ::
 ++  extract-simple-payload

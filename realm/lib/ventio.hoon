@@ -29,7 +29,7 @@
   |=  [=vase =bowl:gall]
   ^-  card:agent:gall
   =/  [vid=vent-id =mark =noun]  !<(request vase)
-  =/  args=cage          noun+!>((some src.bowl vid mark noun))
+  =/  args=cage          noun+!>((some bowl vid mark noun))
   :: vine must have same desk and same name as agent in /ted/vines
   ::
   =/  =(fyrd:khan cage)  [q.byk.bowl (cat 3 'vines-' dap.bowl) args]

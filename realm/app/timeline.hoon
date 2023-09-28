@@ -23,12 +23,10 @@
 ::
 ++  on-init
   ^-  (quip card _this)
-  =^  cards  this
-    (on-poke timeline-action+!>([%add-forerunners-bedrock &]))
   :_  this
-  %+  welp
-    cards
-  [%pass /eyre/connect %arvo %e %connect `/apps/timeline dap.bowl]~
+  :~  [%pass /eyre/connect %arvo %e %connect `/apps/timeline dap.bowl]
+      [%pass / %agent [our dap]:bowl %poke timeline-action+!>([%add-forerunners-bedrock &])]
+  ==
 ::
 ++  on-save  !>(state)
 ::
@@ -37,9 +35,8 @@
   ^-  (quip card _this)
   =/  old=state-0  !<(state-0 ole)
   =.  state  old
-  =^  cards  this
-    (on-poke timeline-action+!>([%add-forerunners-bedrock |]))
-  [cards this]
+  :_  this
+  [%pass / %agent [our dap]:bowl %poke timeline-action+!>([%add-forerunners-bedrock |])]~
 ::
 ++  on-poke
   |=  [=mark =vase]
@@ -65,28 +62,11 @@
     =+  !<(axn=action vase)
     ?-    -.axn
         %create-timeline
-      ?>  =(src our):bowl
-      =/  =path  /timeline/(scot %p our.bowl)/[name.axn]
-      ?:  (test-bedrock-path-existence:scries path bowl)
-        ~&(>> %timeline-already-exists `this)
-      =|  row=input-path-row:db
-      =:  path.row         path
-          replication.row  %host
-          peers.row        ~[[our.bowl %host]]
-        ==
-      :_  this
-      :~
-        =/  =cage  db-action+!>([%create-path row])
-        [%pass / %agent [our.bowl %bedrock] %poke cage]
-        =/  =cage
-          :-  %db-action  !>
-          :*  %create  [our now]:bowl
-              path     [%timeline 0v0]
-              :: for now defaults to public: true
-              [%timeline ~ &]  ~
-          ==
-        [%pass / %agent [our.bowl %bedrock] %poke cage]
-      ==
+      :: re-interpret as vent-request
+      ::
+      =^  cards  this
+        (on-poke vent-request+!>([*vent-id mark q.vase]))
+      [cards this]
       :: 
         %delete-timeline
       ?>  =(src our):bowl
