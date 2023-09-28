@@ -61,7 +61,7 @@
   ^-  form:m
   ;<  =tube:clay  bind:m  (build-our-tube desk %json mark)
   (pure:m [mark q:(tube !>(body))])
-:: generic thread for vent-based "thread-pokes"
+:: generic thread for vent-based "thread-pokes":
 ::   flexible but less performant
 ::   performance issues SIGNIFICANTLY ameliorated with tube-warming:
 ::     https://github.com/tinnus-napbus/tube-warmer

@@ -97,7 +97,6 @@
       [%next ~]
     ?.  ?=([%clay %writ ~] sign)  `this
     =/  =@ud  +(ud:.^(cass:clay %cw /(scot %p our.bowl)/realm/(scot %da now.bowl)))
-    ~&  next+ud
     :_  this
     :~  [%pass /next %arvo %c %warp our.bowl %realm ~ %many %.y ud+ud ud+ud /]
         [%pass /tube-warmer %arvo %k %fard %realm %tube-warmer noun+!>(`%realm)]

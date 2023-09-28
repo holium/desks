@@ -1,6 +1,7 @@
 :: https://github.com/tinnus-napbus/tube-warmer
 :: Tube-warming measurably boosts performance where several successive
 :: mark conversions happen with high frequency.
+:: See marks building with: |pass [%c %stir %verb 1]
 ::
 /-  spider
 /+  *strandio
@@ -122,9 +123,9 @@
   ?~  mars  (pure:m ~)
   ;<  tub=(unit tube:clay)  bind:m  (build-tube-soft [our des da+now] i.mars)
   ?~  tub
-    ~&  >>>  [%build-tube-failed i.mars]
+    :: ~&  >>>  [%build-tube-failed i.mars]
     loop(mars t.mars)
-  ~&  >  [%built-tube i.mars]
+  :: ~&  >  [%built-tube i.mars]
   loop(mars t.mars)
 ::
 ++  build-all-dais
@@ -136,8 +137,8 @@
   ?~  marks  (pure:m ~)
   ;<  das=(unit dais:clay)  bind:m  (build-dais-soft [our des da+now] i.marks)
   ?~  das
-    ~&  >>>  [%build-dais-failed i.marks]
+    :: ~&  >>>  [%build-dais-failed i.marks]
     loop(marks t.marks)
-  ~&  >  [%built-dais i.marks]
+  :: ~&  >  [%built-dais i.marks]
   loop(marks t.marks)
 --
