@@ -74,7 +74,7 @@
   =/  new-chat      [chat-path chat-access]
   =/  cards=(list card:agent:gall)  ::  poke %chat-db to create the chat
     :-  (create-path-bedrock-poke:rc-lib our pathrow all-peers)
-    :-  (create-chat-bedrock-poke:rc-lib our pathrow all-peers)
+    :-  (create-chat-bedrock-poke:rc-lib our pathrow all-peers ~)
     %+  turn  all-peers
     |=  [s=ship role=@tas]
     (create-path-db-poke:rc-lib s pathrow all-peers)
@@ -133,7 +133,7 @@
       =/  matches     (skim pathpeers |=(p=peer-row:chat-db =(patp.p ship)))
       ?:  (gth (lent matches) 0)  ~  :: this ship is already in this chat, so no need to add them
       :~
-        [%pass /rcpoke %agent [our.bowl %realm-chat] %poke %chat-action !>([%add-ship-to-chat *@da k.kv ship ~])]
+        [%pass /rcpoke %agent [our.bowl %realm-chat] %poke %chat-action !>([%add-ship-to-chat *@da k.kv ship ~ ~])]
         [%pass / %agent [ship %spaces-chat] %poke %spaces-chat-action !>([%create-channel space-path v.kv])]
       ==
   ==

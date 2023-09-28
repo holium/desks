@@ -15,7 +15,9 @@
     =/  default-state=state-3
       [%3 *paths-table:sur *messages-table:sur *peers-table:sur *del-log:sur]
     :_  this(state default-state)
-    [%pass /timer %arvo %b %wait next-expire-time:core]~
+    :~  [%pass /timer %arvo %b %wait next-expire-time:core]
+        [%pass /selfpoke %agent [our.bowl dap.bowl] %poke %chat-db-action !>([%dump-to-bedrock ~])]
+    ==
   ++  on-save   !>(state)
   ++  on-load
     |=  old-state=vase

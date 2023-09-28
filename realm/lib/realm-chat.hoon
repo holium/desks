@@ -143,15 +143,16 @@
   [%pass /dbpoke %agent [ship %bedrock] %poke %db-action !>([%create-path path.row %host ~ ~ ~ peers])]
 ::
 ++  create-chat-bedrock-poke
-  |=  [=ship row=path-row:db peers=ship-roles:db]
+  |=  [=ship row=path-row:db peers=ship-roles:db nft=(unit [contract=@t chain=@t standard=@t])]
   ^-  card
-  =/  chat  [
+  =/  chat=chat:common  [
     metadata.row
     type.row
     (silt (turn ~(tap in pins.row) swap-id-parts))
     invites.row
     peers-get-backlog.row
     max-expires-at-duration.row
+    nft
   ]
   [%pass /dbpoke %agent [ship %bedrock] %poke %db-action !>([%create [ship *@da] path.row chat-type:common [%chat chat] ~])]
 ::
@@ -231,9 +232,9 @@
   ]
 ::
 ++  add-bedrock-peer-poke
-  |=  [host=ship =path newship=ship]
+  |=  [host=ship =path newship=ship sig=(unit [sig=@t addr=@t])]
   ^-  card
-  [%pass /dbpoke %agent [host %bedrock] %poke %db-action !>([%add-peer path newship %member])]
+  [%pass /dbpoke %agent [host %bedrock] %poke %db-action !>([%add-peer path newship %member sig])]
 ::
 ++  remove-before-bedrock-poke
   |=  [host=ship =path t=@da]
@@ -299,7 +300,7 @@
 ::
 ++  create-chat
 ::realm-chat &chat-action [%create-chat ~ %dm ~[~bus] %host *@dr]
-::realm-chat &chat-action [%create-chat ~ %chat ~[~bus ~dev] %host *@dr]
+::realm-chat &chat-action [%create-chat ~ %nft-gated ~[~bus ~dev] %host *@dr (some ['0x000386E3F7559d9B6a2F5c46B4aD1A9587D59Dc3' 'eth-mainnet' 'ERC721'])]
   |=  [act=create-chat-data state=state-1 =bowl:gall]
   ^-  (quip card state-1)
   (vented-create-chat [now.bowl act] state bowl)
@@ -338,7 +339,7 @@
         |=  [s=ship role=@tas]
         (create-path-db-poke s pathrow all-peers)
       (create-path-bedrock-poke our.bowl pathrow all-peers)
-    (create-chat-bedrock-poke our.bowl pathrow all-peers)
+    (create-chat-bedrock-poke our.bowl pathrow all-peers nft.c.act)
   =/  send-status-message
     ?:  =(2 (lent all-ships)) :: if it's just two ships (and therefore a "dm")
       !>([%send-message chat-path ~[[[%status (crip "{(scow %p our.bowl)} created the chat")] ~ ~]] *@dr])
@@ -408,13 +409,13 @@
   [cards state]
 ::
 ++  add-ship-to-chat
-::realm-chat &chat-action [%add-ship-to-chat now /realm-chat/path-id ~bus ~]
-  |=  [act=[t=@da =path =ship host=(unit ship)] state=state-1 =bowl:gall]
+::realm-chat &chat-action [%add-ship-to-chat now /realm-chat/path-id ~bus ~ ~]
+  |=  [act=[t=@da =path =ship host=(unit ship) nft=(unit [sig=@t addr=@t])] state=state-1 =bowl:gall]
   ^-  (quip card state-1)
   ?:  &(=(src.bowl our.bowl) =(our.bowl ship.act))  :: if we are trying to add ourselves, then actually we just need to forward this poke to the host
     ?~  host.act  !!  :: have to pass the host if we are adding ourselves
     :_  state
-    [%pass /dbpoke %agent [(need host.act) dap.bowl] %poke %chat-action !>([%add-ship-to-chat t.act path.act ship.act ~])]~
+    [%pass /dbpoke %agent [(need host.act) dap.bowl] %poke %chat-action !>([%add-ship-to-chat t.act path.act ship.act host.act nft.act])]~
 
   =/  pathrow  (scry-path-row path.act bowl)
   ?>  ?|  =(src.bowl our.bowl)
@@ -431,13 +432,13 @@
     (limo [(into-backlog-msg-poke (turn (scry-messages-for-path path.act bowl) |=([k=uniq-id:db v=msg-part:db] v)) ship.act) ~])
 
   =/  cards=(list card)
-    :-  (add-bedrock-peer-poke (scry-bedrock-path-host:db-scry path.act bowl) path.act ship.act)
+    :-  (add-bedrock-peer-poke (scry-bedrock-path-host:db-scry path.act bowl) path.act ship.act nft.act)
     %+  weld
       %+  snoc
         :: we poke all original peers db with add-peer (including ourselves)
         %+  turn
           pathpeers
-        |=(p=peer-row:db [%pass /dbpoke %agent [patp.p %chat-db] %poke %chat-db-action !>([%add-peer t.act path.act ship.act])])
+        |=(p=peer-row:db [%pass /dbpoke %agent [patp.p %chat-db] %poke %chat-db-action !>([%add-peer t.act path.act ship.act nft.act])])
       ::  we poke the newly-added ship's db with a create-path,
       ::  since that will automatically handle them joining as a member
       [%pass /dbpoke %agent [ship.act %chat-db] %poke %chat-db-action !>([%create-path pathrow all-peers])]
@@ -798,11 +799,16 @@
       =/  host=(unit ship)
         ?~  uhost  ~
         (some (de-ship (need uhost)))
+      =/  unft    (~(get by p.jon) 'nft')
+      =/  nft=(unit [sig=@t addr=@t])
+        ?~  unft  ~
+        (some [(so sig.u.unft) (so addr.u.unft)])
       [
         ?~(ut *@da (di u.ut))
         (pa (~(got by p.jon) 'path'))
         (de-ship (~(got by p.jon) 'ship'))
         host
+        nft
       ]
     ::
     ++  path-and-ship

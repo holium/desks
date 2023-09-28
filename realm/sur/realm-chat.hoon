@@ -56,7 +56,7 @@
       [%edit-chat =path metadata=(map cord cord) peers-get-backlog=? invites=@tas max-expires-at-duration=@dr]
       [%pin-message =path =msg-id:db pin=?]
       [%clear-pinned-messages =path]
-      [%add-ship-to-chat t=@da =path =ship host=(unit ship)]
+      [%add-ship-to-chat t=@da =path =ship host=(unit ship) nft=(unit [sig=@t addr=@t])]
       [%remove-ship-from-chat =path =ship]
       [%send-message =path fragments=(list minimal-fragment:db) expires-in=@dr]
       [%vented-send-message t=@da =path fragments=(list minimal-fragment:db) expires-in=@dr]

@@ -3,7 +3,7 @@
 ::  - constraints via paths-table settings
 /-  *db, common, mstore=membership, sstore=spaces-store
 /-  vstore=visas
-/+  spaces-chat, passport-lib=passport
+/+  spaces-chat, passport-lib=passport, crypto-helper
 |%
 ::
 :: helpers
@@ -547,7 +547,7 @@
           ==
         :: if they SHOULD be added, add them
         =/  log2  (maybe-log hide-logs.state "on-accepted: adding {<ship>} to {<path.pr>}")
-        =/  new  (add-peer [path.pr ship max-role] +.cs bowl)
+        =/  new  (add-peer [path.pr ship max-role ~] +.cs bowl)
         $(index +(index), cs [(weld -.cs -.new) +.new])
       :: else, move on
       $(index +(index), cs cs)
@@ -862,24 +862,51 @@
   [cards state]
 ::
 ++  add-peer
-::bedrock &db-action [%add-peer /example ~fed %member]
-  |=  [[=path =ship =role] state=state-2 =bowl:gall]
+::bedrock &db-action [%add-peer /realm-chat/0vpjm9o.8a6mq.4j0et.nehkn.nj8km ~fed %member (some ['' '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'])]
+  |=  [[=path =ship =role sig=(unit [sig=@t addr=@t])] state=state-2 =bowl:gall]
   ^-  (quip card state-2)
   =/  log1  (maybe-log hide-logs.state "{<dap.bowl>}%add-peer: {<ship>} to {(spud path)} as {<role>}")
   :: ensure the path actually exists
   =/  path-row=path-row    (~(got by paths.state) path)
-  =/  is-allowed=?
+  =/  is-allowed=?(%y %n %nft)
     ?+  path
       :: and that we are the %host of it
-      ?&  =(host.path-row our.bowl)
-      :: ensure this came from our ship
-          =(our.bowl src.bowl)
-      ==
-      [%spaces @ @ %chats @ ~]  %.y
-      [%realm-chat @ ~]         %.y
+      ?:  ?&  =(host.path-row our.bowl)
+          :: ensure this came from our ship
+              =(our.bowl src.bowl)
+          ==
+        %y
+      %n
+      [%spaces @ @ %chats @ ~]  %y
+      [%realm-chat @ ~]
+    =/  chatrow=row  (snag 0 ~(val by (need (get-tbl chat-type:common path state))))
+    ?>  ?=(%chat -.data.chatrow)
+    ?.  =(%nft-gated type.data.chatrow)  %y
+    ?~  sig  %n
+    ?~  nft.data.chatrow  %n
+    =/  msg=@t  (crip ['I own the nft, let me in to ' (spat path) ~])
+    ?:  (verify-message:crypto-helper msg sig.u.sig addr.u.sig)  %nft
+    %n
     ==
-  ?>  is-allowed
+  ?:  =(is-allowed %nft)
+    =/  chatrow=row  (snag 0 ~(val by (need (get-tbl chat-type:common path state))))
+    ?>  ?=(%chat -.data.chatrow)
+    =/  url=@t
+    %-  crip
+    :~  'https://'
+      chain:(need nft.data.chatrow)
+      '.g.alchemy.com/nft/v3/REPLACE_KEY/getContractsForOwner?withMetadata=false&pageSize=100&owner='
+      addr:(need sig)
+    ==
+    =/  =request:http  [%'GET' url ~ ~]
+    =/  return-wire  (weld /nft-verify/(scot %p ship)/(scot %tas role) path)
+    ~&  "sending {<url>}"
+    :_  state
+    :_  ~
+    ^-  card
+    [%pass return-wire %arvo %i %request request *outbound-config:iris]
 
+  ?>  =(is-allowed %y)
   =/  newpeer=peer  [path ship role now.bowl now.bowl now.bowl]
 
   :: local state updates
@@ -1673,11 +1700,20 @@
       [(de-id u.request-id) ((ot ~[[%id de-id] [%input-row de-input-row]]) jon)]
     ::
     ++  add-peer
-      %-  ot
-      :~  [%path pa]
-          [%ship de-ship]
-          [%role (se %tas)]
-      ==
+      |=  jon=json
+      ^-  [path ship role (unit [sig=@t addr=@t])]
+      ?>  ?=([%o *] jon)
+      =/  gt  ~(got by p.jon)
+      =/  sig   (~(get by p.jon) 'signature')
+      =/  psig
+      ?~  sig  ~
+      (some ((ot ~[sig+so addr+so]) u.sig))
+      [
+        (pa (gt 'path'))
+        (de-ship (gt 'ship'))
+        ((se %tas) (gt 'role'))
+        psig
+      ]
     ::
     ++  kick-peer
       %-  ot

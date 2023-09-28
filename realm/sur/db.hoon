@@ -178,7 +178,7 @@
       [%create-from-space =path space-path=[=ship space=cord] sr=role:membership]  :: create a new peers list based on space members, automatically keeps peers list in sync, sends %get-path to all peers
       [%edit-path =input-path-row]            :: edit a path's metadata
       [%remove-path =path]                    :: remove a peers list and all attached objects in tables, sends %delete-path to all peers
-      [%add-peer =path =ship =role]           :: add a peer to an existing peers list, sends %get-path to that peer
+      [%add-peer =path =ship =role sig=(unit [sig=@t addr=@t])]    :: add a peer to an existing peers list, sends %get-path to that peer
       [%kick-peer =path =ship]                :: remove a peer from an existing peers list, sends %delete-path to that peer
       :: only from host foreign ship
       [%get-path =path-row peers=ship-roles]  :: when we are being informed that we were added to a peers list. we don't know the list, only the host (which is who sent it to us)

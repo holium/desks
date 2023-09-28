@@ -682,6 +682,54 @@
           pokes
           this
         ]
+      [%nft-verify @ @ *]
+    =/  =path    `path`t.t.t.wire
+    =/  =ship    `@p`(slav %p i.t.wire)
+    =/  =role    `@tas`(slav %tas i.t.t.wire)
+    ?>  ?=(%iris -.sign-arvo)
+    =/  i  +.sign-arvo
+    ?>  ?=(%http-response -.i)
+    ?>  ?=(%finished -.+.i)
+    =/  payload  full-file.client-response.i
+    ?~  payload  `this
+    =/  contracts=(list @t)
+      (parse-alchemy-json (need (de:json:html q.data.u.payload)))
+    =/  path-row=path-row    (~(got by paths.state) path)
+    =/  chatrow=row  (snag 0 ~(val by (need (get-tbl:db chat-type:common path state))))
+    ?>  ?=(%chat -.data.chatrow)
+    ?>  |-
+      ?:  =((lent contracts) 0)
+        %.n
+      ?:  =(contract:(need nft.data.chatrow) (snag 0 contracts))
+        ~&  >  "found matching contract {<nft.data.chatrow>} {<(snag 0 contracts)>}"
+        %.y
+      $(contracts +.contracts)
+    =/  newpeer=peer  [path ship role now.bowl now.bowl now.bowl]
+
+    :: local state updates
+    :: update paths table
+    =.  updated-at.path-row     now.bowl
+    =.  received-at.path-row    now.bowl
+    =.  paths.state             (~(put by paths.state) path path-row)
+    :: update peers table
+    =/  original-peers=(list peer)    (~(got by peers.state) path)
+    =/  newlist=(list peer)     [newpeer (skip original-peers |=(p=peer =(ship.p ship)))]
+    =.  peers.state             (~(put by peers.state) path newlist)
+
+    =/  thechange=db-changes    [%add-peer newpeer]~
+    :: emit the change to subscribers
+    =/  cards=(list card)
+      :: poke `ship` with %get path
+      :-  (get-path-card:db ship path-row (peers-to-ship-roles:db (~(got by peers.state) path)))
+      :: tell clients about the new peer
+      :-  [%give %fact [/db (weld /path path) ~] db-changes+!>(thechange)]
+      :: tell subs about the new peer
+      %+  turn
+        (living-peers:db original-peers now.bowl our.bowl)
+      |=  p=peer
+      ^-  card
+      (handle-changes-card:db ship.p thechange path)
+    [cards this]
     ==
   ::
   ++  on-fail
@@ -700,4 +748,16 @@
   |=  p=path
   ^-  type:common
   [`@tas`(slav %tas +2:p) `@uvH`(slav %uv +6:p)]
+++  parse-alchemy-json
+  |=  jon=json
+  ^-  (list @t)
+  ?>  ?=([%o *] jon)
+  =/  contracts=json  (~(got by p.jon) 'contracts')
+  ?>  ?=([%a *] contracts)
+  %+  turn  p.contracts
+  |=  jn=json
+  ^-  @t
+  ?>  ?=([%o *] jn)
+  =/  address=json  (~(got by p.jn) 'address')
+  (so:dejs:format address)
 --

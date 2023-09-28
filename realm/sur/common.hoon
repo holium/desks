@@ -301,7 +301,7 @@
       invites=@tas  :: must either match `peer-role` type or be keyword %anyone, or else no one will be able to invite
       peers-get-backlog=?
       max-expires-at-duration=@dr  :: optional chat-wide enforced expires-at on messages. 0 or *@dr means "not set"
-      nft=(unit [contract=@t chain=@t standard=@t]) :: contrach is the 0x789... address, chain is "eth-mainnet" or whatever, standard is "ERC-721"
+      nft=(unit [contract=@t chain=@t standard=@t]) :: contract is the 0x789... address, chain is "eth-mainnet" or whatever, standard is "ERC-721"
   ==
 ++  chat-type  `type`[name=%chat hash=0v0]
 +$  chat-0
