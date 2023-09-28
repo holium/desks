@@ -24,6 +24,7 @@
 ::
 ;<  files=(map path vase)  bind:m
   (build-all-files our.bowl desk now.bowl paths)
+=/  marks=(list mark)  (turn paths en-fit)
 :: get list of all possible mark conversions (tubes) in the desk
 ::
 =/  mars=(list mars:clay)
@@ -34,7 +35,10 @@
   mark-pairs
 :: warm all the tubes
 ::
-;<  ~  bind:m  (read-all-tubes our.bowl desk now.bowl mars)
+;<  ~  bind:m  (build-all-tubes our.bowl desk now.bowl mars)
+:: warm all dais
+::
+;<  ~  bind:m  (build-all-dais our.bowl desk now.bowl marks)
 :: end thread
 ::
 (pure:m !>(~))
@@ -79,20 +83,18 @@
 ++  mark-pairs
   |=  [=path =vase]
   ^-  (list mars:clay)
-  =/  fit=@tas  (en-fit path)
+  =/  fit=mark  (en-fit path)
   =/  [grab=(list mark) grow=(list mark)]
     (get-marks vase)
-  %+  weld  (turn grab |=(=mark [mark fit]))
-  (turn grow |=(=mark [fit mark]))
+  ;:  weld  [fit fit]~
+    (turn grab |=(=mark [mark fit]))
+    (turn grow |=(=mark [fit mark]))
+  ==
 ::
 ++  build-tube-soft
   |=  [[=ship =desk =case] =mars:clay]
   =/  m  (strand ,(unit tube:clay))
   ^-  form:m
-  :: Presumably, when you ask for this tube it is built
-  :: and cached until the next desk commit...
-  :: To "warm" the tube, all you have to do is ask for it.
-  ::
   ;<  =riot:clay  bind:m
     (warp ship desk ~ %sing %c case /[a.mars]/[b.mars])
   ?~  riot
@@ -100,7 +102,18 @@
   ?>  =(%tube p.r.u.riot)
   (pure:m `!<(tube:clay q.r.u.riot))
 ::
-++  read-all-tubes
+++  build-dais-soft
+  |=  [[=ship =desk =case] mak=mark]
+  =/  m  (strand ,(unit dais:clay))
+  ^-  form:m
+  ;<  =riot:clay  bind:m
+    (warp ship desk ~ %sing %b case /[mak])
+  ?~  riot
+    (pure:m ~)
+  ?>  =(%dais p.r.u.riot)
+  (pure:m `!<(dais:clay q.r.u.riot))
+::
+++  build-all-tubes
   |=  [our=@p des=desk now=@da mars=(list mars:clay)]
   |-
   =/  m  (strand ,~)
@@ -113,4 +126,18 @@
     loop(mars t.mars)
   ~&  >  [%built-tube i.mars]
   loop(mars t.mars)
+::
+++  build-all-dais
+  |=  [our=@p des=desk now=@da marks=(list mark)]
+  |-
+  =/  m  (strand ,~)
+  ^-  form:m
+  =*  loop  $
+  ?~  marks  (pure:m ~)
+  ;<  das=(unit dais:clay)  bind:m  (build-dais-soft [our des da+now] i.marks)
+  ?~  das
+    ~&  >>>  [%build-dais-failed i.marks]
+    loop(marks t.marks)
+  ~&  >  [%built-dais i.marks]
+  loop(marks t.marks)
 --
