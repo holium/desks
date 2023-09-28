@@ -22,7 +22,7 @@
   |=  [p=passport:common ln=passport-link-container:common]
   ^-  ?
   :: only allow keys that are already in the crypto state to add other keys
-  =/  parsed-link=passport-data-link:common   (passport-data-link:dejs (need (de-json:html data.ln)))
+  =/  parsed-link=passport-data-link:common   (passport-data-link:dejs (need (de:json:html data.ln)))
   =/  entity=@t     from-entity.mtd.parsed-link
   =/  key=@t        signing-public-key.mtd.parsed-link
   =/  keys=(list @t)  (~(got by entity-to-public-keys.pki-state.crypto.p) entity)
@@ -54,7 +54,8 @@
     %+  weld
     (trip '\19Ethereum Signed Message:\0a')
     %+  weld
-    (en-json:html (numb:enjs:format (lent (trip msg))))
+    %-  trip
+    (en:json:html (numb:enjs:format (lent (trip msg))))
     (trip msg)
     ::export function hashMessage(message: Bytes | string): string {
     ::    if (typeof(message) === "string") { message = toUtf8Bytes(message); }
@@ -98,13 +99,13 @@
   |=  ln=passport-link-container:common
   ^-  @t
   ?:  =('PASSPORT_ROOT' link-type.ln)
-    =/  pr=passport-crypto:common           (passport-root:dejs (need (de-json:html data.ln)))
+    =/  pr=passport-crypto:common           (passport-root:dejs (need (de:json:html data.ln)))
     signing-key.sig-chain-settings.pr
   ?:  ?|  =('KEY_ADD' link-type.ln)
           =('KEY_REMOVE' link-type.ln)
           =('NAME_RECORD_SET' link-type.ln)
       ==
-    =/  pd=passport-data-link:common  (passport-data-link:dejs (need (de-json:html data.ln)))
+    =/  pd=passport-data-link:common  (passport-data-link:dejs (need (de:json:html data.ln)))
     signing-public-key.mtd.pd
   !!
 ::
@@ -130,6 +131,15 @@
 ++  edit
   |=  [our=ship =type:common =id:common data=columns:db]
   (edit-req our type id data [our *@da])
+::
+++  remove-req
+  |=  [our=ship =type:common =id:common =req-id]
+  ^-  card
+  [%pass /dbpoke %agent [our %bedrock] %poke %db-action !>([%remove req-id type /private id])]
+::
+++  remove
+  |=  [our=ship =type:common =id:common]
+  (remove-req our type id [our *@da])
 ::
 ++  maybe-log
   |=  [hide-debug=? msg=tape]
@@ -317,6 +327,44 @@
     ==
   [cards state]
 ::
+++  cancel-friend-request
+::passport &passport-action [%cancel-friend-request ~zod]
+  |=  [[=req-id =ship] state=state-0 =bowl:gall]
+  ^-  (quip card state-0)
+  =/  log1  (maybe-log hide-logs.state "%cancel-friend-request: {<req-id>} {<ship>}")
+  =/  vent-path=path  /vent/(scot %p src.req-id)/(scot %da now.req-id)
+  =/  kickcard=card  [%give %kick ~[vent-path] ~]
+
+  ?>  =(src.bowl our.bowl) ::only we can cancel our own requests
+  ?>  ?!(=(our.bowl ship)) ::has to be for a different ship than ourselves
+
+  =/  new-fren              (get-friend:scries ship bowl)
+  ?>  =(status.friend.new-fren %pending-outgoing) :: we can only cancel pending-outgoing requests
+
+  =/  cards=(list card)
+    :~  [%give %fact ~[vent-path] passport-vent+!>([%ack ~])]
+        kickcard
+        (remove our.bowl friend-type:common id.new-fren)
+        [%pass /selfpoke %agent [ship dap.bowl] %poke %passport-action !>([%revoke-friend-request ~])]
+    ==
+  [cards state]
+::
+++  revoke-friend-request
+::passport &passport-action [%revoke-friend-request ~]
+  |=  [state=state-0 =bowl:gall]
+  ^-  (quip card state-0)
+  =/  log1  (maybe-log hide-logs.state "%revoke-friend-request: from {<src.bowl>}")
+  ?>  ?!(=(src.bowl our.bowl)) :: we can only process responses from other ships
+
+  =/  new-fren                  (get-friend:scries src.bowl bowl)
+  ?>  =(status.friend.new-fren %pending-incoming) :: we can only process responses for pending-incoming requests
+  ?>  =(src.bowl ship.friend.new-fren) :: must come from the requester
+
+  =/  cards=(list card)
+    :~  (remove our.bowl friend-type:common id.new-fren)
+    ==
+  [cards state]
+::
 ++  handle-friend-request
 ::passport &passport-action [%handle-friend-request [our now] %.y ~zod]
   |=  [[=req-id accept=? =ship] state=state-0 =bowl:gall]
@@ -328,6 +376,10 @@
   =/  kickcard=card  [%give %kick ~[vent-path] ~]
 
   =/  new-fren                  (get-friend:scries ship bowl)
+  ?>  ?|  =(status.friend.new-fren %pending-incoming) :: we can only handle pending-incoming requests
+          =(status.friend.new-fren %friend) :: or %friend (in order to end a friendship)
+          =(status.friend.new-fren %rejected) :: or %rejected (in order to change our mind about starting a friendship)
+      ==
   =.  status.friend.new-fren    ?:(accept %friend %rejected)
 
   =/  cards=(list card)
@@ -344,8 +396,11 @@
   |=  [accept=? state=state-0 =bowl:gall]
   ^-  (quip card state-0)
   =/  log1  (maybe-log hide-logs.state "%respond-to-friend-request: {<accept>} from {<src.bowl>}")
+  ?>  ?!(=(src.bowl our.bowl)) :: we can only process responses from other ships
 
   =/  new-fren                  (get-friend:scries src.bowl bowl)
+  ?>  =(status.friend.new-fren %pending-outgoing) :: we can only process responses for pending-outgoing requests
+  ?>  =(src.bowl ship.friend.new-fren) :: must come from the requestee
   =.  status.friend.new-fren    ?:(accept %friend %rejected)
 
   =/  cards=(list card)
@@ -417,7 +472,7 @@
 ::
 ++  add-link
 ::passport &passport-action [%add-link passport-link-container]
-  |=  [[=req-id ln=passport-link-container:common] state=state-0 =bowl:gall]
+  |=  [[=req-id ln=passport-link-container:common wallet-source=(unit @t)] state=state-0 =bowl:gall]
   ^-  (quip card state-0)
   =/  log1  (maybe-log hide-logs.state "%add-link: {<req-id>} {<ln>}")
   :: assure it's us
@@ -442,17 +497,17 @@
   =.  p
     ?:  =('PASSPORT_ROOT' link-type.ln)
       ?>  =((lent chain.p) 0) :: only allow passport_root as first link in chain
-      =.  crypto.p   (passport-root:dejs (need (de-json:html data.ln)))
+      =.  crypto.p   (passport-root:dejs (need (de:json:html data.ln)))
       =.  default-address.p   addr
       =/  pk=@ux        (recover-pub-key hash.ln hash-signature.ln addr)
       =/  t-pk=@t       (crip (num-to-hex:eth pk))
       =/  sig=crypto-signature:common  [data.ln hash.ln hash-signature.ln t-pk]
-      =.  addresses.p   ['root' addr t-pk sig]~
+      =.  addresses.p   [(need wallet-source) addr t-pk sig]~
       p
     ?:  =('KEY_ADD' link-type.ln)
       ?>  (validate-signing-key p ln)   :: only allow keys that are already in the crypto state to add other keys
       :: TODO check previous_link_hash
-      =/  parsed-link=passport-data-link:common   (passport-data-link:dejs (need (de-json:html data.ln)))
+      =/  parsed-link=passport-data-link:common   (passport-data-link:dejs (need (de:json:html data.ln)))
       ?>  (prev-link-hash-matches parsed-link chain.p)
       =/  entity=@t     from-entity.mtd.parsed-link
       =/  key=@t        signing-public-key.mtd.parsed-link
@@ -480,7 +535,7 @@
     ?:  =('NAME_RECORD_SET' link-type.ln)
       ?>  (validate-signing-key p ln)   :: only allow keys that are already in the crypto state to update the name_record
       :: TODO check previous_link_hash
-      =/  parsed-link=passport-data-link:common   (passport-data-link:dejs (need (de-json:html data.ln)))
+      =/  parsed-link=passport-data-link:common   (passport-data-link:dejs (need (de:json:html data.ln)))
       ?>  (prev-link-hash-matches parsed-link chain.p)
       ?+  -.data.parsed-link  !!
         %name-record-set
@@ -506,10 +561,10 @@
         =.  discoverable.p  =(record.data.parsed-link 'true')
         p
       ?:  =('nfts' name.data.parsed-link)
-        =.  nfts.p  (linked-nfts:dejs (need (de-json:html record.data.parsed-link)))
+        =.  nfts.p  (linked-nfts:dejs (need (de:json:html record.data.parsed-link)))
         p
       ?:  =('contact' name.data.parsed-link)
-        =.  contact.p  (de-contact:dejs (need (de-json:html record.data.parsed-link)))
+        =.  contact.p  (de-contact:dejs (need (de:json:html record.data.parsed-link)))
         p
       ~&  >>>  'unrecognized NAME_RECORD_SET "name" property'
       !!
@@ -593,19 +648,30 @@
   :: TODO ask %pals for as many contacts to prepopulate as we can and
   :: TODO create a poke to auto-add friends from mutuals in %pals
   =/  old-friends  .^(json %gx /(scot %p our.bowl)/friends/(scot %da now.bowl)/all/noun)
+  =/  frens=(list friend:common)  (new-friends-from-old:dejs old-friends)
   =/  contacts=(list contact:common)
     %+  turn
       (contacts-from-friends:dejs old-friends)
     cleanup-contact
-  =/  our-contact=contact:common
-    %+  snag  0
+  =/  maybe-our-contacts
     (skim contacts |=(c=contact:common =(our.bowl ship.c)))
+  =/  our-contact=contact:common
+    ?:  =((lent maybe-our-contacts) 0)
+      [our.bowl ~ [~ '#000000'] ~ ~]
+    (snag 0 maybe-our-contacts)
   =/  log2  (maybe-log hide-logs.state "%init-our-passport: contact {<our-contact>}")
   =/  p=passport:common
     [our-contact ~ %online %.y ~ ~ '' ~ ~ *passport-crypto:common]
   =/  cards=(list card)
     :-  (create our.bowl passport-type:common [%passport p])
     :-  (create our.bowl contact-type:common [%contact contact.p])
+    ^-  (list card)
+    %+  weld
+      ^-  (list card)
+      %+  turn  frens
+      |=  f=friend:common
+      (create our.bowl friend-type:common [%friend f])
+    ^-  (list card)
     %+  turn
       %+  skip  contacts  :: don't save our own contact again, or any contacts that are just blank
       |=  c=contact:common
@@ -623,6 +689,40 @@
 ++  dejs
   =,  dejs:format
   |%
+  ++  new-friends-from-old
+    |=  jon=json
+    ^-  (list friend:common)
+    ?>  ?=([%o *] jon)
+    =/  jn=json  (~(got by p.jon) 'friends')
+    ?>  ?=([%o *] jn)
+    %+  turn
+      %+  skim
+        %+  turn
+          ~(tap by p.jn)
+        |=  [shp=@t fr=json]
+        ^-  (unit friend:common)
+        ?>  ?=([%o *] fr)
+        =/  status=@tas  ((se %tas) (~(got by p.fr) 'status'))
+        ?:  =(%contact status)  ~
+        ?:  =(%our status)      ~
+        %-  some
+        ^-  friend:common
+        :*  `@p`(slav %p shp)
+            ?+  status    %rejected
+              %fren       %friend
+              %follower   %pending-incoming
+              %following  %pending-outgoing
+            ==
+            (bo (~(got by p.fr) 'pinned'))
+            ~
+        ==
+      |=  uf=(unit friend:common)
+      ^-  ?
+      ?~(uf %.n %.y)
+    |=  uf=(unit friend:common)
+    ^-  friend:common
+    (need uf)
+  ::
   ++  contacts-from-friends
     |=  jon=json
     ^-  (list contact:common)
@@ -849,6 +949,7 @@
       :~  [%add-link add-link]
           [%get de-get]
           [%add-friend de-add-friend]
+          [%cancel-friend-request de-cancel-friend-request]
           [%handle-friend-request de-handle-friend-request]
           [%change-contact de-change-contact]
       ==
@@ -858,7 +959,7 @@
       ^-  [req-id contact:common]
       ?>  ?=([%o *] jon)
       =/  request-id=(unit json)  (~(get by p.jon) 'request-id')
-      =/  id=id:common  
+      =/  id=id:common
         ?~  request-id  [~zod ~2000.1.1]  :: if the poke-sender didn't care enough to pass a request id, just use a fake one
         (de-id u.request-id)
       :-  id
@@ -871,12 +972,25 @@
       =/  gt  ~(got by p.jon)
       =/  request-id=(unit json)  (~(get by p.jon) 'request-id')
       =/  mtd=(unit json)  (~(get by p.jon) 'mtd')
-      =/  id=id:common  
+      =/  id=id:common
         ?~  request-id  [~zod ~2000.1.1]  :: if the poke-sender didn't care enough to pass a request id, just use a fake one
         (de-id u.request-id)
       :*  id
           (de-ship (gt 'ship'))
           ?~(mtd ~ ((om so) u.mtd))
+      ==
+    ::
+    ++  de-cancel-friend-request
+      |=  jon=json
+      ^-  [req-id ship]
+      ?>  ?=([%o *] jon)
+      =/  gt  ~(got by p.jon)
+      =/  request-id=(unit json)  (~(get by p.jon) 'request-id')
+      =/  id=id:common
+        ?~  request-id  [~zod ~2000.1.1]  :: if the poke-sender didn't care enough to pass a request id, just use a fake one
+        (de-id u.request-id)
+      :*  id
+          (de-ship (gt 'ship'))
       ==
     ::
     ++  de-handle-friend-request
@@ -885,7 +999,7 @@
       ?>  ?=([%o *] jon)
       =/  gt  ~(got by p.jon)
       =/  request-id=(unit json)  (~(get by p.jon) 'request-id')
-      =/  id=id:common  
+      =/  id=id:common
         ?~  request-id  [~zod ~2000.1.1]  :: if the poke-sender didn't care enough to pass a request id, just use a fake one
         (de-id u.request-id)
       :*  id
@@ -895,13 +1009,14 @@
     ::
     ++  add-link
       |=  jon=json
-      ^-  [req-id passport-link-container:common]
+      ^-  [req-id passport-link-container:common (unit @t)]
       ?>  ?=([%o *] jon)
       =/  request-id=(unit json)  (~(get by p.jon) 'request-id')
-      ~&  jon
+      =/  wallet=(unit json)  (~(get by p.jon) 'wallet-source')
       ?~  request-id
-        [[~zod ~2000.1.1] (de-add-link jon)]  :: if the poke-sender didn't care enough to pass a request id, just use a fake one
-      [(de-id u.request-id) (de-add-link jon)]
+      :: if the poke-sender didn't care enough to pass a request id, just use a fake one
+        [[~zod ~2000.1.1] (de-add-link jon) (so:dejs-soft:format ?~(wallet ~ u.wallet))]
+      [(de-id u.request-id) (de-add-link jon) (so:dejs-soft:format ?~(wallet ~ u.wallet))]
     ::
     ++  de-add-link
       %-  ot
@@ -1076,7 +1191,7 @@
       ^-  json
       ?~  a  ~
       %-  pairs
-      :- 
+      :-
         ?-  -.u.a
           %image  ['img' s+img.u.a]
           %nft  ['nft' s+nft.u.a]

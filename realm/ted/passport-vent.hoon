@@ -14,6 +14,7 @@
 ?~  axn  (strand-fail %no-arg ~)
 ?.  ?|  ?=(%get -.u.axn)
         ?=(%add-friend -.u.axn)
+        ?=(%cancel-friend-request -.u.axn)
         ?=(%handle-friend-request -.u.axn)
         ?=(%add-link -.u.axn)
         ?=(%change-passport -.u.axn)
@@ -35,6 +36,13 @@
   %add-friend
     ;<  ~  bind:m  (watch wire [our %bedrock] wire)  :: IMPORTANT that this subs to bedrock, not passport
     ;<  ~  bind:m  (poke [our %passport] passport-action+!>([%add-friend [our now] +>.u.axn]))
+    ;<  cage=(unit cage)  bind:m  (take-fact-or-kick wire)
+    ?^  cage
+      (pure:m q.u.cage)
+    (pure:m !>([%ack ~]))
+  %cancel-friend-request
+    ;<  ~  bind:m  (watch wire [our %passport] wire)
+    ;<  ~  bind:m  (poke [our %passport] passport-action+!>([%cancel-friend-request [our now] +>.u.axn]))
     ;<  cage=(unit cage)  bind:m  (take-fact-or-kick wire)
     ?^  cage
       (pure:m q.u.cage)

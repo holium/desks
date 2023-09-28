@@ -40,6 +40,10 @@
         (add-friend:passport +.act state bowl)
       %get-friend
         (get-friend:passport +.act state bowl)
+      %cancel-friend-request  :: for us to cancel a pending request we sent out
+        (cancel-friend-request:passport +.act state bowl)
+      %revoke-friend-request  :: for another ship to tell us they canceled their request
+        (revoke-friend-request:passport state bowl)
       %handle-friend-request
         (handle-friend-request:passport +.act state bowl)
       %respond-to-friend-request
@@ -95,6 +99,7 @@
           ``passport-friends+!>(~)
         ``passport-friends+!>((get-friends:scries bowl))
     ::
+    :: for getting the list of friend requests you need to respond to
       [%x %pending-friends ~]
         ?.  (test-bedrock-table-existence:scries friend-type:common bowl)
           ``passport-friends+!>(~)
@@ -103,7 +108,7 @@
             (get-friends:scries bowl)
           |=  =friend:common
           ^-  ?
-          =(%pending status.friend)
+          =(%pending-incoming status.friend)
         ``passport-friends+!>(friends)
     ::
     :: .^([[@p * (unit @t) *] (unit @t) @t *] %gx /=/passport/=/our-passport/noun)
