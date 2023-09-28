@@ -16,7 +16,7 @@
 ;<  =bowl:rand  bind:m  get-bowl
 :: accepts a desk as argument; can warm tubes of any desk
 ::
-=/  =desk  (need !<((unit desk) arg))
+=/  [=desk verb=?]  (need !<((unit [desk ?]) arg))
 :: get list of mark file names of hoon files from desk's mar directory
 ::
 ;<  paths=(list path)  bind:m  (scry (list path) %ct /[desk]/mar)
@@ -36,10 +36,10 @@
   mark-pairs
 :: warm all the tubes
 ::
-;<  ~  bind:m  (build-all-tubes our.bowl desk now.bowl mars)
+;<  ~  bind:m  (build-all-tubes verb our.bowl desk now.bowl mars)
 :: warm all dais
 ::
-;<  ~  bind:m  (build-all-dais our.bowl desk now.bowl marks)
+;<  ~  bind:m  (build-all-dais verb our.bowl desk now.bowl marks)
 :: end thread
 ::
 (pure:m !>(~))
@@ -115,7 +115,7 @@
   (pure:m `!<(dais:clay q.r.u.riot))
 ::
 ++  build-all-tubes
-  |=  [our=@p des=desk now=@da mars=(list mars:clay)]
+  |=  [verb=? our=@p des=desk now=@da mars=(list mars:clay)]
   |-
   =/  m  (strand ,~)
   ^-  form:m
@@ -123,13 +123,15 @@
   ?~  mars  (pure:m ~)
   ;<  tub=(unit tube:clay)  bind:m  (build-tube-soft [our des da+now] i.mars)
   ?~  tub
-    :: ~&  >>>  [%build-tube-failed i.mars]
+    ?.  verb  loop(mars t.mars)
+    ~&  >>>  [%build-tube-failed i.mars]
     loop(mars t.mars)
-  :: ~&  >  [%built-tube i.mars]
+  ?.  verb  loop(mars t.mars)
+  ~&  >  [%built-tube i.mars]
   loop(mars t.mars)
 ::
 ++  build-all-dais
-  |=  [our=@p des=desk now=@da marks=(list mark)]
+  |=  [verb=? our=@p des=desk now=@da marks=(list mark)]
   |-
   =/  m  (strand ,~)
   ^-  form:m
@@ -137,8 +139,10 @@
   ?~  marks  (pure:m ~)
   ;<  das=(unit dais:clay)  bind:m  (build-dais-soft [our des da+now] i.marks)
   ?~  das
-    :: ~&  >>>  [%build-dais-failed i.marks]
+    ?.  verb  loop(marks t.marks)
+    ~&  >>>  [%build-dais-failed i.marks]
     loop(marks t.marks)
-  :: ~&  >  [%built-dais i.marks]
+  ?.  verb  loop(marks t.marks)
+  ~&  >  [%built-dais i.marks]
   loop(marks t.marks)
 --

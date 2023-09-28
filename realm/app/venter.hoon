@@ -7,7 +7,7 @@
 :: https://github.com/tinnus-napbus/tube-warmer
 ::
 |%
-+$  state-0  [%0 =vents:vio]
++$  state-0  [%0 =vents:vio tube-verb=_|]
 +$  card     card:agent:gall
 +$  vent-id  vent-id:vio
 --
@@ -24,7 +24,7 @@
   =/  =@ud  +(ud:.^(cass:clay %cw /(scot %p our.bowl)/realm/(scot %da now.bowl)))
   :_  this
   :~  [%pass /next %arvo %c %warp our.bowl %realm ~ %many %.y ud+ud ud+ud /]
-      [%pass /tube-warmer %arvo %k %fard %realm %tube-warmer noun+!>(`%realm)]
+      [%pass /tube-warmer %arvo %k %fard %realm %tube-warmer noun+!>(`[%realm tube-verb])]
   ==
 ::
 ++  on-save   !>(state)
@@ -37,7 +37,7 @@
   =/  =@ud  +(ud:.^(cass:clay %cw /(scot %p our.bowl)/realm/(scot %da now.bowl)))
   :_  this
   :~  [%pass /next %arvo %c %warp our.bowl %realm ~ %many %.y ud+ud ud+ud /]
-      [%pass /tube-warmer %arvo %k %fard %realm %tube-warmer noun+!>(`%realm)]
+      [%pass /tube-warmer %arvo %k %fard %realm %tube-warmer noun+!>(`[%realm tube-verb])]
   ==
 ::
 ++  on-poke
@@ -45,6 +45,8 @@
   ^-  (quip card _this)
   ?>  =(src our):bowl
   ?+    mark  (on-poke:def mark vase)
+    %noun  `this(tube-verb (tail !<([%verb ?] vase)))
+    ::
       %tally-vent
     ~&  %venter-tallying
     =+  !<([=dock vid=vent-id] vase)
@@ -54,6 +56,7 @@
     ~&  %venter-clearing
     =+  !<([=dock vid=vent-id] vase)
     `this(vents (~(del ju vents) dock vid))
+    ::
     ::
       %clear-dead
     =+  .^(pats=(list path) %gx /(scot %p our.bowl)/spider/(scot %da now.bowl)/tree/noun)
@@ -99,7 +102,7 @@
     =/  =@ud  +(ud:.^(cass:clay %cw /(scot %p our.bowl)/realm/(scot %da now.bowl)))
     :_  this
     :~  [%pass /next %arvo %c %warp our.bowl %realm ~ %many %.y ud+ud ud+ud /]
-        [%pass /tube-warmer %arvo %k %fard %realm %tube-warmer noun+!>(`%realm)]
+        [%pass /tube-warmer %arvo %k %fard %realm %tube-warmer noun+!>(`[%realm tube-verb])]
     ==
   ==
 ::
