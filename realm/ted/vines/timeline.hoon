@@ -1,5 +1,5 @@
-/-  spider, *timeline
-/+  *ventio, db, server, scries=bedrock-scries
+/-  spider
+/+  *timeline, *ventio, db, server, scries=bedrock-scries
 =>  |%
     +$  gowl     bowl:gall
     +$  sowl     bowl:spider
@@ -155,6 +155,29 @@
     ?>  ?=(%ack -.vnt)
     (pure:m !>(`~))
     ::
+      %relay-timeline-post
+    =|  printf=wain
+    |-
+    ?~  to.axn  (pure:m !>([printf ~]))
+    =/  =relay:common  [id [%timeline-post 0v0] from 0 %all |]:axn
+    =/  row=input-row:db  [i.to.axn [%relay 0v0] [%relay relay] ~]
+    ;<  =sowl  bind:m  get-bowl
+    =/  =action:db  [%relay [our now]:sowl row]
+    ;<  out=thread-result  bind:m  (run-thread-soft %realm %venter !>(`action))
+    ?-    -.out
+        %&
+      =+  ;;(vnt=vent:db q.p.out)
+      ?>  ?=(%ack -.vnt)
+      $(to.axn t.to.axn)
+      ::
+        %|
+      ~&  >>>  failed+(spat i.to.axn)
+      %=  $
+        to.axn  t.to.axn
+        printf  [(vase-to-cord !>(failed+(spat i.to.axn))) printf]
+      ==
+    ==
+    ::
       %create-react
     :: TODO: return new react id
     ::
@@ -197,6 +220,61 @@
     ;<  out=^vase  bind:m  (run-thread %realm %venter !>(`action))
     =+  ;;(vnt=vent:db q.out)
     ?>  ?=(%ack -.vnt)
+    (pure:m !>(`~))
+    ::
+      %convert-message
+    ;<  post=(unit [req-id=[@p @da] post=timeline-post])  bind:m
+      (convert-chat-db-msg-part [msg-id msg-part-id]:axn)
+    ?~  post
+      ~&(>>> %failed-to-process-message-part !!)
+    =/  =action:db
+      :*  %create  req-id.u.post
+          to.axn  [%timeline-post 0v0]
+          [%timeline-post post.u.post]  ~
+      ==
+    ;<  out=^vase  bind:m  (run-thread %realm %venter !>(`action))
+    =+  ;;(vnt=vent:db q.out)
+    (pure:m !>(?>(?=(%row -.vnt) `[%timeline-post +.vnt])))
+    ::
+      %add-forerunners-bedrock
+    =/  fore=path  /spaces/~lomder-librun/realm-forerunners/chats/0v2.68end.ets6m.29fgc.ntejl.jbeo7
+    =/  db-fore=path  /timeline/(scot %p our.gowl)/forerunners
+    ?:  &(!force.axn (test-bedrock-path-existence:scries db-fore gowl))
+      ~&  >>  %timeline-already-exists
+      (pure:m !>([~[%timeline-already-exists] ~]))
+    ;<  ~  bind:m
+      ((vent ,~) [our dap]:gowl timeline-action+!>([%create-timeline %forerunners]))
+    ;<  posts=(list [[@p @da] timeline-post])  bind:m
+      (convert-chat-db-msg-parts fore)
+    =/  =cage
+      :-  %db-action  !>
+      :-  %create-many
+      %+  turn  posts
+      |=  [req-id=[@p @da] post=timeline-post]
+      :*  req-id
+          db-fore  [%timeline-post 0v0]
+          [%timeline-post post]  ~
+      ==
+    ;<  ~  bind:m  (poke [our.gowl %bedrock] cage)
+    (pure:m !>(`~))
+    ::
+      %add-random-emojis
+    ;<  ids=(list id:common:db)  bind:m  (timeline-post-ids path.axn)
+    =/  =cage
+      :-  %db-action  !>
+      :-  %create-many
+      %-  zing
+      %+  turn  ids
+      |=  =id:common
+      %+  turn  (random-reacts path.axn id)
+      |=  =react:common:db
+      :-  [our now]:gowl
+      :*  path.axn  [%react 0v0]
+          [%react react]  ~
+      ==
+    ~&  >   %done-creating-emojis
+    ~&  >>  %poking-bedrock-with-create-many
+    ;<  ~  bind:m  (poke [our.gowl %bedrock] cage)
     (pure:m !>(`~))
   ==
 ==
@@ -285,4 +363,53 @@
       pay(data !<((unit octs) q.cage))
     ==
   --
+::
+++  convert-chat-db-msg-part
+  |=  [=msg-id:cd =msg-part-id:cd]
+  =/  m  (strand ,(unit [[@p @da] timeline-post]))
+  ^-  form:m
+  ;<  dump=db-dump:cd  bind:m
+    (scry db-dump:cd /gx/chat-db/db/chat-db-dump)
+  ?>  ?=(%tables -.dump)
+  =/  tables=(map term table:cd)
+    %-  ~(gas by *(map term table:cd))
+    (turn tables.dump |=(=table:cd [-.table table]))
+  =/  =table:cd  (~(got by tables) %messages)
+  ?>  ?=(%messages -.table)
+  =+  (got:msgon:cd messages-table.table [msg-id msg-part-id])
+  ;<  our=ship  bind:m  get-our
+  %-  pure:m
+  (convert-message our created-at msg-id msg-part-id content metadata)
+::
+++  convert-chat-db-msg-parts
+  |=  =path
+  =/  m  (strand ,(list [[@p @da] timeline-post]))
+  ^-  form:m
+  ;<  dump=db-dump:cd  bind:m
+    (scry db-dump:cd /gx/chat-db/db/chat-db-dump)
+  ?>  ?=(%tables -.dump)
+  =/  tables=(map term table:cd)
+    %-  ~(gas by *(map term table:cd))
+    (turn tables.dump |=(=table:cd [-.table table]))
+  =/  =table:cd  (~(got by tables) %messages)
+  ?>  ?=(%messages -.table)
+  ;<  our=ship  bind:m  get-our
+  %-  pure:m
+  %+  murn  (tap:msgon:cd messages-table.table)
+  |=  [* msg-part:cd]
+  ?.  =(fore path)  ~
+  (convert-message our created-at msg-id msg-part-id content metadata)
+::
+++  timeline-post-ids
+  |=  =path
+  =/  scry-path=^path
+    ;:  welp
+      /gx/bedrock/db/table-by-path/timeline-post/0v0
+      path  /db-table
+    ==
+  =/  m  (strand ,(list id:common:db))
+  ^-  form:m
+  ;<  [* pt=pathed-table:db *]  bind:m
+    (scry ,[* pt=pathed-table:db *] scry-path)
+  (pure:m ~(tap in ~(key by (~(got by pt) path))))
 --

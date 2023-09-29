@@ -184,9 +184,9 @@
   (build-tube [our des da+now] mars)
 :: this works -- strandio's +await-thread doesn't seem to...
 ::
-++  run-thread
+++  run-thread-soft
   |=  [=desk file=term args=vase]
-  =/  m  (strand ,vase)
+  =/  m  (strand ,thread-result)
   ^-  form:m
   ;<  =bowl:spider  bind:m  get-bowl
   =/  tid  (scot %ta (cat 3 'strand_' (scot %uv (sham file eny.bowl))))
@@ -197,7 +197,21 @@
   ;<  =cage  bind:m  (take-fact /awaiting/[tid])
   ;<  ~      bind:m  (take-kick /awaiting/[tid])
   ?+  p.cage  ~|([%strange-thread-result p.cage file tid] !!)
-    %thread-done  (pure:m q.cage)
-    %thread-fail  (strand-fail ;;([term tang] q.q.cage))
+    %thread-done  (pure:m %& q.cage)
+    %thread-fail  (pure:m %| ;;([term tang] q.q.cage))
   ==
+::
+++  run-thread
+  |=  [=desk file=term args=vase]
+  =/  m  (strand ,vase)
+  ^-  form:m
+  ;<  =thread-result  bind:m  (run-thread-soft desk file args)
+  ?-  -.thread-result
+    %&  (pure:m p.thread-result)
+    %|  (strand-fail p.thread-result)
+  ==
+:: printf utils
+::
+++  vase-to-wain  |=(=vase `wain`(turn (wash [0 80] (sell vase)) crip))
+++  vase-to-cord  |=(=vase (of-wain:format (vase-to-wain vase)))
 --

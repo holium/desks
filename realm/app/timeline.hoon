@@ -55,6 +55,9 @@
     [cards this]
     ::
       %handle-http-response
+    :: only we can tell ourselves to give an http-response
+    ::
+    ?>  =(src our):bowl
     =+  !<([eyre-id=@ta pay=simple-payload:http] vase)
     :_(this (give-simple-payload:app:server eyre-id pay))
     ::
@@ -67,42 +70,6 @@
       =^  cards  this
         (on-poke vent-request+!>([*vent-id mark q.vase]))
       [cards this]
-      ::
-        %relay-timeline-post
-      =;  cards
-        [cards this]
-      =/  =relay:common  [id [%timeline-post 0v0] from 0 %all |]:axn
-      %+  turn  to.axn
-      |=  to=path
-      ^-  card
-      =/  row=input-row:db  [to [%relay 0v0] [%relay relay] ~]
-      =/  =cage  db-action+!>([%relay [our now]:bowl row])
-      [%pass / %agent [our.bowl %bedrock] %poke cage]
-      ::
-        %convert-message
-      =+  .^(dump=db-dump:cd %gx /(scot %p our.bowl)/chat-db/(scot %da now.bowl)/db/chat-db-dump)
-      ?>  ?=(%tables -.dump)
-      =/  tables=(map term table:cd)
-        %-  ~(gas by *(map term table:cd))
-        (turn tables.dump |=(=table:cd [-.table table]))
-      =/  =table:cd  (~(got by tables) %messages)
-      ?>  ?=(%messages -.table)
-      =/  post=(unit [req-id=[@p @da] post=timeline-post])
-        =+  (got:msgon:cd messages-table.table [msg-id msg-part-id]:axn)
-        (convert-message our.bowl created-at msg-id msg-part-id content metadata)
-      ?~  post
-        ~&(>>> %failed-to-process-message-part `this)
-      :_  this
-      %+  turn  to.axn
-      |=  to=path
-      ^-  card
-      =/  =cage
-        :-  %db-action  !>
-        :*  %create  req-id.u.post
-            to  [%timeline-post 0v0]
-            [%timeline-post post.u.post]  ~
-        ==
-      [%pass / %agent [our.bowl %bedrock] %poke cage]
       ::
         %add-forerunners-bedrock
       =/  fore=path  /spaces/~lomder-librun/realm-forerunners/chats/0v2.68end.ets6m.29fgc.ntejl.jbeo7
@@ -135,31 +102,6 @@
           ==
         [%pass / %agent [our.bowl %bedrock] %poke cage]
       :_(this (weld tl-cards post-cards))
-      ::
-        %add-random-emojis
-      =/  db-fore=path  /timeline/(scot %p our.bowl)/forerunners
-      =+  .^  [* pt=pathed-table:db *]  %gx
-              ;:  welp
-                /(scot %p our.bowl)/bedrock/(scot %da now.bowl)/db/table-by-path/timeline-post/0v0
-                db-fore  /noun
-              ==
-          ==
-      =/  cards=(list card)
-        %-  zing
-        %+  turn
-          ~(tap in ~(key by (~(got by pt) db-fore)))
-        |=  =id:common
-        ^-  (list card)
-        %+  turn  (random-reacts db-fore id)
-        |=  =react:common
-        =;  =cage
-          [%pass / %agent [our.bowl %bedrock] %poke cage]
-        :-  %db-action  !>
-        :*  %create  [our now]:bowl
-            db-fore  [%react 0v0]
-            [%react react]  ~
-        ==
-      [cards this]
     ==
   ==
 ::
