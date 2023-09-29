@@ -63,6 +63,7 @@
       [%edit-message =edit-message-action:db]
       [%delete-message =path =msg-id:db]
       [%delete-backlog =path]
+      [%room-action =path kind=?(%start %join %leave)] :: creates a %status message that we start/join/left a room
 
       :: internal %realm-chat state updaters
       [%enable-push ~]

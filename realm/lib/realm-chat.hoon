@@ -97,6 +97,31 @@
     %paths  ~(val by paths-table.tbl)
   ==
 ::
+++  notif-from-nickname-or-patp
+  |=  [patp=ship =bowl:gall]
+  ^-  @t
+  =/  cv=view:fr
+    .^  view:fr
+        %gx
+        /(scot %p our.bowl)/friends/(scot %da now.bowl)/contact-hoon/(scot %p patp)/noun
+    ==
+  =/  nickname=@t
+    ?+  -.cv  (scot %p patp) :: if the scry came back wonky, just fall back to patp
+      %contact-info
+        nickname.contact-info.cv
+    ==
+  ?:  =('' nickname)
+    (scot %p patp)
+  nickname
+::
+++  group-name-or-blank
+  |=  [=path-row:db]
+  ^-  @t
+  =/  title       (~(get by metadata.path-row) 'title')
+  ?:  =(type.path-row %dm)   '' :: always blank for DMs
+  ?~  title     'Group Chat'    :: if it's a group chat without a title, just say "group chat"
+  (need title)                  :: otherwise, return the title of the group
+::
 ++  into-backlog-msg-poke
   |=  [m=message:db =ship]
   [%pass /dbpoke %agent [ship %chat-db] %poke %chat-db-action !>([%insert-backlog m])]
@@ -537,7 +562,7 @@
   [cards state]
 ::
 ++  delete-backlog
-::  :realm-chat &action [%delete-backlog /realm-chat/path-id]
+::  :realm-chat &chat-action [%delete-backlog /realm-chat/path-id]
   |=  [act=[=path] state=state-1 =bowl:gall]
   ^-  (quip card state-1)
   ?>  =(src.bowl our.bowl)
@@ -554,6 +579,22 @@
     !>([%send-message path.act ~[[[%status (crip "{(scow %p our.bowl)} cleared the chat history")] ~ ~]] *@dr])
   =.  cards  (snoc cards [%pass /selfpoke %agent [our.bowl %realm-chat] %poke %chat-action cleared-status-message])
   [cards state]
+::
+++  room-action
+::  :realm-chat &chat-action [%room-action /realm-chat/path-id %start]
+  |=  [act=[=path kind=?(%start %leave %join)] state=state-1 =bowl:gall]
+  ^-  (quip card state-1)
+  ?>  =(src.bowl our.bowl)
+  =/  log1  (maybe-log hide-debug.state "{<dap.bowl>}%room-action: {<path.act>} {<kind.act>}")
+  =/  our-name      (notif-from-nickname-or-patp our.bowl bowl)
+  =/  verb=@t
+  ?-  kind.act
+    %start    ' started '
+    %leave    ' left '
+    %join     ' joined '
+  ==
+  =/  contents=@t  (crip [our-name verb 'a call with you' ~])
+  (send-message [path.act (limo [[[%status contents] ~ ~] ~]) *@dr] state bowl)
 ::
 ++  disable-push
   |=  [state=state-1 =bowl:gall]
