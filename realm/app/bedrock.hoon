@@ -128,6 +128,14 @@
 
       %create
         (create:db +.act state bowl)
+      %create-many
+        =|  cards=(list card)
+        |-
+        ?~  args.act
+          [cards state]
+        =^  cadz  state
+          (create:db i.args.act state bowl)
+        $(args.act t.args.act, cards (weld cadz cards))
       %edit
         (edit:db +.act state bowl)
       %remove
