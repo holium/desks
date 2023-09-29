@@ -31,7 +31,6 @@
   ==
 ::
 +$  vent
-  $@  ~
   %+  pair  wain  :: printf
   $@  ~
   $%  [%timeline =path]

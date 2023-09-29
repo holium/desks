@@ -90,34 +90,34 @@
       (pure:m !>([~[%timeline-does-not-exist] ~]))
     =/  =cage  db-action+!>([%delete-path path])
     ;<  ~  bind:m  (poke [our.gowl %bedrock] cage)
-    (pure:m !>(~))
+    (pure:m !>(`~))
     ::
       %follow-timeline
     ?>  =(src our):gowl
     =+  ;;([%timeline host=@ta name=@ta ~] path.axn)
     =/  =cage  db-action+!>([%handle-follow-request name])
     ;<  ~  bind:m  (poke [(slav %p host) %bedrock] cage)
-    (pure:m !>(~))
+    (pure:m !>(`~))
     ::
       %handle-follow-request
     =/  =path  /timeline/(scot %p our.gowl)/[name.axn]
     :: TODO: check that the timeline is public
     =/  =cage  db-action+!>([%add-peer path src.gowl %$])
     ;<  ~  bind:m  (poke [our.gowl %bedrock] cage)
-    (pure:m !>(~))
+    (pure:m !>(`~))
     ::
       %leave-timeline
     ?>  =(src our):gowl
     =+  ;;([%timeline host=@ta name=@ta ~] path.axn)
     =/  =cage  db-action+!>([%handle-leave-request name])
     ;<  ~  bind:m  (poke [(slav %p host) %bedrock] cage)
-    (pure:m !>(~))
+    (pure:m !>(`~))
     ::
       %handle-leave-request
     =/  =path  /timeline/(scot %p our.gowl)/[name.axn]
     =/  =cage  db-action+!>([%kick-peer path src.gowl])
     ;<  ~  bind:m  (poke [our.gowl %bedrock] cage)
-    (pure:m !>(~))
+    (pure:m !>(`~))
     ::
       %create-react
     =/  =cage
@@ -127,7 +127,7 @@
           [%react react.axn]  ~
       ==
     ;<  ~  bind:m  (poke [our.gowl %bedrock] cage)
-    (pure:m !>(~))
+    (pure:m !>(`~))
     ::
       %delete-react
     =/  =cage
@@ -136,7 +136,7 @@
           [%react 0v0]  path.axn  id.axn
       ==
     ;<  ~  bind:m  (poke [our.gowl %bedrock] cage)
-    (pure:m !>(~))
+    (pure:m !>(`~))
     ::
       %create-comment
     =/  =cage
@@ -146,7 +146,7 @@
           [%comment comment.axn]  ~
       ==
     ;<  ~  bind:m  (poke [our.gowl %bedrock] cage)
-    (pure:m !>(~))
+    (pure:m !>(`~))
     ::
       %delete-comment
     =/  =cage
@@ -155,7 +155,7 @@
           [%comment 0v0]  path.axn  id.axn
       ==
     ;<  ~  bind:m  (poke [our.gowl %bedrock] cage)
-    (pure:m !>(~))
+    (pure:m !>(`~))
   ==
 ==
 ::
