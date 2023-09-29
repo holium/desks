@@ -244,7 +244,7 @@
       ~&  >>  %forerunners-timeline-already-exists
       (pure:m !>([~[%forerunners-timeline-already-exists] ~]))
     ;<  *  bind:m
-      ((vent ,*) [our dap]:gowl timeline-action+!>([%create-timeline %forerunners]))
+      ((vent ,*) [our dap]:gowl timeline-action+[%create-timeline %forerunners])
     ;<  posts=(list [[@p @da] timeline-post])  bind:m
       (convert-chat-db-msg-parts fore)
     =/  =cage
@@ -398,7 +398,7 @@
   %-  pure:m
   %+  murn  (tap:msgon:cd messages-table.table)
   |=  [* msg-part:cd]
-  ?.  =(fore path)  ~
+  ?.  =(^path path)  ~
   (convert-message our created-at msg-id msg-part-id content metadata)
 ::
 ++  timeline-post-ids
