@@ -119,6 +119,39 @@
     ;<  ~  bind:m  (poke [our.gowl %bedrock] cage)
     (pure:m !>(`~))
     ::
+      %create-timeline-posts
+    =/  =cage
+      :-  %db-action  !>
+      :-  %create-many
+      %+  turn  posts.axn
+      |=  post=timeline-post
+      :*  [our now]:gowl  path.axn
+          [%timeline-post 0v0]
+          [%timeline-post post]  ~
+      ==
+    ;<  ~  bind:m  (poke [our.gowl %bedrock] cage)
+    (pure:m !>(`~))
+    ::
+      %delete-timeline-post
+    =/  =cage
+      :-  %db-action  !>
+      :*  %remove   [our now]:gowl
+          [%timeline-post 0v0]  path.axn  id.axn
+      ==
+    ;<  ~  bind:m  (poke [our.gowl %bedrock] cage)
+    (pure:m !>(`~))
+    ::
+    ::   %relay-timeline-post
+    :: =;  cards
+    ::   [cards this]
+    :: =/  =relay:common  [id [%timeline-post 0v0] from 0 %all |]:axn
+    :: %+  turn  to.axn
+    :: |=  to=path
+    :: ^-  card
+    :: =/  row=input-row:db  [to [%relay 0v0] [%relay relay] ~]
+    :: =/  =cage  db-action+!>([%relay [our now]:bowl row])
+    :: [%pass / %agent [our.bowl %bedrock] %poke cage]
+    ::
       %create-react
     =/  =cage
       :-  %db-action  !>

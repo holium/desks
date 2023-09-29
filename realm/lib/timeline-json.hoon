@@ -26,19 +26,16 @@
   ++  vent
     |=  =vent:tl
     ^-  json
-    =|  =(map @t json)
-    =?  map  ?=(^ p.vent)
-      %+  ~(put by map)
-        'printf'
-      a+(turn p.vent (lead %s))
-    =?  map  ?=(^ q.vent)
-      %+  ~(put by map)
-        -.q.vent
-      ?-  -.q.vent
-        %timeline       (path path.q.vent)
-        %timeline-post  (row-id-to-json:enjs:db id.q.vent)
-      ==
-    ?~(map ~ o+map)
+    %-  pairs
+    :~  [%printf a+(turn p.vent (lead %s))]
+        :-  %vent
+        ?~  q.vent  ~
+        %+  frond  -.q.vent
+        ?-  -.q.vent
+          %timeline       (path path.q.vent)
+          %timeline-post  (row-id-to-json:enjs:db id.q.vent)
+        ==
+    ==
   --
 ::
 ++  dejs
