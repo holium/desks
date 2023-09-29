@@ -182,4 +182,22 @@
   ;<  our=ship  bind:m  get-our
   ;<  now=time  bind:m  get-time
   (build-tube [our des da+now] mars)
+:: this works -- strandio's +await-thread doesn't seem to...
+::
+++  run-thread
+  |=  [=desk file=term args=vase]
+  =/  m  (strand ,vase)
+  ^-  form:m
+  ;<  =bowl:spider  bind:m  get-bowl
+  =/  tid  (scot %ta (cat 3 'strand_' (scot %uv (sham file eny.bowl))))
+  =.  q.byk.bowl  desk
+  =/  poke-vase  !>(`start-args:spider`[`tid.bowl `tid byk.bowl file args])
+  ;<  ~      bind:m  (watch-our /awaiting/[tid] %spider /thread-result/[tid])
+  ;<  ~      bind:m  (poke-our %spider %spider-start poke-vase)
+  ;<  =cage  bind:m  (take-fact /awaiting/[tid])
+  ;<  ~      bind:m  (take-kick /awaiting/[tid])
+  ?+  p.cage  ~|([%strange-thread-result p.cage file tid] !!)
+    %thread-done  (pure:m q.cage)
+    %thread-fail  (strand-fail %thread-fail ~)
+  ==
 --

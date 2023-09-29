@@ -135,65 +135,68 @@
       %create-timeline-post
     :: TODO: return created id
     ::
-    =/  =cage
-      :-  %db-action  !>
+    =/  =action:db
       :-  %create
       :*  [our now]:gowl  path.axn
           [%timeline-post 0v0]
           [%timeline-post post.axn]  ~
       ==
-    ;<  ~  bind:m  (poke [our.gowl %bedrock] cage)
-    (pure:m !>(`~))
+    ;<  out=^vase  bind:m  (run-thread %realm %venter !>(`action))
+    =+  ;;(vnt=vent:db q.out)
+    (pure:m !>(?>(?=(%row -.vnt) `[%timeline-post +.vnt])))
     ::
       %delete-timeline-post
-    =/  =cage
-      :-  %db-action  !>
+    =/  =action:db
       :*  %remove   [our now]:gowl
           [%timeline-post 0v0]  path.axn  id.axn
       ==
-    ;<  ~  bind:m  (poke [our.gowl %bedrock] cage)
+    ;<  out=^vase  bind:m  (run-thread %realm %venter !>(`action))
+    =+  ;;(vnt=vent:db q.out)
+    ?>  ?=(%ack -.vnt)
     (pure:m !>(`~))
     ::
       %create-react
     :: TODO: return new react id
     ::
-    =/  =cage
-      :-  %db-action  !>
+    =/  =action:db
       :*  %create   [our now]:gowl
           path.axn  [%react 0v0]
           [%react react.axn]  ~
       ==
-    ;<  ~  bind:m  (poke [our.gowl %bedrock] cage)
-    (pure:m !>(`~))
+    ;<  out=^vase  bind:m  (run-thread %realm %venter !>(`action))
+    =+  ;;(vnt=vent:db q.out)
+    (pure:m !>(?>(?=(%row -.vnt) `[%react +.vnt])))
     ::
       %delete-react
-    =/  =cage
-      :-  %db-action  !>
+    =/  =action:db
       :*  %remove  [our now]:gowl
           [%react 0v0]  path.axn  id.axn
       ==
-    ;<  ~  bind:m  (poke [our.gowl %bedrock] cage)
+    ;<  out=^vase  bind:m  (run-thread %realm %venter !>(`action))
+    =+  ;;(vnt=vent:db q.out)
+    ?>  ?=(%ack -.vnt)
     (pure:m !>(`~))
     ::
       %create-comment
     :: TODO: return new comment id
     ::
-    =/  =cage
-      :-  %db-action  !>
+    =/  =action:db
       :*  %create   [our now]:gowl
           path.axn  [%comment 0v0]
           [%comment comment.axn]  ~
       ==
-    ;<  ~  bind:m  (poke [our.gowl %bedrock] cage)
-    (pure:m !>(`~))
+    ;<  out=^vase  bind:m  (run-thread %realm %venter !>(`action))
+    =+  ;;(vnt=vent:db q.out)
+    (pure:m !>(?>(?=(%row -.vnt) `[%comment +.vnt])))
     ::
       %delete-comment
-    =/  =cage
-      :-  %db-action  !>
+    =/  =action:db
       :*  %remove  [our now]:gowl
           [%comment 0v0]  path.axn  id.axn
       ==
-    ;<  ~  bind:m  (poke [our.gowl %bedrock] cage)
+    ;<  out=^vase  bind:m  (run-thread %realm %venter !>(`action))
+    =+  ;;(vnt=vent:db q.out)
+    ?>  ?=(%ack -.vnt)
     (pure:m !>(`~))
   ==
 ==

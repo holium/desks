@@ -24,6 +24,7 @@
     [(spat k) (timeline-post v)]
   ::
   ++  vent
+    =,  enjs:db
     |=  =vent:tl
     ^-  json
     %-  pairs
@@ -33,7 +34,9 @@
         %+  frond  -.q.vent
         ?-  -.q.vent
           %timeline       (path path.q.vent)
-          %timeline-post  (row-id-to-json:enjs:db id.q.vent)
+          %timeline-post  (en-row row.q.vent (~(put by *schemas:db) type.row.q.vent schema.q.vent))
+          %react          (en-row row.q.vent (~(put by *schemas:db) type.row.q.vent schema.q.vent))
+          %comment        (en-row row.q.vent (~(put by *schemas:db) type.row.q.vent schema.q.vent))
         ==
     ==
   --
@@ -61,6 +64,7 @@
         [%follow-timeline (ot ~[path+pa])]
         [%leave-timeline (ot ~[path+pa])]
         [%create-timeline-posts (ot ~[path+pa posts+(ar de-timeline-post)])]
+        [%create-timeline-post (ot ~[path+pa post+de-timeline-post])]
         [%delete-timeline-post (ot ~[path+pa id+de-id])]
         [%relay-timeline-post (ot ~[from+pa id+de-id to+(ar pa)])]
         [%create-react (ot ~[path+pa react+de-react])]

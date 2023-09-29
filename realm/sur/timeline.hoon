@@ -35,6 +35,9 @@
   %+  pair  wain  :: printf
   $@  ~
   $%  [%timeline =path]
-      [%timeline-post =id:common]
+      [%timeline-post =row:db =schema:db]
+      [%react =row:db =schema:db]
+      [%comment =row:db =schema:db]
+
   ==
 --
