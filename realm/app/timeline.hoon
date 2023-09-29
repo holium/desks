@@ -61,6 +61,17 @@
       %timeline-action
     =+  !<(axn=action vase)
     ?+    -.axn  !!
+        %relay-timeline-post
+      =;  cards
+        [cards this]
+      =/  =relay:common  [id [%timeline-post 0v0] from 0 %all |]:axn
+      %+  turn  to.axn
+      |=  to=path
+      ^-  card
+      =/  row=input-row:db  [to [%relay 0v0] [%relay relay] ~]
+      =/  =cage  db-action+!>([%relay [our now]:bowl row])
+      [%pass / %agent [our.bowl %bedrock] %poke cage]
+      ::
         %convert-message
       =+  .^(dump=db-dump:cd %gx /(scot %p our.bowl)/chat-db/(scot %da now.bowl)/db/chat-db-dump)
       ?>  ?=(%tables -.dump)

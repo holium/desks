@@ -58,7 +58,7 @@
     =/  =path  /timeline/(scot %p our.gowl)/[name.axn]
     ?:  (test-bedrock-path-existence:scries path gowl)
       ~&  >>  %timeline-already-exists
-      (pure:m !>([~[%timeline-already-exists] path]))
+      (pure:m !>([~[%timeline-already-exists] [%timeline path]]))
     =|  row=input-path-row:db
     =:  path.row         path
         replication.row  %host
@@ -120,6 +120,8 @@
     (pure:m !>(`~))
     ::
       %create-timeline-posts
+    :: TODO: return new post ids
+    ::
     =/  =cage
       :-  %db-action  !>
       :-  %create-many
@@ -141,18 +143,9 @@
     ;<  ~  bind:m  (poke [our.gowl %bedrock] cage)
     (pure:m !>(`~))
     ::
-    ::   %relay-timeline-post
-    :: =;  cards
-    ::   [cards this]
-    :: =/  =relay:common  [id [%timeline-post 0v0] from 0 %all |]:axn
-    :: %+  turn  to.axn
-    :: |=  to=path
-    :: ^-  card
-    :: =/  row=input-row:db  [to [%relay 0v0] [%relay relay] ~]
-    :: =/  =cage  db-action+!>([%relay [our now]:bowl row])
-    :: [%pass / %agent [our.bowl %bedrock] %poke cage]
-    ::
       %create-react
+    :: TODO: return new react id
+    ::
     =/  =cage
       :-  %db-action  !>
       :*  %create   [our now]:gowl
@@ -172,6 +165,8 @@
     (pure:m !>(`~))
     ::
       %create-comment
+    :: TODO: return new comment id
+    ::
     =/  =cage
       :-  %db-action  !>
       :*  %create   [our now]:gowl
