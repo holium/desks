@@ -42,7 +42,31 @@
   ++  on-load
     |=  old-state=vase
     ^-  (quip card _this)
-    =/  old  !<(versioned-state old-state)
+    =/  uold=(unit versioned-state)
+      (mole |.(!<(versioned-state old-state)))
+    =/  old=versioned-state
+    ?~  uold
+      ::  types failed to nest, so fallback to empty tables,
+      ::  same paths and peers
+      =/  old-paths-and-peers     !<(minimal-state old-state)
+      ?-  -.old-paths-and-peers
+        %0
+      =/  default-state=state-0   *state-0
+      =.  paths.default-state     paths.old-paths-and-peers
+      =.  peers.default-state     peers.old-paths-and-peers
+      =.  tables.default-state
+      (~(gas by *tables-0) ~[[%relay *pathed-table-0] [%vote *pathed-table-0] [%react *pathed-table-0]])
+      default-state
+        %1
+      =/  default-state=state-1   *state-1
+      =.  paths.default-state     paths.old-paths-and-peers
+      =.  peers.default-state     peers.old-paths-and-peers
+      =.  tables.default-state
+      (~(gas by *^tables) ~[[relay-type:common *pathed-table] [vote-type:common *pathed-table] [react-type:common *pathed-table]])
+      default-state
+      ==
+    :: types DO nest, so just read it out
+    !<(versioned-state old-state)
     :: do a quick check to make sure we are subbed to /updates in %spaces
     =/  cards
       :-  [%pass /timer %arvo %b %rest next-refresh-time:core]
@@ -357,16 +381,17 @@
             ::~&  >>>  "{<dap.bowl>}: /next/[path] subscription failed"
             `this
           %kick
-            =/  pathrow    (~(get by paths.state) +.+.wire)
-            ?:  =(~ pathrow)
+            `this
+            ::=/  pathrow    (~(get by paths.state) +.+.wire)
+            ::?:  =(~ pathrow)
               ::~&  >>>  "got a %kick on {(spud +.+.wire)} that we are ignoring because that path is not in our state"
-              `this
-            =/  newpath  (weld /next/(scot %da updated-at:(need pathrow)) path:(need pathrow))
-            ~&  >>>  "{<dap.bowl>}: /next/[path] kicked us, resubbing {(spud newpath)}"
-            :_  this
-            :~
-              [%pass newpath %agent [src.bowl dap.bowl] %watch newpath]
-            ==
+            ::  `this
+            ::=/  newpath  (weld /next/(scot %da updated-at:(need pathrow)) path:(need pathrow))
+            ::~&  >>>  "{<dap.bowl>}: /next/[path] kicked us, resubbing {(spud newpath)}"
+            :::_  this
+            :::~
+            ::  [%pass newpath %agent [src.bowl dap.bowl] %watch newpath]
+            ::==
           %fact
             :: handle the update by updating our local state and
             :: pushing db-changes out to our subscribers
@@ -529,26 +554,6 @@
                   $(index +(index))
             ==
             [cards this]
-        ==
-      [%path @ *]
-        ?-    -.sign
-          %poke-ack
-            ?~  p.sign  `this
-            ::~&  >>>  "%realm-chat: {<(spat wire)>} dbpoke failed"
-            ::~&  >>>  p.sign
-            `this
-          %watch-ack
-            ?~  p.sign  `this
-            ::~&  >>>  "{<dap.bowl>}: /db subscription failed"
-            `this
-          %kick
-            ::~&  >  "{<dap.bowl>}: /db kicked us, resubscribing..."
-            :_  this
-            :~
-              [%pass /db %agent [our.bowl %chat-db] %watch /db]
-            ==
-          %fact
-            `this
         ==
     ==
   ::
