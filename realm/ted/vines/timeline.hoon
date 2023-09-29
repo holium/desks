@@ -1,8 +1,9 @@
 /-  spider
-/+  *timeline, *ventio, db, server, scries=bedrock-scries
+/+  vio=ventio, *timeline, db, server, scries=bedrock-scries
+=,  vio :: avoids overwrite of punt
 =>  |%
-    +$  gowl     bowl:gall
-    +$  sowl     bowl:spider
+    +$  gowl  bowl:gall
+    +$  sowl  bowl:spider
     --
 =,  strand=strand:spider
 ^-  thread:spider
@@ -52,7 +53,7 @@
   ::
     %timeline-action
   =+  !<(axn=action vase)
-  ?+    -.axn  (punt [our dap]:gowl mark vase)
+  ?-    -.axn
       %create-timeline
     ?>  =(src our):gowl
     =/  =path  /timeline/(scot %p our.gowl)/[name.axn]
@@ -240,10 +241,10 @@
     =/  fore=path  /spaces/~lomder-librun/realm-forerunners/chats/0v2.68end.ets6m.29fgc.ntejl.jbeo7
     =/  db-fore=path  /timeline/(scot %p our.gowl)/forerunners
     ?:  &(!force.axn (test-bedrock-path-existence:scries db-fore gowl))
-      ~&  >>  %timeline-already-exists
-      (pure:m !>([~[%timeline-already-exists] ~]))
-    ;<  ~  bind:m
-      ((vent ,~) [our dap]:gowl timeline-action+!>([%create-timeline %forerunners]))
+      ~&  >>  %forerunners-timeline-already-exists
+      (pure:m !>([~[%forerunners-timeline-already-exists] ~]))
+    ;<  *  bind:m
+      ((vent ,*) [our dap]:gowl timeline-action+!>([%create-timeline %forerunners]))
     ;<  posts=(list [[@p @da] timeline-post])  bind:m
       (convert-chat-db-msg-parts fore)
     =/  =cage

@@ -60,49 +60,6 @@
     ?>  =(src our):bowl
     =+  !<([eyre-id=@ta pay=simple-payload:http] vase)
     :_(this (give-simple-payload:app:server eyre-id pay))
-    ::
-      %timeline-action
-    =+  !<(axn=action vase)
-    ?+    -.axn  !!
-        %create-timeline
-      :: re-interpret as vent-request
-      ::
-      =^  cards  this
-        (on-poke vent-request+!>([*vent-id mark q.vase]))
-      [cards this]
-      ::
-        %add-forerunners-bedrock
-      =/  fore=path  /spaces/~lomder-librun/realm-forerunners/chats/0v2.68end.ets6m.29fgc.ntejl.jbeo7
-      =/  db-fore=path  /timeline/(scot %p our.bowl)/forerunners
-      ?:  &(!force.axn (test-bedrock-path-existence:scries db-fore bowl))
-        ~&(>> %timeline-already-exists `this)
-      =+  .^(dump=db-dump:cd %gx /(scot %p our.bowl)/chat-db/(scot %da now.bowl)/db/chat-db-dump)
-      ?>  ?=(%tables -.dump)
-      =/  tables=(map term table:cd)
-        %-  ~(gas by *(map term table:cd))
-        (turn tables.dump |=(=table:cd [-.table table]))
-      =/  =table:cd  (~(got by tables) %messages)
-      ?>  ?=(%messages -.table)
-      =/  posts=(list [[@p @da] timeline-post])
-        %+  murn  (tap:msgon:cd messages-table.table)
-        |=  [* msg-part:cd]
-        ?.  =(fore path)  ~
-        (convert-message our.bowl created-at msg-id msg-part-id content metadata)
-      =^  tl-cards  this
-        (on-poke timeline-action+!>([%create-timeline %forerunners]))
-      =/  post-cards
-        %+  turn  posts
-        |=  [req-id=[@p @da] post=timeline-post]
-        ^-  card
-        =/  =cage
-          :-  %db-action  !>
-          :*  %create  req-id
-              db-fore  [%timeline-post 0v0]
-              [%timeline-post post]  ~
-          ==
-        [%pass / %agent [our.bowl %bedrock] %poke cage]
-      :_(this (weld tl-cards post-cards))
-    ==
   ==
 ::
 ++  on-watch
