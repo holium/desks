@@ -27,10 +27,18 @@
     |=  =vent:tl
     ^-  json
     ?~  vent  ~
-    %+  frond  -.vent
-    ?-  -.vent
-      %timeline       (path path.vent)
-      %timeline-post  (row-id-to-json:enjs:db id.vent)
+    =|  =(map @t json)
+    =?  map  ?=(^ p.vent)
+      %+  ~(put by map)
+        'printf'
+      a+(turn p.vent (lead %s))
+    ?~  q.vent  o+map
+    :-  %o
+    %+  ~(put by map)
+      -.q.vent
+    ?-  -.q.vent
+      %timeline       (path path.q.vent)
+      %timeline-post  (row-id-to-json:enjs:db id.q.vent)
     ==
   --
 ::

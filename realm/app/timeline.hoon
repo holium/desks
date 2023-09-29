@@ -60,46 +60,7 @@
     ::
       %timeline-action
     =+  !<(axn=action vase)
-    ?-    -.axn
-        %create-timeline
-      :: re-interpret as vent-request
-      ::
-      =^  cards  this
-        (on-poke vent-request+!>([*vent-id mark q.vase]))
-      [cards this]
-      :: 
-        %delete-timeline
-      ?>  =(src our):bowl
-      =/  =path  /timeline/(scot %p our.bowl)/[name.axn]
-      ?.  (test-bedrock-path-existence:scries path bowl)
-        ~&(>> %timeline-does-not-exist `this)
-      =/  =cage  db-action+!>([%delete-path path])
-      :_(this [%pass / %agent [our.bowl %bedrock] %poke cage]~)
-      ::
-        %follow-timeline
-      ?>  =(src our):bowl
-      =+  ;;([%timeline host=@ta name=@ta ~] path.axn)
-      =/  =cage  db-action+!>([%handle-follow-request name])
-      :_(this [%pass / %agent [(slav %p host) %bedrock] %poke cage]~)
-      ::
-        %handle-follow-request
-      =/  =path  /timeline/(scot %p our.bowl)/[name.axn]
-      :: TODO: check that the timeline is public
-      =/  =cage  db-action+!>([%add-peer path src.bowl %$])
-      :_(this [%pass / %agent [our.bowl %bedrock] %poke cage]~)
-      ::
-        %leave-timeline
-      ?>  =(src our):bowl
-      =+  ;;([%timeline host=@ta name=@ta ~] path.axn)
-      =/  =cage  db-action+!>([%handle-leave-request name])
-      :_(this [%pass / %agent [(slav %p host) %bedrock] %poke cage]~)
-      ::
-        %handle-leave-request
-      =/  =path  /timeline/(scot %p our.bowl)/[name.axn]
-      :: TODO: check that the timeline is public
-      =/  =cage  db-action+!>([%kick-peer path src.bowl])
-      :_(this [%pass / %agent [our.bowl %bedrock] %poke cage]~)
-      ::
+    ?+    -.axn  !!
         %create-timeline-posts
       =/  =cage
         :-  %db-action  !>
@@ -130,40 +91,6 @@
       =/  row=input-row:db  [to [%relay 0v0] [%relay relay] ~]
       =/  =cage  db-action+!>([%relay [our now]:bowl row])
       [%pass / %agent [our.bowl %bedrock] %poke cage]
-      ::
-        %create-react
-      =/  =cage
-        :-  %db-action  !>
-        :*  %create   [our now]:bowl
-            path.axn  [%react 0v0]
-            [%react react.axn]  ~
-        ==
-      :_(this [%pass / %agent [our.bowl %bedrock] %poke cage]~)
-      ::
-        %delete-react
-      =/  =cage
-        :-  %db-action  !>
-        :*  %remove  [our now]:bowl
-            [%react 0v0]  path.axn  id.axn
-        ==
-      :_(this [%pass / %agent [our.bowl %bedrock] %poke cage]~)
-      ::
-        %create-comment
-      =/  =cage
-        :-  %db-action  !>
-        :*  %create   [our now]:bowl
-            path.axn  [%comment 0v0]
-            [%comment comment.axn]  ~
-        ==
-      :_(this [%pass / %agent [our.bowl %bedrock] %poke cage]~)
-      ::
-        %delete-comment
-      =/  =cage
-        :-  %db-action  !>
-        :*  %remove  [our now]:bowl
-            [%comment 0v0]  path.axn  id.axn
-        ==
-      :_(this [%pass / %agent [our.bowl %bedrock] %poke cage]~)
       ::
         %convert-message
       =+  .^(dump=db-dump:cd %gx /(scot %p our.bowl)/chat-db/(scot %da now.bowl)/db/chat-db-dump)

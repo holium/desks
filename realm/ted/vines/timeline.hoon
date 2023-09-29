@@ -57,7 +57,8 @@
     ?>  =(src our):gowl
     =/  =path  /timeline/(scot %p our.gowl)/[name.axn]
     ?:  (test-bedrock-path-existence:scries path gowl)
-      ~&(>> %timeline-already-exists (pure:m !>(~)))
+      ~&  >>  %timeline-already-exists
+      (pure:m !>([~[%timeline-already-exists] path]))
     =|  row=input-path-row:db
     =:  path.row         path
         replication.row  %host
@@ -69,17 +70,92 @@
       (poke [our.gowl %bedrock] db-action+!>([%create-path row]))
     :: add the %timeline entry at this path
     ::
-    =/  new-tl=cage
+    =/  =cage
       :-  %db-action  !>
       :*  %create  [our now]:gowl
           path     [%timeline 0v0]
           :: for now defaults to public: true
           [%timeline ~ &]  ~
       ==
-    ;<  ~  bind:m  (poke [our.gowl %bedrock] new-tl)
+    ;<  ~  bind:m  (poke [our.gowl %bedrock] cage)
     :: return created path
     ::
-    (pure:m !>([%timeline path]))
+    (pure:m !>(`[%timeline path]))
+    ::
+      %delete-timeline
+    ?>  =(src our):gowl
+    =/  =path  /timeline/(scot %p our.gowl)/[name.axn]
+    ?.  (test-bedrock-path-existence:scries path gowl)
+      ~&  >>  %timeline-does-not-exist
+      (pure:m !>([~[%timeline-does-not-exist] ~]))
+    =/  =cage  db-action+!>([%delete-path path])
+    ;<  ~  bind:m  (poke [our.gowl %bedrock] cage)
+    (pure:m !>(~))
+    ::
+      %follow-timeline
+    ?>  =(src our):gowl
+    =+  ;;([%timeline host=@ta name=@ta ~] path.axn)
+    =/  =cage  db-action+!>([%handle-follow-request name])
+    ;<  ~  bind:m  (poke [(slav %p host) %bedrock] cage)
+    (pure:m !>(~))
+    ::
+      %handle-follow-request
+    =/  =path  /timeline/(scot %p our.gowl)/[name.axn]
+    :: TODO: check that the timeline is public
+    =/  =cage  db-action+!>([%add-peer path src.gowl %$])
+    ;<  ~  bind:m  (poke [our.gowl %bedrock] cage)
+    (pure:m !>(~))
+    ::
+      %leave-timeline
+    ?>  =(src our):gowl
+    =+  ;;([%timeline host=@ta name=@ta ~] path.axn)
+    =/  =cage  db-action+!>([%handle-leave-request name])
+    ;<  ~  bind:m  (poke [(slav %p host) %bedrock] cage)
+    (pure:m !>(~))
+    ::
+      %handle-leave-request
+    =/  =path  /timeline/(scot %p our.gowl)/[name.axn]
+    =/  =cage  db-action+!>([%kick-peer path src.gowl])
+    ;<  ~  bind:m  (poke [our.gowl %bedrock] cage)
+    (pure:m !>(~))
+    ::
+      %create-react
+    =/  =cage
+      :-  %db-action  !>
+      :*  %create   [our now]:gowl
+          path.axn  [%react 0v0]
+          [%react react.axn]  ~
+      ==
+    ;<  ~  bind:m  (poke [our.gowl %bedrock] cage)
+    (pure:m !>(~))
+    ::
+      %delete-react
+    =/  =cage
+      :-  %db-action  !>
+      :*  %remove  [our now]:gowl
+          [%react 0v0]  path.axn  id.axn
+      ==
+    ;<  ~  bind:m  (poke [our.gowl %bedrock] cage)
+    (pure:m !>(~))
+    ::
+      %create-comment
+    =/  =cage
+      :-  %db-action  !>
+      :*  %create   [our now]:gowl
+          path.axn  [%comment 0v0]
+          [%comment comment.axn]  ~
+      ==
+    ;<  ~  bind:m  (poke [our.gowl %bedrock] cage)
+    (pure:m !>(~))
+    ::
+      %delete-comment
+    =/  =cage
+      :-  %db-action  !>
+      :*  %remove  [our now]:gowl
+          [%comment 0v0]  path.axn  id.axn
+      ==
+    ;<  ~  bind:m  (poke [our.gowl %bedrock] cage)
+    (pure:m !>(~))
   ==
 ==
 ::

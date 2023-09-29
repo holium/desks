@@ -32,6 +32,8 @@
 ::
 +$  vent
   $@  ~
+  %+  pair  wain  :: printf
+  $@  ~
   $%  [%timeline =path]
       [%timeline-post =id:common]
   ==
