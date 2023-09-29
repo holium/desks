@@ -61,6 +61,13 @@
       %timeline-action
     =+  !<(axn=action vase)
     ?+    -.axn  !!
+        %create-timeline
+      :: re-interpret as vent-request
+      ::
+      =^  cards  this
+        (on-poke vent-request+!>([*vent-id mark q.vase]))
+      [cards this]
+      ::
         %relay-timeline-post
       =;  cards
         [cards this]

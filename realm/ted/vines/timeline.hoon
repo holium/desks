@@ -120,8 +120,6 @@
     (pure:m !>(`~))
     ::
       %create-timeline-posts
-    :: TODO: return new post ids
-    ::
     =/  =cage
       :-  %db-action  !>
       :-  %create-many
@@ -130,6 +128,19 @@
       :*  [our now]:gowl  path.axn
           [%timeline-post 0v0]
           [%timeline-post post]  ~
+      ==
+    ;<  ~  bind:m  (poke [our.gowl %bedrock] cage)
+    (pure:m !>(`~))
+    ::
+      %create-timeline-post
+    :: TODO: return created id
+    ::
+    =/  =cage
+      :-  %db-action  !>
+      :-  %create
+      :*  [our now]:gowl  path.axn
+          [%timeline-post 0v0]
+          [%timeline-post post.axn]  ~
       ==
     ;<  ~  bind:m  (poke [our.gowl %bedrock] cage)
     (pure:m !>(`~))

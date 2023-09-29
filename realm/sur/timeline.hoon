@@ -12,6 +12,7 @@
       [%leave-timeline =path]
       [%handle-leave-request name=@ta]
       [%create-timeline-posts =path posts=(list timeline-post)]
+      [%create-timeline-post =path post=timeline-post]
       [%delete-timeline-post =path =id:common]
       [%relay-timeline-post from=path =id:common to=(list path)]
       [%create-react =path =react:common]
