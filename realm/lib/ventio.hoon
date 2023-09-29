@@ -198,6 +198,6 @@
   ;<  ~      bind:m  (take-kick /awaiting/[tid])
   ?+  p.cage  ~|([%strange-thread-result p.cage file tid] !!)
     %thread-done  (pure:m q.cage)
-    %thread-fail  (strand-fail %thread-fail ~)
+    %thread-fail  (strand-fail ;;([term tang] q.q.cage))
   ==
 --
