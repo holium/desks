@@ -46,6 +46,13 @@
   ?:  ?=(%vent-request mark)  :_(this ~[(to-vine:vio vase bowl)])
   ::
   ?+    mark  (on-poke:def mark vase)
+      %timeline-action
+    :: re-interpret as vent-request
+    ::
+    =^  cards  this
+      (on-poke vent-request+!>([*vent-id mark q.vase]))
+    [cards this]
+    ::
       %handle-http-request
     :: re-interpret as vent-request
     :: necessary -- %eyre hits %timeline with a poke
