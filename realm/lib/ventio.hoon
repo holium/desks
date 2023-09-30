@@ -1,7 +1,8 @@
 /-  spider
 /+  *strandio
+=,  tid=tid:rand
 |%
-+$  vent-id  (trel @p tid:rand @da)
++$  vent-id  (trel @p tid @da)
 +$  request  (pair vent-id page)
 +$  package
   $:  =dock     :: destination ship/agent
@@ -149,7 +150,7 @@
   (strand-fail !<(goof q.rep))
 ::
 ++  unique-vent
-  |=  [=dock =vents our=@p =tid:rand now=@da]
+  |=  [=dock =vents our=@p =tid now=@da]
   ^-  vent-id
   ?.  (~(has ju vents) dock [our tid now])
     [our tid now]
@@ -189,7 +190,7 @@
   =/  m  (strand ,thread-result)
   ^-  form:m
   ;<  =bowl:spider  bind:m  get-bowl
-  =/  tid  (scot %ta (cat 3 'strand_' (scot %uv (sham file eny.bowl))))
+  =/  tid  (scot %ta (cat 3 'strand_' (scot %uv (sham desk file eny.bowl))))
   =.  q.byk.bowl  desk
   =/  poke-vase  !>(`start-args:spider`[`tid.bowl `tid byk.bowl file args])
   ;<  ~      bind:m  (watch-our /awaiting/[tid] %spider /thread-result/[tid])

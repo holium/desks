@@ -134,8 +134,6 @@
     (pure:m !>(`~))
     ::
       %create-timeline-post
-    :: TODO: return created id
-    ::
     =/  =action:db
       :-  %create
       :*  [our now]:gowl  path.axn
@@ -180,8 +178,6 @@
     ==
     ::
       %create-react
-    :: TODO: return new react id
-    ::
     =/  =action:db
       :*  %create   [our now]:gowl
           path.axn  [%react 0v0]
@@ -202,8 +198,6 @@
     (pure:m !>(`~))
     ::
       %create-comment
-    :: TODO: return new comment id
-    ::
     =/  =action:db
       :*  %create   [our now]:gowl
           path.axn  [%comment 0v0]
