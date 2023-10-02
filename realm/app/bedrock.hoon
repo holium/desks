@@ -128,6 +128,14 @@
 
       %create
         (create:db +.act state bowl)
+      %create-many
+        =|  cards=(list card)
+        |-
+        ?~  args.act
+          [cards state]
+        =^  cadz  state
+          (create:db i.args.act state bowl)
+        $(args.act t.args.act, cards (weld cadz cards))
       %edit
         (edit:db +.act state bowl)
       %remove
@@ -382,16 +390,17 @@
             ::~&  >>>  "{<dap.bowl>}: /next/[path] subscription failed"
             `this
           %kick
-            =/  pathrow    (~(get by paths.state) +.+.wire)
-            ?:  =(~ pathrow)
+            `this
+            ::=/  pathrow    (~(get by paths.state) +.+.wire)
+            ::?:  =(~ pathrow)
               ::~&  >>>  "got a %kick on {(spud +.+.wire)} that we are ignoring because that path is not in our state"
-              `this
-            =/  newpath  (weld /next/(scot %da updated-at:(need pathrow)) path:(need pathrow))
-            ~&  >>>  "{<dap.bowl>}: /next/[path] kicked us, resubbing {(spud newpath)}"
-            :_  this
-            :~
-              [%pass newpath %agent [src.bowl dap.bowl] %watch newpath]
-            ==
+            ::  `this
+            ::=/  newpath  (weld /next/(scot %da updated-at:(need pathrow)) path:(need pathrow))
+            ::~&  >>>  "{<dap.bowl>}: /next/[path] kicked us, resubbing {(spud newpath)}"
+            :::_  this
+            :::~
+            ::  [%pass newpath %agent [src.bowl dap.bowl] %watch newpath]
+            ::==
           %fact
             :: handle the update by updating our local state and
             :: pushing db-changes out to our subscribers
@@ -554,26 +563,6 @@
                   $(index +(index))
             ==
             [cards this]
-        ==
-      [%path @ *]
-        ?-    -.sign
-          %poke-ack
-            ?~  p.sign  `this
-            ::~&  >>>  "%realm-chat: {<(spat wire)>} dbpoke failed"
-            ::~&  >>>  p.sign
-            `this
-          %watch-ack
-            ?~  p.sign  `this
-            ::~&  >>>  "{<dap.bowl>}: /db subscription failed"
-            `this
-          %kick
-            ::~&  >  "{<dap.bowl>}: /db kicked us, resubscribing..."
-            :_  this
-            :~
-              [%pass /db %agent [our.bowl %chat-db] %watch /db]
-            ==
-          %fact
-            `this
         ==
     ==
   ::
