@@ -432,7 +432,7 @@
     (limo [(into-backlog-msg-poke (turn (scry-messages-for-path path.act bowl) |=([k=uniq-id:db v=msg-part:db] v)) ship.act) ~])
 
   =/  cards=(list card)
-    :-  (add-bedrock-peer-poke (scry-bedrock-path-host:db-scry path.act bowl) path.act ship.act nft.act)
+::    :-  (add-bedrock-peer-poke (scry-bedrock-path-host:db-scry path.act bowl) path.act ship.act nft.act)
     %+  weld
       %+  snoc
         :: we poke all original peers db with add-peer (including ourselves)
@@ -489,15 +489,15 @@
     %+  turn
       pathpeers
     |=(a=peer-row:db (into-insert-message-poke a +.act official-time))
-  =/  cards=(list card)
-    ?.  (test-bedrock-path-existence:db-scry path.act bowl)
-      chat-db-pokes
-    ?.  (test-bedrock-table-existence:db-scry chat-type:common bowl)
-      chat-db-pokes
-    =/  bedrock-chat=(unit row:bedrock)  (scry-first-bedrock-chat:db-scry path.act bowl)
-    ?~  bedrock-chat  chat-db-pokes
-    :-  (create-bedrock-message-poke (scry-bedrock-path-host:db-scry path.act bowl) +.act official-time id.u.bedrock-chat)
-    chat-db-pokes
+  =/  cards=(list card)  chat-db-pokes
+::    ?.  (test-bedrock-path-existence:db-scry path.act bowl)
+::      chat-db-pokes
+::    ?.  (test-bedrock-table-existence:db-scry chat-type:common bowl)
+::      chat-db-pokes
+::    =/  bedrock-chat=(unit row:bedrock)  (scry-first-bedrock-chat:db-scry path.act bowl)
+::    ?~  bedrock-chat  chat-db-pokes
+::    :-  (create-bedrock-message-poke (scry-bedrock-path-host:db-scry path.act bowl) +.act official-time id.u.bedrock-chat)
+::    chat-db-pokes
   :: then send pokes to all the peers about inserting a message
   [cards state]
 ::
@@ -514,11 +514,11 @@
     %+  turn
       pathpeers
     |=(p=peer-row:db (into-edit-message-poke p act))
-  =/  cards=(list card)
-    ?.  (test-bedrock-path-existence:db-scry path.act bowl)
-      chat-db-pokes
-    :-  (edit-bedrock-message-poke (scry-bedrock-path-host:db-scry path.act bowl) act bowl)
-    chat-db-pokes
+  =/  cards=(list card)  chat-db-pokes
+::    ?.  (test-bedrock-path-existence:db-scry path.act bowl)
+::      chat-db-pokes
+::    :-  (edit-bedrock-message-poke (scry-bedrock-path-host:db-scry path.act bowl) act bowl)
+::    chat-db-pokes
   [cards state]
 ::
 ++  delete-message
@@ -534,11 +534,11 @@
     %+  turn
       pathpeers
     |=(p=peer-row:db (into-delete-message-poke p msg-id.act))
-  =/  cards=(list card)
-    ?.  (test-bedrock-path-existence:db-scry path.act bowl)
-      chat-db-pokes
-    :-  (delete-bedrock-message-poke (scry-bedrock-path-host:db-scry path.act bowl) act bowl)
-    chat-db-pokes
+  =/  cards=(list card)  chat-db-pokes
+::    ?.  (test-bedrock-path-existence:db-scry path.act bowl)
+::      chat-db-pokes
+::    :-  (delete-bedrock-message-poke (scry-bedrock-path-host:db-scry path.act bowl) act bowl)
+::    chat-db-pokes
   [cards state]
 ::
 ++  delete-backlog

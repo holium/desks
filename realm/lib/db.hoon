@@ -1674,6 +1674,7 @@
           [%edit-path create-path]
           [%remove-path pa]
           [%create de-create-input-row]
+          [%create-many (ar de-create-input-row)]
           [%edit de-edit-poke]
           [%remove remove]
           [%remove-many remove-many]

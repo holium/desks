@@ -893,7 +893,7 @@
       ^-  [req-id contact:common]
       ?>  ?=([%o *] jon)
       =/  request-id=(unit json)  (~(get by p.jon) 'request-id')
-      =/  id=id:common  
+      =/  id=id:common
         ?~  request-id  [~zod ~2000.1.1]  :: if the poke-sender didn't care enough to pass a request id, just use a fake one
         (de-id u.request-id)
       :-  id
@@ -906,7 +906,7 @@
       =/  gt  ~(got by p.jon)
       =/  request-id=(unit json)  (~(get by p.jon) 'request-id')
       =/  mtd=(unit json)  (~(get by p.jon) 'mtd')
-      =/  id=id:common  
+      =/  id=id:common
         ?~  request-id  [~zod ~2000.1.1]  :: if the poke-sender didn't care enough to pass a request id, just use a fake one
         (de-id u.request-id)
       :*  id
@@ -920,7 +920,7 @@
       ?>  ?=([%o *] jon)
       =/  gt  ~(got by p.jon)
       =/  request-id=(unit json)  (~(get by p.jon) 'request-id')
-      =/  id=id:common  
+      =/  id=id:common
         ?~  request-id  [~zod ~2000.1.1]  :: if the poke-sender didn't care enough to pass a request id, just use a fake one
         (de-id u.request-id)
       :*  id
@@ -933,7 +933,7 @@
       ?>  ?=([%o *] jon)
       =/  gt  ~(got by p.jon)
       =/  request-id=(unit json)  (~(get by p.jon) 'request-id')
-      =/  id=id:common  
+      =/  id=id:common
         ?~  request-id  [~zod ~2000.1.1]  :: if the poke-sender didn't care enough to pass a request id, just use a fake one
         (de-id u.request-id)
       :*  id
@@ -946,7 +946,7 @@
       ^-  [req-id passport-link-container:common (unit @t)]
       ?>  ?=([%o *] jon)
       =/  request-id=(unit json)  (~(get by p.jon) 'request-id')
-      =/  wallet=(unit json)  (~(get by p.jon) 'wallet_source')
+      =/  wallet=(unit json)  (~(get by p.jon) 'wallet-source')
       ?~  request-id
       :: if the poke-sender didn't care enough to pass a request id, just use a fake one
         [[~zod ~2000.1.1] (de-add-link jon) (so:dejs-soft:format ?~(wallet ~ u.wallet))]
@@ -1125,7 +1125,7 @@
       ^-  json
       ?~  a  ~
       %-  pairs
-      :- 
+      :-
         ?-  -.u.a
           %image  ['img' s+img.u.a]
           %nft  ['nft' s+nft.u.a]
