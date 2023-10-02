@@ -27,7 +27,6 @@
     =/  default-cards
       :~  [%pass /timer %arvo %b %rest next-expire-time:core]
           [%pass /timer %arvo %b %wait next-expire-time:core]
-          [%pass /selfpoke %agent [our.bowl dap.bowl] %poke %chat-db-action !>([%dump-to-bedrock ~])]
       ==
     ?-  -.old
       %0  

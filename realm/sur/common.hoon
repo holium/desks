@@ -11,10 +11,14 @@
       %creds
       %chat
       %message
+      %passport
+      %friend
+      %contact
       @tas
   ==
 +$  type      [name=type-prefix hash=@uvH]  :: hash is (sham schema) for %general, and incrementing @uv for common types
 +$  id        [=ship t=@da] :: ship is who created the row, t is when it was created since that's inherently unique in one-at-a-time only creation fashion
++$  rich-ref  [=id =path =type mtd=(map @t @t)]
 +$  u-path-id  (unit [=path =id])
 ::
 :: pre-built data-types
@@ -168,6 +172,125 @@
     region=@t
   ==
 ++  creds-type  `type`[name=%creds hash=0v0]
+
+::
++$  friend
+  $:  =ship
+      ::pending-outgoing = WE asked `ship` to be friend
+      ::pending-incoming = `ship` asked US to be friend
+      ::friend = pending `ship` accepted to be friend
+      ::rejected = pending `ship` rejected to be friend
+      status=?(%pending-outgoing %pending-incoming %friend %rejected)
+      pinned=?
+      mtd=(map @t @t)
+  ==
+++  friend-type  `type`[name=%friend hash=0v0]
+::
++$  passport
+  $:  =contact
+      cover=(unit @t)
+      user-status=?(%invisible %online)
+      discoverable=?
+      nfts=(list linked-nft)
+      addresses=(list linked-address)
+      default-address=@t
+      recommendations=(set rich-ref)
+      chain=passport-chain
+      crypto=passport-crypto
+  ==
+++  passport-type  `type`[name=%passport hash=0v0]
+::
++$  contact
+  $:  =ship
+      avatar=(unit avatar)
+      color=(unit @t) :: i.e. #FCFCFC
+      bio=(unit @t)
+      display-name=(unit @t)
+  ==
+::
+++  contact-type  `type`[name=%contact hash=0v0]
+::
++$  avatar
+  $%  [%image img=@t]
+      [%nft nft=@t]
+  ==
+::
++$  linked-nft
+  $:  chain-id=?(%eth-mainnet %eth-testnet)
+      token-id=@t         :: i.e. 8739
+      contract-address=@t :: i.e. 0x789e...fee7
+      name=@t             :: i.e. "Pixelady #599"
+      image-url=@t
+      owned-by=@t         :: the wallet address that owns the NFT
+      token-standard=@t   :: i.e. ERC-721
+  ==
+::
++$  linked-address
+  $:  wallet=@t   :: "rainbow", "metamask", etc
+      address=@t
+      pubkey=@t
+      =crypto-signature
+  ==
+::
++$  crypto-signature
+  $:  data=@t   ::  the full data blob being signed
+      hash=@t   ::  a hash of the data (sha-256)
+      signature-of-hash=@t :: the private-key encryption of the hash
+      pubkey=@t :: the pubkey needed to decrypt the signature
+  ==
+::
++$  passport-chain  (list passport-link-container)
++$  passport-link-container   [link-type=@t data=@t hash=@t hash-signature=@t]
++$  passport-link
+  $%  [%edge-add from-link-hash=@t to-link-hash=@t key=@t value=@t]
+      [%edge-remove link-hash=@t]
+      [%entity-add public-key=@t public-key-type=@t name=@t]
+      [%entity-remove name=@t]
+      [%key-add public-key=@t public-key-type=@t name=@t]
+      [%key-remove name=@t]
+      [%post-add type=@t data=json]
+      [%post-edit link-hash=@t type=@t data=json]
+      [%post-remove link-hash=@t]
+      [%name-record-set name=@t record=@t]
+      [%token-burn from-entity=@t amount=@rd]
+      [%token-mint to-entity=@t amount=@rd]
+      [%token-transfer to-entity=@t amount=@rd]
+  ==
++$  passport-data-link
+  $:  mtd=passport-data-link-metadata
+      data=passport-link
+  ==
++$  passport-data-link-metadata
+  $:  from-entity=@t
+      signing-public-key=@t
+      value=@ud
+      link-id=@t
+      epoch-block-number=@ud
+      previous-epoch-nonce=@ud
+      previous-epoch-hash=@t
+      nonce=@ud
+      previous-link-hash=@t
+      data-block-number=@ud
+      timestamp=@da
+  ==
++$  pki-state
+  $:  chain-owner-entities=(list @t)
+      entity-to-public-keys=(map @t (list @t))
+      public-key-to-nonce=(map @t @ud)
+      entity-to-value=(map @t @ud)
+      public-key-to-entity=(map @t @t)
+  ==
++$  passport-crypto
+  $:  link-id=@t
+      epoch-block=@ud
+      data-block=@ud
+      timestamp=@da
+      previous-epoch-hash=@t
+      =pki-state
+      transaction-types=[link-names=(list @t) link-structs=@t]
+      data-structs=[struct-names=(list @t) struct-types=@t]
+      sig-chain-settings=[new-entity-balance=@ud epoch-length=@ud signing-key=@t data-state=json]
+  ==
 
 :: chat-db stuff
 +$  chat
