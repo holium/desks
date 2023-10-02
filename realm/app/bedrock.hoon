@@ -192,7 +192,7 @@
           =/  thepathrow    (~(got by paths.state) t.t.path)
           :: if the @da they passed was behind, %give them the current version, and %kick them
           ?:  (gth updated-at.thepathrow t)
-            ~&  >>>  "{<src.bowl>} tried to sub on old @da {<t>}, %kicking them from {<t.t.path>}"
+            :: ~&  >>>  "{<src.bowl>} tried to sub on old @da {<t>}, %kicking them from {<t.t.path>}"
             =/  thepeers    (~(got by peers.state) t.t.path)
             =/  tbls        (tables-by-path:db tables.state t.t.path)
             =/  dels=(list [@da db-del-change])
