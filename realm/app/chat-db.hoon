@@ -349,7 +349,7 @@
     |=  path
       `this
   ::
-  ::  only used for behn timers
+  ::  only used for behn timers and nft-verification
   ++  on-arvo
     |=  [=wire =sign-arvo]
     ^-  (quip card _this)
@@ -384,6 +384,7 @@
           (parse-alchemy-json (need (de:json:html q.data.u.payload)))
         ?>  |-
           ?:  =((lent contracts) 0)
+            ~&  >>>  "failed to find matching contract {<nft.pathrow>}"
             %.n
           ?:  =(contract:(need nft.pathrow) (snag 0 contracts))
             ~&  >  "found matching contract {<nft.pathrow>} {<(snag 0 contracts)>}"

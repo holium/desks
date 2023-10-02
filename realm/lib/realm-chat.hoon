@@ -232,7 +232,7 @@
   ]
 ::
 ++  add-bedrock-peer-poke
-  |=  [host=ship =path newship=ship sig=(unit [sig=@t addr=@t])]
+  |=  [host=ship =path newship=ship sig=nft-sig]
   ^-  card
   [%pass /dbpoke %agent [host %bedrock] %poke %db-action !>([%add-peer path newship %member sig])]
 ::
@@ -410,7 +410,7 @@
 ::
 ++  add-ship-to-chat
 ::realm-chat &chat-action [%add-ship-to-chat now /realm-chat/path-id ~bus ~ ~]
-  |=  [act=[t=@da =path =ship host=(unit ship) nft=(unit [sig=@t addr=@t])] state=state-1 =bowl:gall]
+  |=  [act=[t=@da =path =ship host=(unit ship) nft=nft-sig] state=state-1 =bowl:gall]
   ^-  (quip card state-1)
   ?:  &(=(src.bowl our.bowl) =(our.bowl ship.act))  :: if we are trying to add ourselves, then actually we just need to forward this poke to the host
     ?~  host.act  !!  :: have to pass the host if we are adding ourselves
@@ -747,14 +747,22 @@
       ==
     ::
     ++  create-chat
-      %-  ot
-      :~  [%metadata (om so)]
-          [%type (se %tas)]
-          [%peers (ar de-ship)]
-          [%invites (se %tas)]
-          [%max-expires-at-duration null-or-dri]  :: specify in integer milliseconds, or null for "not set"
-          [%nft (ot ~[contract+so chain+so standard+so]):dejs-soft:format]
-      ==
+      |=  jon=json
+      ^-  create-chat-data
+      ?>  ?=([%o *] jon)
+      =/  gt  ~(got by p.jon)
+      =/  unft    (~(get by p.jon) 'nft')
+      =/  nft=(unit [contract=@t chain=@t standard=@t])
+        ?~  unft  ~
+        (some ((ot ~[contract+so chain+so standard+so]) u.unft))
+      [
+        ((om so) (gt 'metadata'))
+        ((se %tas) (gt 'type'))
+        ((ar de-ship) (gt 'peers'))
+        ((se %tas) (gt 'invites'))
+        (null-or-dri (gt 'max-expires-at-duration')):: specify in integer milliseconds, or null for "not set"
+        nft
+      ]
     ::
     ++  edit-chat
       %-  ot
@@ -792,7 +800,7 @@
     ::
     ++  path-and-ship-and-unit-host
       |=  jon=json
-      ^-  [@da path ship (unit ship)]
+      ^-  [@da path ship (unit ship) nft-sig]
       ?>  ?=([%o *] jon)
       =/  ut    (~(get by p.jon) 't')
       =/  uhost    (~(get by p.jon) 'host')
@@ -800,9 +808,9 @@
         ?~  uhost  ~
         (some (de-ship (need uhost)))
       =/  unft    (~(get by p.jon) 'nft')
-      =/  nft=(unit [sig=@t addr=@t])
+      =/  nft=nft-sig
         ?~  unft  ~
-        (some [(so sig.u.unft) (so addr.u.unft)])
+        (some ((ot ~[sig+so addr+so]) u.unft))
       [
         ?~(ut *@da (di u.ut))
         (pa (~(got by p.jon) 'path'))

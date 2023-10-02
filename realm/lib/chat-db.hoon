@@ -872,6 +872,17 @@
           :: return as integer millisecond duration
           max-expires-at-duration+(numb (|=(t=@dr ^-(@ud (mul (div t ~s1) 1.000))) max-expires-at-duration.path-row))
           received-at+(time received-at.path-row)
+          nft+(en-nft-info nft.path-row)
+      ==
+    ::
+    ++  en-nft-info
+      |=  nft=(unit [contract=@t chain=@t standard=@t])
+      ^-  json
+      ?~  nft  ~
+      %-  pairs
+      :~  contract+s+contract.u.nft
+          chain+s+chain.u.nft
+          standard+s+standard.u.nft
       ==
     ::
     ++  messages-row
