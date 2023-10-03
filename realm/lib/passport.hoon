@@ -24,8 +24,8 @@
   :: only allow keys that are already in the crypto state to add other keys
   =/  parsed-link=passport-data-link:common   (passport-data-link:dejs (need (de:json:html data.ln)))
   =/  entity=@t     from-entity.mtd.parsed-link
-  =/  key=@t        signing-public-key.mtd.parsed-link
-  =/  keys=(list @t)  (~(got by entity-to-public-keys.pki-state.crypto.p) entity)
+  =/  key=@t        signing-address.mtd.parsed-link
+  =/  keys=(list @t)  (~(got by entity-to-addresses.pki-state.crypto.p) entity)
   ?~  (find [key]~ keys)  %.n  ::invalid signing key
   %.y
 ::
@@ -106,7 +106,7 @@
           =('NAME_RECORD_SET' link-type.ln)
       ==
     =/  pd=passport-data-link:common  (passport-data-link:dejs (need (de:json:html data.ln)))
-    signing-public-key.mtd.pd
+    signing-address.mtd.pd
   !!
 ::
 ++  req
@@ -510,21 +510,21 @@
       =/  parsed-link=passport-data-link:common   (passport-data-link:dejs (need (de:json:html data.ln)))
       ?>  (prev-link-hash-matches parsed-link chain.p)
       =/  entity=@t     from-entity.mtd.parsed-link
-      =/  key=@t        signing-public-key.mtd.parsed-link
+      =/  key=@t        signing-address.mtd.parsed-link
       ?+  -.data.parsed-link  !!
         %key-add
-      =/  new-key-type=@t   public-key-type.data.parsed-link
-      =/  new-key=@t        public-key.data.parsed-link
+      =/  new-key-type=@t   address-type.data.parsed-link
+      =/  new-key=@t        address.data.parsed-link
       =/  new-entity=@t     name.data.parsed-link
       ::  add new key to the pki-state for the new-entity
-      =/  keys=(list @t)  (~(got by entity-to-public-keys.pki-state.crypto.p) new-entity)
-      =.  entity-to-public-keys.pki-state.crypto.p  (~(put by entity-to-public-keys.pki-state.crypto.p) new-entity (snoc keys new-key))
-      =.  public-key-to-entity.pki-state.crypto.p   (~(put by public-key-to-entity.pki-state.crypto.p) new-key new-entity)
+      =/  keys=(list @t)  (~(got by entity-to-addresses.pki-state.crypto.p) new-entity)
+      =.  entity-to-addresses.pki-state.crypto.p  (~(put by entity-to-addresses.pki-state.crypto.p) new-entity (snoc keys new-key))
+      =.  address-to-entity.pki-state.crypto.p   (~(put by address-to-entity.pki-state.crypto.p) new-key new-entity)
 
-      =.  public-key-to-nonce.pki-state.crypto.p  :: increment signing key nonce
-        (~(put by public-key-to-nonce.pki-state.crypto.p) key +((~(got by public-key-to-nonce.pki-state.crypto.p) key)))
+      =.  address-to-nonce.pki-state.crypto.p  :: increment signing key nonce
+        (~(put by address-to-nonce.pki-state.crypto.p) key +((~(got by address-to-nonce.pki-state.crypto.p) key)))
       :: set new-key nonce to 0
-      =.  public-key-to-nonce.pki-state.crypto.p    (~(put by public-key-to-nonce.pki-state.crypto.p) new-key 0)
+      =.  address-to-nonce.pki-state.crypto.p    (~(put by address-to-nonce.pki-state.crypto.p) new-key 0)
       :: update known addresses
       =/  pk=@ux  (recover-pub-key hash.ln hash-signature.ln addr)
       =/  t-pk=@t  (crip (num-to-hex:eth pk))
@@ -803,7 +803,7 @@
     ?>  ?=([%o *] jon)
     =/  gt  ~(got by p.jon)
     ?:  =('KEY_ADD' typ)
-      [%key-add (so (gt 'public_key')) (so (gt 'public_key_type')) (so (gt 'entity_name'))]
+      [%key-add (so (gt 'address')) (so (gt 'address_type')) (so (gt 'entity_name'))]
     ?:  =('NAME_RECORD_SET' typ)
       [%name-record-set (so (gt 'name')) (so (gt 'record'))]
     !!
@@ -813,9 +813,9 @@
 ::        %edge-remove
 ::      [%edge-remove (so (gt 'link-hash'))]
 ::        %entity-add
-::      [%entity-add (so (gt 'public-key')) (so (gt 'public-key-type')) (so (gt 'name'))]
+::      [%entity-add (so (gt 'address')) (so (gt 'address-type')) (so (gt 'name'))]
 ::        %key-add
-::      [%key-add (so (gt 'public-key')) (so (gt 'public-key-type')) (so (gt 'name'))]
+::      [%key-add (so (gt 'address')) (so (gt 'address-type')) (so (gt 'name'))]
 ::        %key-remove
 ::      [%key-remove (so (gt 'name'))]
 ::        %post-add
@@ -837,7 +837,7 @@
   ++  de-passport-data-link-metadata
     %-  ot
     :~  ['from_entity' so]
-        ['signing_public_key' so]
+        ['signing_address' so]
         ['value' ni]
         ['link_id' so]
         ['epoch_block_number' ni]
@@ -889,10 +889,10 @@
   ++  de-pki-state
     %-  ot
     :~  ['chain_owner_entities' (ar so)]
-        ['entity_to_public_keys' (om (ar so))]
-        ['public_key_to_nonce' (om ni)]
+        ['entity_to_addresses' (om (ar so))]
+        ['address_to_nonce' (om ni)]
         ['entity_to_value' (om ni)]
-        ['public_key_to_entity' (om so)]
+        ['address_to_entity' (om so)]
     ==
   ::
   ++  de-contact
@@ -1101,9 +1101,9 @@
       ^-  json
       %-  pairs
       :~  ['chain-owner-entities' a+(turn chain-owner-entities.pki |=(e=@t s+e))]
-          ['entity-to-public-keys' (map-t-list-t entity-to-public-keys.pki)]
-          ['public-key-to-entity' (metadata-to-json public-key-to-entity.pki)]
-          ['public-key-to-nonce' (map-t-ud public-key-to-nonce.pki)]
+          ['entity-to-addresses' (map-t-list-t entity-to-addresses.pki)]
+          ['address-to-entity' (metadata-to-json address-to-entity.pki)]
+          ['address-to-nonce' (map-t-ud address-to-nonce.pki)]
           ['entity-to-value' (map-t-ud entity-to-value.pki)]
       ==
     ::
@@ -1135,8 +1135,8 @@
         ==
           %entity-add
         :~  ['link-type' [%s -.ln]]
-            ['public-key' s+public-key.ln]
-            ['public-key-type' s+public-key-type.ln]
+            ['address' s+address.ln]
+            ['address-type' s+address-type.ln]
             ['name' s+name.ln]
         ==
           %entity-remove
@@ -1145,8 +1145,8 @@
         ==
           %key-add
         :~  ['link-type' [%s -.ln]]
-            ['public-key' s+public-key.ln]
-            ['public-key-type' s+public-key-type.ln]
+            ['address' s+address.ln]
+            ['address-type' s+address-type.ln]
             ['name' s+name.ln]
         ==
           %key-remove
