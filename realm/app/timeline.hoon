@@ -83,6 +83,8 @@
   |=  =(pole knot)
   ^-  (unit (unit cage))
   ?+    pole  (on-peek:def pole)
+    [%x %func-scry ~]  ``noun+!>(|=(a=@ud `@ud`(add a 15)))
+    ::
       [%x %timelines ~]
     =+  .^(=state-1:db %gx /(scot %p our.bowl)/bedrock/(scot %da now.bowl)/db/db-state)
     =/  paths=(list path)

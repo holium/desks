@@ -279,11 +279,15 @@
     ::
       %crash-test
     ~&  %crash-test
-    ;<  a=[%paths (list path)]  bind:m
-      (scry-hard ,[%paths (list path)] /gx/timeline/timelines/noun)
-    ~&  >>  %we-got-here
-    ~&  a+a
-    (pure:m !>(`~))
+    =|  idx=@ud
+    |-
+    ;<  a=$-(@ud @ud)  bind:m
+      (scry-hard ,$-(@ud @ud) /gx/timeline/func-scry/noun)
+    ?:  =(idx 100)
+      ~&  >>  %we-got-here
+      ~&  [idx a+(a 43)]
+      (pure:m !>(`~))
+    $(idx +(idx))
   ==
 ==
 ::

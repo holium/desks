@@ -48,12 +48,12 @@
     %noun  `this(tube-verb (tail !<([%verb ?] vase)))
     ::
       %tally-vent
-    ~&  %venter-tallying
+    :: ~&  %venter-tallying
     =+  !<([=dock vid=vent-id] vase)
     `this(vents (~(put ju vents) dock vid))
     ::
       %clear-vent
-    ~&  %venter-clearing
+    :: ~&  %venter-clearing
     =+  !<([=dock vid=vent-id] vase)
     `this(vents (~(del ju vents) dock vid))
     ::

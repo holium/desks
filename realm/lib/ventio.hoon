@@ -254,6 +254,7 @@
   ;<  ~  bind:m  (send-raw-card card)
   (take-poke-ack-soft /poke)
 :: These won't crash spider if the scry fails
+:: (Because a different agent, %venter, is responsible for scrying...)
 ::
 ++  scry-soft
   |*  [=mold =path]
@@ -275,4 +276,13 @@
     %&  (pure:m p.a)
     %|  (strand-fail p.a)
   ==
+::
+++  unit-scry
+  |*  [=mold =path]
+  =/  m  (strand ,(unit mold))
+  ^-  form:m
+  ;<  a=(each mold goof)  bind:m  (scry-soft mold path)
+  ?.  -.a
+    (pure:m ~)
+  (pure:m `p.a)
 --
