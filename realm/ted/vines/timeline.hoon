@@ -281,8 +281,8 @@
     ~&  %crash-test
     =|  idx=@ud
     |-
-    ;<  a=$-(@ud @ud)  bind:m
-      (scry-hard ,$-(@ud @ud) /gx/timeline/func-scry/noun)
+    ;<  a=$-(@ud ^)  bind:m
+      (scry-hard ,$-(@ud ^) /gx/timeline/func-scry/noun)
     ?:  =(idx 100)
       ~&  >>  %we-got-here
       ~&  [idx a+(a 43)]

@@ -94,8 +94,6 @@
   |=  [=dock =page]
   ^-  form:m
   ;<  =vase  bind:m  (vent-raw dock p.page q.page)
-  :: Does !< not work here? Why?
-  ::
   (pure:m ;;(a q.vase))
 ::
 ++  unpage
@@ -264,7 +262,7 @@
   ;<  =thread-result  bind:m  (vent-soft [our %venter] scry+path)
   ?-  -.thread-result
     %|  (pure:m %| p.thread-result)
-    %&  (pure:m %& !<(mold p.thread-result))
+    %&  (pure:m %& ;;(mold p.thread-result))
   ==
 ::
 ++  scry-hard
