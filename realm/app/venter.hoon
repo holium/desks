@@ -57,7 +57,6 @@
     =+  !<([=dock vid=vent-id] vase)
     `this(vents (~(del ju vents) dock vid))
     ::
-    ::
       %clear-dead
     =+  .^(pats=(list path) %gx /(scot %p our.bowl)/spider/(scot %da now.bowl)/tree/noun)
     =/  tids=(set tid:rand)  (~(gas in *(set tid:rand)) (turn pats rear))
@@ -74,9 +73,29 @@
       |=  vid=vent-id
       ?.((~(has in tids) q.vid) ~ `vid)
     ==
+    ::
+      %vent-request
+    =+  !<([vid=vent-id:vio req=page] vase)
+    =/  =path  (en-path:vio vid)
+    ?+    p.req  (on-poke:def mark vase)
+        %scry
+      =+  ;;(scry=^path q.req)
+      ?>  ?=(^ scry)
+      ?>  ?=(^ t.scry)
+      =+  .^(p=* i.scry (scot %p our.bowl) i.t.scry (scot %da now.bowl) t.t.scry)
+      :_  this
+      :~  [%give %fact ~[path] noun+!>(p)]
+          [%give %kick ~[path] ~]
+      ==
+    ==
   ==
 ::
-++  on-watch  on-watch:def
+++  on-watch
+  |=  =(pole knot)
+  ^-  (quip card _this)
+  ?+    pole  (on-watch:def pole)
+    [%vent @ @ @ ~]  ?>(=(src our):bowl `this)
+  ==
 ++  on-leave  on-leave:def
 ::
 ++  on-peek

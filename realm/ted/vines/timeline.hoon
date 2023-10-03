@@ -1,6 +1,5 @@
 /-  spider
-/+  vio=ventio, *timeline, db, server, scries=bedrock-scries
-=,  vio :: avoids overwrite of punt
+/+  *ventio, t=timeline, db, cd=chat-db, server, scries=bedrock-scries
 =>  |%
     +$  gowl  bowl:gall
     +$  sowl  bowl:spider
@@ -52,7 +51,7 @@
   (pure:m !>(~))
   ::
     %timeline-action
-  =+  !<(axn=action vase)
+  =+  !<(axn=action:t vase)
   ?-    -.axn
       %create-timeline
     ?>  =(src our):gowl
@@ -125,7 +124,7 @@
       :-  %db-action  !>
       :-  %create-many
       %+  turn  posts.axn
-      |=  post=timeline-post
+      |=  post=timeline-post:t
       :*  [our now]:gowl  path.axn
           [%timeline-post 0v0]
           [%timeline-post post]  ~
@@ -158,7 +157,7 @@
     =|  printf=wain
     |-
     ?~  to.axn  (pure:m !>([printf ~]))
-    =/  =relay:common  [id [%timeline-post 0v0] from 0 %all |]:axn
+    =/  =relay:common:db  [id [%timeline-post 0v0] from 0 %all |]:axn
     =/  row=input-row:db  [i.to.axn [%relay 0v0] [%relay relay] ~]
     ;<  =sowl  bind:m  get-bowl
     =/  =action:db  [%relay [our now]:sowl row]
@@ -218,7 +217,7 @@
     (pure:m !>(`~))
     ::
       %convert-message
-    ;<  post=(unit [req-id=[@p @da] post=timeline-post])  bind:m
+    ;<  post=(unit [req-id=[@p @da] post=timeline-post:t])  bind:m
       (convert-chat-db-msg-part [msg-id msg-part-id]:axn)
     ?~  post
       ~&(>>> %failed-to-process-message-part !!)
@@ -239,13 +238,13 @@
       (pure:m !>([~[%forerunners-timeline-already-exists] ~]))
     ;<  *  bind:m
       ((vent ,*) [our dap]:gowl timeline-action+[%create-timeline %forerunners])
-    ;<  posts=(list [[@p @da] timeline-post])  bind:m
+    ;<  posts=(list [[@p @da] timeline-post:t])  bind:m
       (convert-chat-db-msg-parts fore)
     =/  =cage
       :-  %db-action  !>
       :-  %create-many
       %+  turn  posts
-      |=  [req-id=[@p @da] post=timeline-post]
+      |=  [req-id=[@p @da] post=timeline-post:t]
       :*  req-id
           db-fore  [%timeline-post 0v0]
           [%timeline-post post]  ~
@@ -260,8 +259,8 @@
       :-  %create-many
       %-  zing
       %+  turn  ids
-      |=  =id:common
-      %+  turn  (random-reacts path.axn id)
+      |=  =id:common:db
+      %+  turn  (random-reacts:t path.axn id)
       |=  =react:common:db
       :-  [our now]:gowl
       :*  path.axn  [%react 0v0]
@@ -270,6 +269,20 @@
     ~&  >   %done-creating-emojis
     ~&  >>  %poking-bedrock-with-create-many
     ;<  ~  bind:m  (poke [our.gowl %bedrock] cage)
+    (pure:m !>(`~))
+    ::
+      %scry-test
+    ~&  >>  %scrying
+    ;<  ~  bind:m  (poke [our.gowl %venter] fail-scry+!>(~))
+    ~&  >>  %we-scried
+    (pure:m !>([~[%hello] ~]))
+    ::
+      %crash-test
+    ~&  %crash-test
+    ;<  a=[%paths (list path)]  bind:m
+      (scry-hard ,[%paths (list path)] /gx/timeline/timelines/noun)
+    ~&  >>  %we-got-here
+    ~&  a+a
     (pure:m !>(`~))
   ==
 ==
@@ -361,7 +374,7 @@
 ::
 ++  convert-chat-db-msg-part
   |=  [=msg-id:cd =msg-part-id:cd]
-  =/  m  (strand ,(unit [[@p @da] timeline-post]))
+  =/  m  (strand ,(unit [[@p @da] timeline-post:t]))
   ^-  form:m
   ;<  dump=db-dump:cd  bind:m
     (scry db-dump:cd /gx/chat-db/db/chat-db-dump)
@@ -374,11 +387,11 @@
   =+  (got:msgon:cd messages-table.table [msg-id msg-part-id])
   ;<  our=ship  bind:m  get-our
   %-  pure:m
-  (convert-message our created-at msg-id msg-part-id content metadata)
+  (convert-message:t our created-at msg-id msg-part-id content metadata)
 ::
 ++  convert-chat-db-msg-parts
   |=  =path
-  =/  m  (strand ,(list [[@p @da] timeline-post]))
+  =/  m  (strand ,(list [[@p @da] timeline-post:t]))
   ^-  form:m
   ;<  dump=db-dump:cd  bind:m
     (scry db-dump:cd /gx/chat-db/db/chat-db-dump)
@@ -393,7 +406,7 @@
   %+  murn  (tap:msgon:cd messages-table.table)
   |=  [* msg-part:cd]
   ?.  =(^path path)  ~
-  (convert-message our created-at msg-id msg-part-id content metadata)
+  (convert-message:t our created-at msg-id msg-part-id content metadata)
 ::
 ++  timeline-post-ids
   |=  =path

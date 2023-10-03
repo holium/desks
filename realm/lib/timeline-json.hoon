@@ -74,6 +74,8 @@
         [%add-forerunners-bedrock (ot ~[force+bo])]
         [%convert-message (ot ~[msg-id+msg-id msg-part-id+ni to+pa])]
         [%add-random-emojis (ot ~[path+pa])]
+        [%scry-test ul]
+        [%crash-test ul]
     ==
   --
 --

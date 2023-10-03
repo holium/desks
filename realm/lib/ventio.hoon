@@ -94,6 +94,8 @@
   |=  [=dock =page]
   ^-  form:m
   ;<  =vase  bind:m  (vent-raw dock p.page q.page)
+  :: Does !< not work here? Why?
+  ::
   (pure:m ;;(a q.vase))
 ::
 ++  unpage
@@ -114,9 +116,9 @@
   ;<  =tube:clay  bind:m  (build-our-tube desk %noun mark)
   (pure:m (tube vase))
 ::
-++  vent-raw
+++  vent-soft
   |=  [=dock req=page]
-  =/  m  (strand ,vase)
+  =/  m  (strand ,thread-result)
   ^-  form:m
   :: get existing vents
   :: 
@@ -134,7 +136,12 @@
   ;<  ~  bind:m  (poke [our.bowl %venter] tally-vent+!>([dock vid]))
   :: poke the agent on the destination ship with the vent id and page
   ::
-  ;<  ~  bind:m  (poke dock vent-request+!>([vid req]))
+  ;<  p=(unit tang)  bind:m  (poke-soft dock vent-request+!>([vid req]))
+  ?^  p
+    :: clear the vent-path
+    ::
+    ;<  ~  bind:m  (poke [our.bowl %venter] clear-vent+!>([dock vid]))
+    (pure:m %| [%vent-request-poke-fail u.p])
   :: take vent update on vent-path
   ::
   ;<  rep=cage  bind:m  (take-fact vent-path)
@@ -143,11 +150,21 @@
   ::
   ;<  ~  bind:m  (poke [our.bowl %venter] clear-vent+!>([dock vid]))
   ::
-  :: return vent result or strand-fail on error
+  :: return vent result or error
   ::
   ?.  ?=(%goof p.rep)
-    (pure:m q.rep)
-  (strand-fail !<(goof q.rep))
+    (pure:m %& q.rep)
+  (pure:m %| !<(goof q.rep))
+::
+++  vent-raw
+  |=  [=dock req=page]
+  =/  m  (strand ,vase)
+  ^-  form:m
+  ;<  =thread-result  bind:m  (vent-soft dock req)
+  ?-  -.thread-result
+    %&  (pure:m p.thread-result)
+    %|  (strand-fail p.thread-result)
+  ==
 ::
 ++  unique-vent
   |=  [=dock =vents our=@p =tid now=@da]
@@ -215,4 +232,47 @@
 ::
 ++  vase-to-wain  |=(=vase `wain`(turn (wash [0 80] (sell vase)) crip))
 ++  vase-to-cord  |=(=vase (of-wain:format (vase-to-wain vase)))
+::
+++  take-poke-ack-soft
+  |=  =wire
+  =/  m  (strand ,(unit tang))
+  ^-  form:m
+  |=  tin=strand-input:strand
+  ?+  in.tin  `[%skip ~]
+      ~  `[%wait ~]
+      [~ %agent * %poke-ack *]
+    ?.  =(wire wire.u.in.tin)
+      `[%skip ~]
+    `[%done p.sign.u.in.tin]
+  ==
+::
+++  poke-soft
+  |=  [=dock =cage]
+  =/  m  (strand ,(unit tang))
+  ^-  form:m
+  =/  =card:agent:gall  [%pass /poke %agent dock %poke cage]
+  ;<  ~  bind:m  (send-raw-card card)
+  (take-poke-ack-soft /poke)
+:: These won't crash spider if the scry fails
+::
+++  scry-soft
+  |*  [=mold =path]
+  =/  m  (strand ,(each mold goof))
+  ^-  form:m
+  ;<  our=@p  bind:m  get-our
+  ;<  =thread-result  bind:m  (vent-soft [our %venter] scry+path)
+  ?-  -.thread-result
+    %|  (pure:m %| p.thread-result)
+    %&  (pure:m %& !<(mold p.thread-result))
+  ==
+::
+++  scry-hard
+  |*  [=mold =path]
+  =/  m  (strand ,mold)
+  ^-  form:m
+  ;<  a=(each mold goof)  bind:m  (scry-soft mold path)
+  ?-  -.a
+    %&  (pure:m p.a)
+    %|  (strand-fail p.a)
+  ==
 --
