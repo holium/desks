@@ -38,9 +38,9 @@
   ==
 ::
 ++  scry-messages-for-path
-  |=  [=path =bowl:gall]
+  |=  [=path our=@p now=@da]
   ^-  (list [k=uniq-id:db v=msg-part:db])
-  =/  paths  (weld /(scot %p our.bowl)/chat-db/(scot %da now.bowl)/db/messages-for-path path)
+  =/  paths  (weld /(scot %p our)/chat-db/(scot %da now)/db/messages-for-path path)
   =/  tbls
     .^
       db-dump:db
@@ -51,6 +51,16 @@
   ?+  -.tbl  !!
     %messages
       (tap:msgon:db messages-table.tbl)
+  ==
+::
+++  scry-message-count-for-path
+  |=  [=path =bowl:gall]
+  ^-  @ud
+  =/  paths  (weld /(scot %p our.bowl)/chat-db/(scot %da now.bowl)/db/message-count-for-path path)
+  .^
+    @ud
+    %gx
+    (weld paths /noun)
   ==
 ::
 ++  scry-path-row
@@ -135,7 +145,7 @@
 ++  create-path-db-poke
   |=  [=ship row=path-row:db peers=ship-roles:db]
   ^-  card
-  [%pass /dbpoke %agent [ship %chat-db] %poke %chat-db-action !>([%create-path row peers])]
+  [%pass /dbpoke %agent [ship %chat-db] %poke %chat-db-action !>([%create-path row peers 0])]
 ::
 ++  create-path-bedrock-poke
   |=  [=ship row=path-row:db peers=ship-roles:db]
@@ -359,7 +369,7 @@
       :: enforces the rule that only hosts can actually edit the path-row
       [%pass /selfpoke %agent [patp.host-peer %realm-chat] %poke %chat-action !>([%edit-chat act])]~
 
-    :-  (edit-chat-bedrock-poke (scry-bedrock-path-host:db-scry path.act bowl) act bowl)
+    :::-  (edit-chat-bedrock-poke (scry-bedrock-path-host:db-scry path.act bowl) act bowl)
     :: we poke all peers/members' db with edit-path (including ourselves)
     %:  turn
       pathpeers
@@ -422,9 +432,20 @@
       (turn pathpeers |=(p=peer-row:db [patp.p role.p]))
     [ship.act %member]
 
-  =/  backlog-poke-cards
+  =/  expected-msg-count=@ud
+    ?.  peers-get-backlog.pathrow  0
+    (scry-message-count-for-path path.act bowl)
+  ~&  >  "expected: {<expected-msg-count>}"
+  =/  backlog-poke-cards=(list card)
     ?.  peers-get-backlog.pathrow  ~
-    (limo [(into-backlog-msg-poke (turn (scry-messages-for-path path.act bowl) |=([k=uniq-id:db v=msg-part:db] v)) ship.act) ~])
+    ?.  (gth expected-msg-count 200)
+      (limo [(into-backlog-msg-poke (turn (scry-messages-for-path path.act our.bowl now.bowl) |=([k=uniq-id:db v=msg-part:db] v)) ship.act) ~])
+    =/  msgs  (scag 200 (scry-messages-for-path path.act our.bowl now.bowl))
+    =/  tid   (cat 3 (spat path.act) ship.act)
+    =/  start-args  [~ `tid byk.bowl(r da+now.bowl) %send-backlog !>(`[path.act ship.act])]
+    :-  (into-backlog-msg-poke (turn msgs |=([k=uniq-id:db v=msg-part:db] v)) ship.act)
+    :-  [%pass /thread/(scot %da now.bowl) %agent [our.bowl %spider] %poke %spider-start !>(start-args)]
+    ~
 
   =/  cards=(list card)
 ::    :-  (add-bedrock-peer-poke (scry-bedrock-path-host:db-scry path.act bowl) path.act ship.act)
@@ -436,7 +457,7 @@
         |=(p=peer-row:db [%pass /dbpoke %agent [patp.p %chat-db] %poke %chat-db-action !>([%add-peer t.act path.act ship.act])])
       ::  we poke the newly-added ship's db with a create-path,
       ::  since that will automatically handle them joining as a member
-      [%pass /dbpoke %agent [ship.act %chat-db] %poke %chat-db-action !>([%create-path pathrow all-peers])]
+      [%pass /dbpoke %agent [ship.act %chat-db] %poke %chat-db-action !>([%create-path pathrow all-peers expected-msg-count])]
     backlog-poke-cards
   [cards state]
 ::  allows self to remove self, or %host to kick others

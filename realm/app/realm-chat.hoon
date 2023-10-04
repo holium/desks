@@ -139,6 +139,7 @@
     |=  [=wire =sign:agent:gall]
     ^-  (quip card _this)
     ?+    wire  !!
+      [%thread @ ~]  `this
       [%dbpoke ~]
       :: [%dbpoke *]
         ?+    -.sign  `this
