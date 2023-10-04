@@ -18,7 +18,7 @@
 ;<  ~  bind:m  (trace %running-timeline-vine ~)
 ::
 |^
-?+    mark  (punt [our dap]:gowl mark vase) :: poke normally
+?+    mark  (just-poke [our dap]:gowl mark vase) :: poke normally
     %handle-http-request
   =+  !<([eyre-id=@ta req=inbound-request:eyre] vase)
   ;<  cat=(unit simple-payload:http)  bind:m

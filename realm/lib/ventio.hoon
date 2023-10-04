@@ -49,7 +49,7 @@
   ==
 :: translates poke-ack to vent for regular poke
 ::
-++  punt
+++  just-poke
   |=  [=dock =cage]
   =/  m  (strand ,vase)
   ^-  form:m
@@ -81,7 +81,7 @@
   ?~  pak  (strand-fail %no-arg ~)
   =+  u.pak :: expose dock, input, output, and body
   ;<  =page       bind:m  (unpackage body input)
-  ;<  =vase       bind:m  ((vent-dyn output) dock page)
+  ;<  =vase       bind:m  ((vent-as-mark output) dock page)
   :: convert to json - this allows for generic
   :: /spider/realm/venter-package/vent/json thread format
   ::
@@ -105,7 +105,7 @@
   ;<  ~                bind:m  (trace (cat 3 'mark: ' p.page) ~)
   (pure:m (tube !>(q.page)))
 ::
-++  vent-dyn
+++  vent-as-mark
   |=  [=desk =mark]
   |=  [=dock =page]
   =/  m  (strand ,vase)
@@ -151,6 +151,8 @@
   :: return vent result or error
   ::
   ?.  ?=(%goof p.rep)
+    ~?  >>>  !?=(%noun p.rep)
+      %venting-unexpected-mark
     (pure:m %& q.rep)
   (pure:m %| !<(goof q.rep))
 ::
