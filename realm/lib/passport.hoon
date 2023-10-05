@@ -1275,7 +1275,7 @@
       |=  m=passport-data-link-metadata:common
       ^-  json
       %-  pairs
-      :~  ['link-id' s+link-id.m]
+      :~  ['from-entity' s+from-entity.m]
           ['signing-address' s+signing-address.m]
           ['value' (numb value.m)]
           ['link-id' s+link-id.m]
