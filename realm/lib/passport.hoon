@@ -1,6 +1,3 @@
-::  db [realm]:
-::  TODO:
-::  - constraints via paths-table settings
 /-  *passport, common, db
 /+  scries=bedrock-scries, eth=ethereum
 |%
@@ -483,9 +480,7 @@
 
   =/  p=passport:common   (our-passport:scries bowl)
   =/  old-contact=contact:common  contact.p
-  :: TODO verify the link is valid, then save it to bedrock
-  :: also probably need to make updates to `crypto.p` and the pki state
-
+  :: verify the link is valid, then save it to bedrock
   :: validate the hash of data is what the payload claims it is
   ?>  =((shax data.ln) (ether-hash-to-ux hash.ln))
 
@@ -506,7 +501,6 @@
       p
     ?:  =('KEY_ADD' link-type.ln)
       ?>  (validate-signing-key p ln)   :: only allow keys that are already in the crypto state to add other keys
-      :: TODO check previous_link_hash
       =/  parsed-link=passport-data-link:common   (passport-data-link:dejs (need (de:json:html data.ln)))
       ?>  (prev-link-hash-matches parsed-link chain.p)
       =/  entity=@t     from-entity.mtd.parsed-link
@@ -533,8 +527,7 @@
       p
       ==
     ?:  =('NAME_RECORD_SET' link-type.ln)
-      ?>  (validate-signing-key p ln)   :: only allow keys that are already in the crypto state to update the name_record
-      :: TODO check previous_link_hash
+      ?>  (validate-signing-key p ln)   :: only allow keys that are already in the crypto state to update the name-record
       =/  parsed-link=passport-data-link:common   (passport-data-link:dejs (need (de:json:html data.ln)))
       ?>  (prev-link-hash-matches parsed-link chain.p)
       ?+  -.data.parsed-link  !!
@@ -791,10 +784,10 @@
     ^-  passport-data-link:common
     ?>  ?=([%o *] jon)
     =/  gt  ~(got by p.jon)
-    =/  pmtd=passport-data-link-metadata:common  (de-passport-data-link-metadata (gt 'link_metadata'))
+    =/  pmtd=passport-data-link-metadata:common  (de-passport-data-link-metadata (gt 'link-metadata'))
     [
       pmtd
-      (de-passport-link (gt 'link_data') link-id.pmtd)
+      (de-passport-link (gt 'link-data') link-id.pmtd)
     ]
   ::
   ++  de-passport-link
@@ -803,7 +796,7 @@
     ?>  ?=([%o *] jon)
     =/  gt  ~(got by p.jon)
     ?:  =('KEY_ADD' typ)
-      [%key-add (so (gt 'address')) (so (gt 'address_type')) (so (gt 'entity_name'))]
+      [%key-add (so (gt 'address')) (so (gt 'address-type')) (so (gt 'entity-name'))]
     ?:  =('NAME_RECORD_SET' typ)
       [%name-record-set (so (gt 'name')) (so (gt 'record'))]
     !!
@@ -836,30 +829,30 @@
   ::
   ++  de-passport-data-link-metadata
     %-  ot
-    :~  ['from_entity' so]
-        ['signing_address' so]
+    :~  ['from-entity' so]
+        ['signing-address' so]
         ['value' ni]
-        ['link_id' so]
-        ['epoch_block_number' ni]
-        ['previous_epoch_nonce' ni]
-        ['previous_epoch_hash' so]
+        ['link-id' so]
+        ['epoch-block-number' ni]
+        ['previous-epoch-nonce' ni]
+        ['previous-epoch-hash' so]
         ['nonce' ni]
-        ['previous_link_hash' so]
-        ['data_block_number' ni]
+        ['previous-link-hash' so]
+        ['data-block-number' ni]
         ['timestamp' di]
     ==
   ::
   ++  passport-root
     %-  ot
-    :~  ['link_id' so]
-        ['epoch_block_number' ni]
-        ['data_block_number' ni]
+    :~  ['link-id' so]
+        ['epoch-block-number' ni]
+        ['data-block-number' ni]
         ['timestamp' di]
-        ['previous_epoch_hash' so]
-        ['pki_state' de-pki-state]
-        ['transaction_types' (ot ~[['link_names' (ar so)] ['link_structs' so]])]
-        ['data_structs' (ot ~[['struct_names' (ar so)] ['struct_types' so]])]
-        ['sig_chain_settings' (ot ~[['new_entity_balance' ni] ['epoch_length' ni] ['signing_key' so] ['data_state' nuthing]])]
+        ['previous-epoch-hash' so]
+        ['pki-state' de-pki-state]
+        ['transaction-types' (ot ~[['link-names' (ar so)] ['link-structs' so]])]
+        ['data-structs' (ot ~[['struct-names' (ar so)] ['struct-types' so]])]
+        ['sig-chain-settings' (ot ~[['new-entity-balance' ni] ['epoch-length' ni] ['signing-key' so] ['data-state' nuthing]])]
     ==
   ::
   ++  nuthing
@@ -888,11 +881,11 @@
     ==
   ++  de-pki-state
     %-  ot
-    :~  ['chain_owner_entities' (ar so)]
-        ['entity_to_addresses' (om (ar so))]
-        ['address_to_nonce' (om ni)]
-        ['entity_to_value' (om ni)]
-        ['address_to_entity' (om so)]
+    :~  ['chain-owner-entities' (ar so)]
+        ['entity-to-addresses' (om (ar so))]
+        ['address-to-nonce' (om ni)]
+        ['entity-to-value' (om ni)]
+        ['address-to-entity' (om so)]
     ==
   ::
   ++  de-contact
@@ -1020,10 +1013,10 @@
     ::
     ++  de-add-link
       %-  ot
-      :~  ['link_type' so]
+      :~  [%link-type so]
           [%data so]
           [%hash so]
-          ['signature_of_hash' so]
+          [%signature-of-hash so]
       ==
     ++  de-get
       :: allow people to pass {"request-id": "/~zod/~2000.1.1"} or {"ship": "~zod"}
@@ -1111,10 +1104,10 @@
       |=  ln=passport-link-container:common
       ^-  json
       %-  pairs
-      :~  ['link_type' s+link-type.ln]
+      :~  [%link-type s+link-type.ln]
           ['data' s+data.ln]
           ['hash' s+hash.ln]
-          ['signature_of_hash' s+hash-signature.ln]
+          [%signature-of-hash s+hash-signature.ln]
       ==
     ::
     ++  en-link
