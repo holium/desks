@@ -87,7 +87,12 @@
       ?:  =(1 (mod i 2))
         $(reordered ['.' b1 b2 reordered], ta +.+.ta, i +(i))
       $(reordered [b1 b2 reordered], ta +.+.ta, i +(i))
-  `@ux`(slav %ux (crip ['0' 'x' ready]))
+  |- :: handle the urbit bullshit %ux parsing rules
+    ?:  =('0' (snag 0 ready))
+      $(ready +.ready)
+    ?:  =('.' (snag 0 ready))
+      $(ready +.ready)
+    `@ux`(slav %ux (crip ['0' 'x' ready]))
 ::
 ++  parse-signing-key
   |=  ln=passport-link-container:common
@@ -413,11 +418,8 @@
   =/  vent-path=path  /vent/(scot %p src.req-id)/(scot %da now.req-id)
   =/  kickcard=card  [%give %kick ~[vent-path] ~]
 
-  ~&  "getting passport"
   =/  pass=passport:common   (our-passport:scries bowl)
-  ~&  >  pass
   =/  src-fren=?  (is-friend:scries src.bowl bowl)
-  ~&  >  src-fren
   :: only actually give out the passport if we are discoverable
   :: OR we are friends with the requester
   ?>  |(discoverable.pass src-fren)
@@ -521,6 +523,27 @@
       =/  t-pk=@t  (crip (num-to-hex:eth pk))
       =/  sig=crypto-signature:common  [data.ln hash.ln hash-signature.ln t-pk]
       =.  addresses.p  (snoc addresses.p [new-key-type new-key t-pk sig])
+      p
+      ==
+    ?:  =('KEY_REMOVE' link-type.ln)
+      ?>  (validate-signing-key p ln)   :: only allow keys that are already in the crypto state to remove other keys
+      =/  parsed-link=passport-data-link:common   (passport-data-link:dejs (need (de:json:html data.ln)))
+      ?>  (prev-link-hash-matches parsed-link chain.p)
+      =/  entity=@t     from-entity.mtd.parsed-link
+      =/  key=@t        signing-address.mtd.parsed-link
+      ?+  -.data.parsed-link  !!
+        %key-remove
+      =/  bye-key=@t        address.data.parsed-link
+      ::  remove key from the pki-state
+      =.  entity-to-addresses.pki-state.crypto.p  (~(run by entity-to-addresses.pki-state.crypto.p) |=(ts=(list @t) (skip ts |=(t=@t =(t bye-key)))))
+      =.  address-to-entity.pki-state.crypto.p   (~(del by address-to-entity.pki-state.crypto.p) bye-key)
+
+      =.  address-to-nonce.pki-state.crypto.p  :: increment signing key nonce
+        (~(put by address-to-nonce.pki-state.crypto.p) key +((~(got by address-to-nonce.pki-state.crypto.p) key)))
+      :: set new-key nonce to 0
+      =.  address-to-nonce.pki-state.crypto.p    (~(del by address-to-nonce.pki-state.crypto.p) bye-key)
+      :: update known addresses
+      =.  addresses.p  (skip addresses.p |=(a=linked-address:common =(address.a bye-key)))
       p
       ==
     ?:  =('NAME_RECORD_SET' link-type.ln)
@@ -794,6 +817,8 @@
     =/  gt  ~(got by p.jon)
     ?:  =('KEY_ADD' typ)
       [%key-add (so (gt 'address')) (so (gt 'address-type')) (so (gt 'entity-name'))]
+    ?:  =('KEY_REMOVE' typ)
+      [%key-remove (so (gt 'address'))]
     ?:  =('NAME_RECORD_SET' typ)
       [%name-record-set (so (gt 'name')) (so (gt 'record'))]
     !!
@@ -807,7 +832,6 @@
 ::        %key-add
 ::      [%key-add (so (gt 'address')) (so (gt 'address-type')) (so (gt 'name'))]
 ::        %key-remove
-::      [%key-remove (so (gt 'name'))]
 ::        %post-add
 ::      [%post-add (so (gt 'type')) (gt 'data')]
 ::        %post-edit
@@ -1150,7 +1174,7 @@
         ==
           %key-remove
         :~  ['link-type' [%s -.ln]]
-            ['name' s+name.ln]
+            ['address' s+address.ln]
         ==
           %post-add
         :~  ['link-type' [%s -.ln]]
