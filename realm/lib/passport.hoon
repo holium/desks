@@ -69,9 +69,6 @@
 ++  verify-message
   |=  [msg=@t sig=@t addr=@t]  ^-  ?
   =/  pubkey=@ux  (recover-pub-key msg sig addr)
-  ~&  >>>  pubkey
-  ~&  >>>  "addr {<addr>} address-from-pub {<(address-from-pub:key:eth pubkey)>}"
-
   :: if the passed in address equals the address for the the recovered public key of the sig, then it is verified
   =((hex-to-num:eth addr) (address-from-pub:key:eth pubkey))
 ::
@@ -1074,18 +1071,27 @@
       ^-  json
       %-  pairs
       :~  ['link-id' s+link-id.cryp]
-          ['epoch-block' (numb epoch-block.cryp)]
-          ['data-block' (numb data-block.cryp)]
+          ['epoch-block-number' (numb epoch-block.cryp)]
+          ['data-block-number' (numb data-block.cryp)]
           ['timestamp' (time timestamp.cryp)]
           ['previous-epoch-hash' s+previous-epoch-hash.cryp]
           ['pki-state' (en-pki-state pki-state.cryp)]
-          ['transaction-types' s+%not-implemented]
-          ['data-structs' s+%not-implemented]
+          :-  'transaction-types'
+          %-  pairs
+          :~  ['link-names' a+(turn link-names.transaction-types.cryp |=(t=@t s+t))]
+              ['link-structs' s+link-structs.transaction-types.cryp]
+          ==
+          :-  'data-structs'
+          %-  pairs
+          :~  ['struct-names' a+(turn struct-names.data-structs.cryp |=(t=@t s+t))]
+              ['struct-types' s+struct-types.data-structs.cryp]
+          ==
           :-  'sig-chain-settings'
           %-  pairs
           :~  ['new-entity-balance' (numb new-entity-balance.sig-chain-settings.cryp)]
               ['epoch-length' (numb epoch-length.sig-chain-settings.cryp)]
               ['signing-key' s+signing-key.sig-chain-settings.cryp]
+              ['data-state' data-state.sig-chain-settings.cryp]
           ==
       ==
     ::
@@ -1239,6 +1245,23 @@
           ['status' s+status.n]
           ['pinned' b+pinned.n]
           ['mtd' (metadata-to-json mtd.n)]
+      ==
+    ::
+    ++  en-pdl-metadata
+      |=  m=passport-data-link-metadata:common
+      ^-  json
+      %-  pairs
+      :~  ['link-id' s+link-id.m]
+          ['signing-address' s+signing-address.m]
+          ['value' (numb value.m)]
+          ['link-id' s+link-id.m]
+          ['epoch-block-number' (numb epoch-block-number.m)]
+          ['previous-epoch-nonce' (numb previous-epoch-nonce.m)]
+          ['previous-epoch-hash' s+previous-epoch-hash.m]
+          ['nonce' (numb nonce.m)]
+          ['previous-link-hash' s+previous-link-hash.m]
+          ['data-block-number' (numb data-block-number.m)]
+          ['timestamp' (time timestamp.m)]
       ==
     ::
     ++  row-id-to-json

@@ -117,6 +117,47 @@
     ::
       [%x %passport-state ~]
         ``passport-state+!>(state)
+    ::
+      [%x %template %next-block %metadata-or-root ~]
+        =/  op=passport:common  (our-passport:scries bowl)
+        ?:  =(0 (lent chain.op))
+          =/  p=passport-crypto:common
+          [
+            'PASSPORT_ROOT'
+            0
+            0
+            now.bowl
+            '0x00000000000000000000000000000000'
+            [
+              ['passport_root' ~]
+              (malt ['passport_root' ['FILL_IN' ~]]~)
+              (malt ['FILL_IN' 0]~)
+              (malt ['passport_root' 1.728]~)
+              (malt ['FILL_IN' 'passport_root']~)
+            ]
+            [
+              (limo ~['ENTITY_ADD' 'ENTITY_REMOVE' 'KEY_ADD' 'KEY_REMOVE' 'NAME_RECORD_SET'])
+              ''
+            ]
+            [(limo ['NAME_RECORD' ~]) '']
+            [144 1.000 'FILL_IN' o+(malt ['NAME_RECORD' o+~]~)]
+          ]
+          ``passport-template-root+!>(p)
+        =/  m=passport-data-link-metadata:common
+        [
+          'FILL_IN'
+          'FILL_IN'
+          1
+          'FILL_IN'
+          0
+          0
+          '0x00000000000000000000000000000000'
+          ?~(chain.op 0 (dec (lent chain.op)))
+          ?:((lth (lent chain.op) 2) '0x00000000000000000000000000000000' hash:(rear chain.op))
+          ?~(chain.op 0 (dec (lent chain.op)))
+          now.bowl
+        ]
+        ``passport-template+!>(m)
     ==
   ::
   ++  on-agent
