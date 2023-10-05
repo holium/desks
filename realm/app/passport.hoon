@@ -129,11 +129,11 @@
             now.bowl
             '0x00000000000000000000000000000000'
             [
-              ['passport_root' ~]
-              (malt ['passport_root' ['FILL_IN' ~]]~)
+              [(scot %p our.bowl) ~]
+              (malt [(scot %p our.bowl) ['FILL_IN' ~]]~)
               (malt ['FILL_IN' 0]~)
-              (malt ['passport_root' 1.728]~)
-              (malt ['FILL_IN' 'passport_root']~)
+              (malt [(scot %p our.bowl) 1.728]~)
+              (malt ['FILL_IN' (scot %p our.bowl)]~)
             ]
             [
               (limo ~['ENTITY_ADD' 'ENTITY_REMOVE' 'KEY_ADD' 'KEY_REMOVE' 'NAME_RECORD_SET'])
