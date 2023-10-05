@@ -4,6 +4,7 @@
 +$  versioned-state
   $%  state-0
       state-1
+      state-2
   ==
 +$  state-0
   $:  %0
@@ -23,9 +24,20 @@
       =del-log
       hide-logs=?  :: default hidden %.y
   ==
++$  state-2
+  $:  %2
+      =tables
+      =schemas
+      =paths
+      =peers
+      tickets=~
+      =del-log
+      hide-logs=?  :: default hidden %.y
+  ==
 +$  minimal-state
   $%  [%0 * * paths=paths-0 =peers *]
       [%1 * * =paths =peers *]
+      [%2 * * =paths =peers *]
   ==
 
 +$  schemas   (map type:common schema)

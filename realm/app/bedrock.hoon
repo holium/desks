@@ -17,7 +17,7 @@
 
 /-  *db, sstore=spaces-store, vstore=visas
 /+  dbug, db
-=|  state-1
+=|  state-2
 =*  state  -
 =<
   %-  agent:dbug
@@ -27,7 +27,7 @@
   ::
   ++  on-init
     ^-  (quip card _this)
-    =/  default-state=state-1   *state-1
+    =/  default-state=state-2   *state-2
     :: make sure the relay table exists on-init
     =.  tables.default-state
     (~(gas by *^tables) ~[[relay-type:common *pathed-table] [vote-type:common *pathed-table] [react-type:common *pathed-table]])
@@ -64,6 +64,13 @@
       =.  tables.default-state
       (~(gas by *^tables) ~[[relay-type:common *pathed-table] [vote-type:common *pathed-table] [react-type:common *pathed-table]])
       default-state
+        %2
+      =/  default-state=state-2   *state-2
+      =.  paths.default-state     paths.old-paths-and-peers
+      =.  peers.default-state     peers.old-paths-and-peers
+      =.  tables.default-state
+      (~(gas by *^tables) ~[[relay-type:common *pathed-table] [vote-type:common *pathed-table] [react-type:common *pathed-table]])
+      default-state
       ==
     :: types DO nest, so just read it out
     !<(versioned-state old-state)
@@ -79,19 +86,34 @@
       ?:  (~(has by wex.bowl) [/spaces our.bowl %spaces])
         ~
       [%pass /spaces %agent [our.bowl %spaces] %watch /updates]~
-    ?-  -.old
+    ?-    -.old
         %0
-      =/  new-state=state-1  [
-        %1
+      =/  new-state=state-2  [
+        %2
         (transform-tables-0-to-tables:db tables.old schemas.old)
         (transform-schemas-0-to-schemas:db schemas.old)
         (transform-paths-0-to-paths:db paths.old)
         peers.old
+        ~
         (transform-del-log-0-to-del-log:db del-log.old schemas.old)
         hide-logs.old
       ]
       [cards this(state new-state)]
+      ::
         %1
+      =/  new-state=state-2  [
+        %2
+        tables.old
+        schemas.old
+        paths.old
+        peers.old
+        ~
+        del-log.old
+        hide-logs.old
+      ]
+      [cards this(state new-state)]
+      ::
+        %2
       [cards this(state old)]
     ==
   ::
@@ -405,7 +427,7 @@
             :: handle the update by updating our local state and
             :: pushing db-changes out to our subscribers
             =^  cards  state
-            ^-  (quip card state-1)
+            ^-  (quip card state-2)
             =/  dbpath=path         +.+.wire
             =/  factmark  -.+.sign
             ~&  >>>  "%fact on {(spud wire)}: {<factmark>}"
