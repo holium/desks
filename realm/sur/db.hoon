@@ -30,7 +30,7 @@
       =schemas
       =paths
       =peers
-      tickets=~
+      =tickets
       =del-log
       hide-logs=?  :: default hidden %.y
   ==
@@ -143,7 +143,31 @@
       updated-at=@da
       received-at=@da
   ==
-
+::
++$  tickets
+  $:  incoming-invites=(map path ticket)
+      outgoing-requests=(map path ticket)
+      outgoing-invites=(map path (map ship ticket))
+      incoming-requests=(map path (map ship ticket))
+      graylists=(map path graylist)
+  ==
+::
++$  ticket
+  $:  status=(unit ?) :: accepted/denied
+      sent-at=@da
+      received-at=(unit @da)
+      resolved-at=(unit @da)
+  ==
+:: graylist - blacklist and whitelist
+:: automatic request handling
+:: | auto reject or & auto accept
+::
++$  graylist
+  $:  ship=(map ship ?)       :: black/whitelisted ships
+      rank=(map rank:title ?) :: black/whitelisted ranks (i.e. banning comets)
+      rest=(unit ?)           :: auto reject/accept remaining
+  ==
+::
 +$  db-row-del-change    [%del-row =path =type:common =id:common t=@da]
 +$  db-peer-del-change   [%del-peer =path =ship t=@da]
 +$  db-path-del-change   [%del-path =path t=@da]
