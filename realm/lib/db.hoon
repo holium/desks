@@ -893,9 +893,8 @@
     ?>  ?=(%chat -.data.chatrow)
     =/  url=@t
     %-  crip
-    :~  'https://'
-      chain:(need nft.data.chatrow)
-      '.g.alchemy.com/nft/v3/REPLACE_KEY/getContractsForOwner?withMetadata=false&pageSize=100&owner='
+    :: TODO update to send `chain:(need nft.data.chatrow)`
+    :~  'https://realm-server-test.plymouth.network/alchemy/nfts/'
       addr:(need sig)
     ==
     =/  =request:http  [%'GET' url ~ ~]

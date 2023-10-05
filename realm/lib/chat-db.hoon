@@ -478,9 +478,8 @@
   ?:  =(type.pathrow %nft-gated)
     =/  url=@t
     %-  crip
-    :~  'https://'
-      chain:(need nft.pathrow)
-      '.g.alchemy.com/nft/v3/REPLACE_KEY/getContractsForOwner?withMetadata=false&pageSize=100&owner='
+    :: TODO update to send `chain:(need nft.pathrow)`
+    :~  'https://realm-server-test.plymouth.network/alchemy/nfts/'
       addr:(need signature.act)
     ==
     =/  =request:http  [%'GET' url ~ ~]
