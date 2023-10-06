@@ -498,10 +498,12 @@
       =/  sig=crypto-signature:common  [data.ln hash.ln hash-signature.ln t-pk]
       =.  addresses.p   [(need wallet-source) addr t-pk sig]~
       p
+
+    =/  parsed-link=passport-data-link:common   (passport-data-link:dejs (need (de:json:html data.ln)))
+    ?>  (prev-link-hash-matches parsed-link chain.p)
+    :: only allow keys that are already in the crypto state to make changes
+    ?>  (validate-signing-key p ln)   
     ?:  =('KEY_ADD' link-type.ln)
-      ?>  (validate-signing-key p ln)   :: only allow keys that are already in the crypto state to add other keys
-      =/  parsed-link=passport-data-link:common   (passport-data-link:dejs (need (de:json:html data.ln)))
-      ?>  (prev-link-hash-matches parsed-link chain.p)
       =/  entity=@t     from-entity.mtd.parsed-link
       =/  key=@t        signing-address.mtd.parsed-link
       ?+  -.data.parsed-link  !!
@@ -522,13 +524,10 @@
       =/  pk=@ux  (recover-pub-key hash.ln hash-signature.ln addr)
       =/  t-pk=@t  (crip (num-to-hex:eth pk))
       =/  sig=crypto-signature:common  [data.ln hash.ln hash-signature.ln t-pk]
-      =.  addresses.p  (snoc addresses.p [new-key-type new-key t-pk sig])
+      =.  addresses.p  (snoc addresses.p [new-key-type new-key '' sig])
       p
       ==
     ?:  =('KEY_REMOVE' link-type.ln)
-      ?>  (validate-signing-key p ln)   :: only allow keys that are already in the crypto state to remove other keys
-      =/  parsed-link=passport-data-link:common   (passport-data-link:dejs (need (de:json:html data.ln)))
-      ?>  (prev-link-hash-matches parsed-link chain.p)
       =/  entity=@t     from-entity.mtd.parsed-link
       =/  key=@t        signing-address.mtd.parsed-link
       ?+  -.data.parsed-link  !!
@@ -547,9 +546,18 @@
       p
       ==
     ?:  =('NAME_RECORD_SET' link-type.ln)
-      ?>  (validate-signing-key p ln)   :: only allow keys that are already in the crypto state to update the name-record
-      =/  parsed-link=passport-data-link:common   (passport-data-link:dejs (need (de:json:html data.ln)))
-      ?>  (prev-link-hash-matches parsed-link chain.p)
+      :: update the `addresses` record of this signing key to fill in
+      :: their public key
+      =/  pk=@ux  (recover-pub-key hash.ln hash-signature.ln addr)
+      =/  t-pk=@t  (crip (num-to-hex:eth pk))
+      =.  addresses.p
+        %+  turn
+          addresses.p
+        |=  a=linked-address:common
+        ^-  linked-address:common
+        ?.  =(address.a addr)  a
+        [wallet.a addr t-pk crypto-signature.a]
+      :: do the name record update
       ?+  -.data.parsed-link  !!
         %name-record-set
       ?:  =('display-name' name.data.parsed-link)
