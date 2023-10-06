@@ -413,6 +413,7 @@
 ::passport &passport-action [%get [our now]]
   |=  [=req-id state=state-0 =bowl:gall]
   ^-  (quip card state-0)
+  ?<  =(src.bowl our.bowl)  :: crash if we're poking ourself, that's dumb
   =/  log1  (maybe-log hide-logs.state "%get: {<req-id>} from {<src.bowl>}")
 
   =/  vent-path=path  /vent/(scot %p src.req-id)/(scot %da now.req-id)
@@ -427,6 +428,30 @@
   =/  cards=(list card)
     :-  [%give %fact ~[vent-path] passport-vent+!>([%passport pass])]
     :-  kickcard
+    :-  [%pass /contacts %agent [src.bowl dap.bowl] %poke %passport-action !>([%receive-contacts [[now.bowl contact.pass] ~]])]
+    ~
+  [cards state]
+::
+++  get-contact
+:: for getting our contact
+::passport &passport-action [%get-contact [our now]]
+  |=  [=req-id state=state-0 =bowl:gall]
+  ^-  (quip card state-0)
+  =/  log1  (maybe-log hide-logs.state "%get: {<req-id>} from {<src.bowl>}")
+
+  =/  vent-path=path  /vent/(scot %p src.req-id)/(scot %da now.req-id)
+  =/  kickcard=card  [%give %kick ~[vent-path] ~]
+
+  =/  pass=passport:common   (our-passport:scries bowl)
+  =/  src-fren=?  (is-friend:scries src.bowl bowl)
+  :: only actually give out the passport if we are discoverable
+  :: OR we are friends with the requester
+  ?>  |(discoverable.pass src-fren)
+
+  =/  cards=(list card)
+    :-  [%give %fact ~[vent-path] passport-vent+!>([%contact contact.pass])]
+    :-  kickcard
+    :-  [%pass /contacts %agent [src.bowl dap.bowl] %poke %passport-action !>([%receive-contacts [[now.bowl contact.pass] ~]])]
     ~
   [cards state]
 ::
@@ -970,6 +995,7 @@
       %-  of
       :~  [%add-link add-link]
           [%get de-get]
+          [%get-contact de-get]
           [%add-friend de-add-friend]
           [%cancel-friend-request de-cancel-friend-request]
           [%handle-friend-request de-handle-friend-request]
@@ -1078,6 +1104,7 @@
       ?-  -.vent
         %ack        s/%ack
         %passport   (en-passport passport.vent)
+        %contact    (en-contact contact.vent)
         %friend     (en-friend friend.vent)
         %link       ~
       ==
