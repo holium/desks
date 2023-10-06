@@ -205,6 +205,26 @@
       [%remove-path =path]                    :: remove a peers list and all attached objects in tables, sends %delete-path to all peers
       [%add-peer =path =ship =role]           :: add a peer to an existing peers list, sends %get-path to that peer
       [%kick-peer =path =ship]                :: remove a peer from an existing peers list, sends %delete-path to that peer
+      :: ticket actions
+      [%send-invite =path =ship]
+      [%cancel-invite =path =ship]
+      [%accept-request =path =ship]
+      [%reject-request =path =ship]
+      [%accept-invite =path]
+      [%reject-invite =path]
+      [%send-request =path host=ship]
+      [%cancel-request =path]
+      [%kick-blacklisted =path]
+      [%sent-invite-receipt =path sent-at=@da]
+      [%sent-request-receipt =path sent-at=@da]
+      [%received-invite-receipt =path received-at=@da]
+      [%received-request-receipt =path received-at=@da]
+      [%cancel-invite-receipt =path]
+      [%cancel-request-receipt =path]
+      [%accept-invite-receipt =path]
+      [%accept-request-receipt =path]
+      [%reject-invite-receipt =path]
+      [%reject-request-receipt =path]
       :: only from host foreign ship
       [%get-path =path-row peers=ship-roles]  :: when we are being informed that we were added to a peers list. we don't know the list, only the host (which is who sent it to us)
       [%delete-path =path]                    :: when we are being informed that we got kicked (or host deleted the path entirely). also deletes all attached objects

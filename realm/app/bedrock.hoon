@@ -136,6 +136,46 @@
         (add-peer:db +.act state bowl)
       %kick-peer
         (kick-peer:db +.act state bowl)
+
+      %send-invite
+        (send-invite:db +.act state bowl)
+      %cancel-invite
+        (cancel-invite:db +.act state bowl)
+      %accept-request
+        (accept-request:db +.act state bowl)
+      %reject-request
+        (reject-request:db +.act state bowl)
+      %accept-invite
+        (accept-invite:db +.act state bowl)
+      %reject-invite
+        (reject-invite:db +.act state bowl)
+      %send-request
+        (send-request:db +.act state bowl)
+      %cancel-request
+        (cancel-request:db +.act state bowl)
+      %kick-blacklisted
+        (kick-blacklisted:db +.act state bowl)
+      %sent-invite-receipt
+        (sent-invite-receipt:db +.act state bowl)
+      %sent-request-receipt
+        (sent-request-receipt:db +.act state bowl)
+      %cancel-invite-receipt
+        (cancel-invite-receipt:db +.act state bowl)
+      %cancel-request-receipt
+        (cancel-request-receipt:db +.act state bowl)
+      %accept-invite-receipt
+        (accept-invite-receipt:db +.act state bowl)
+      %accept-request-receipt
+        (accept-request-receipt:db +.act state bowl)
+      %reject-invite-receipt
+        (reject-invite-receipt:db +.act state bowl)
+      %reject-request-receipt
+        (reject-request-receipt:db +.act state bowl)
+      %received-invite-receipt
+        (received-invite-receipt:db +.act state bowl)
+      %received-request-receipt
+        (received-request-receipt:db +.act state bowl)
+
       %keep-alive
         (keep-alive:db +.act state bowl)
 

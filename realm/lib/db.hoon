@@ -945,6 +945,159 @@
 
   [cards state]
 ::
+++  send-invite
+  |=  [[=path =ship] state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
+  :: ensure the path actually exists
+  =/  path-row=path-row    (~(got by paths.state) path)
+  :: and that we are the %host of it
+  ?>  =(host.path-row our.bowl)
+  :: ensure this came from our ship
+  ?>  =(our.bowl src.bowl)
+  ~?  >>  hide-logs.state
+    "{<dap.bowl>}%send-invite: {(scow %p ship)} to {<path>}"
+  :: add to outgoing invites
+  =|  =ticket
+  =.  sent-at.ticket  now.bowl
+  =/  invites=(map ^ship ^ticket)  (~(gut by outgoing-invites.tickets.state) path ~)
+  =.  invites  (~(put by invites) ship ticket)
+  =.  outgoing-invites.tickets.state
+    (~(put by outgoing-invites.tickets.state) path invites)
+  =/  cards=(list card)
+    :: send invite receipt to invitee
+    [%pass /dbpoke %agent [ship %bedrock] %poke %db-action !>([%sent-invite-receipt path now.bowl])]~
+  [cards state]
+::
+++  cancel-invite
+  |=  [[=path =ship] state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
+  :: ensure the path actually exists
+  =/  path-row=path-row    (~(got by paths.state) path)
+  :: and that we are the %host of it
+  ?>  =(host.path-row our.bowl)
+  :: ensure this came from our ship
+  ?>  =(our.bowl src.bowl)
+  ~?  >>  hide-logs.state
+    "{<dap.bowl>}%cancel-invite: {(scow %p ship)} to {<path>}"
+  :: remove from outgoing invites
+  =|  =ticket
+  =.  sent-at.ticket  now.bowl
+  =/  invites=(map ^ship ^ticket)  (~(got by outgoing-invites.tickets.state) path)
+  =.  invites  (~(del by invites) ship)
+  =.  outgoing-invites.tickets.state
+    (~(put by outgoing-invites.tickets.state) path invites)
+  =/  cards=(list card)
+    :: send invite receipt to invitee
+    [%pass /dbpoke %agent [ship %bedrock] %poke %db-action !>([%cancel-invite-receipt path])]~
+  [cards state]
+::
+++  accept-request
+  |=  [[=path =ship] state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
+  `*state-2
+::
+++  reject-request
+  |=  [[=path =ship] state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
+  `*state-2
+::
+++  accept-invite
+  |=  [=path state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
+  `*state-2
+::
+++  reject-invite
+  |=  [=path state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
+  `*state-2
+::
+++  send-request
+  |=  [[=path host=ship] state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
+  :: ensure this came from our ship
+  ?>  =(our.bowl src.bowl)
+  ~?  >>  hide-logs.state
+    "{<dap.bowl>}%send-request: to {<path>}"
+  :: add to outgoing requests
+  =|  =ticket
+  =.  sent-at.ticket  now.bowl
+  =.  outgoing-requests.tickets.state
+    (~(put by outgoing-requests.tickets.state) path ticket)
+  =/  cards=(list card)
+    :: send invite receipt to invitee
+    [%pass /dbpoke %agent [host %bedrock] %poke %db-action !>([%sent-request-receipt path now.bowl])]~
+  [cards state]
+::
+++  cancel-request
+  |=  [=path state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
+  :: ensure this came from our ship
+  ?>  =(our.bowl src.bowl)
+  ~?  >>  hide-logs.state
+    "{<dap.bowl>}%cancel-request: to {<path>}"
+  :: remove from outgoing requests
+  =.  outgoing-requests.tickets.state
+    (~(del by outgoing-requests.tickets.state) path)
+  =/  cards=(list card)
+    :: send cancel request receipt to host
+    [%pass /dbpoke %agent [ship %bedrock] %poke %db-action !>([%cancel-request-receipt path])]~
+  [cards state]
+::
+++  kick-blacklisted
+  |=  [=path state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
+  `*state-2
+::
+++  sent-invite-receipt
+  |=  [[=path sent-at=@da] state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
+  `*state-2
+::
+++  sent-request-receipt
+  |=  [[=path sent-at=@da] state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
+  `*state-2
+::
+++  cancel-invite-receipt
+  |=  [=path state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
+  `*state-2
+::
+++  accept-invite-receipt
+  |=  [=path state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
+  `*state-2
+::
+++  reject-invite-receipt
+  |=  [=path state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
+  `*state-2
+::
+++  cancel-request-receipt
+  |=  [=path state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
+  `*state-2
+::
+++  accept-request-receipt
+  |=  [=path state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
+  `*state-2
+::
+++  reject-request-receipt
+  |=  [=path state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
+  `*state-2
+::
+++  received-invite-receipt
+  |=  [[=path received-at=@da] state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
+  `*state-2
+::
+++  received-request-receipt
+  |=  [[=path received-at=@da] state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
+  `*state-2
+::
 ++  get-path
   |=  [[=path-row peers=ship-roles] state=state-2 =bowl:gall]
   ^-  (quip card state-2)
