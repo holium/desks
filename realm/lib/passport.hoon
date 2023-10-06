@@ -299,6 +299,7 @@
   =/  log1  (maybe-log hide-logs.state "%add-friend: {<req-id>} {<ship>}")
 
   =/  new-fren=friend:common      [ship %pending-outgoing %.n mtd]
+  =/  pass=passport:common   (our-passport:scries bowl)
 
   :: check that we don't already have a friendship with this ship
   =/  frs=(list friend:common)    (get-friends:scries bowl)
@@ -307,7 +308,7 @@
     ?~  (find [ship ~] ships)
       :~  (create-req our.bowl friend-type:common [%friend new-fren] req-id)
           [%pass /selfpoke %agent [ship dap.bowl] %poke %passport-action !>([%get-friend mtd])]
-          (req ship dap.bowl)
+          [%pass /contacts %agent [ship dap.bowl] %poke %passport-action !>([%receive-contacts [[now.bowl contact.pass] ~]])]
       ==
     ~
   [cards state]
@@ -319,9 +320,10 @@
   =/  log1  (maybe-log hide-logs.state "%get-friend: {<mtd>} from {<src.bowl>}")
 
   =/  new-fren=friend:common  [src.bowl %pending-incoming %.n mtd]
+  =/  pass=passport:common   (our-passport:scries bowl)
 
   =/  cards=(list card)
-    :~  (req src.bowl dap.bowl)
+    :~  [%pass /contacts %agent [src.bowl dap.bowl] %poke %passport-action !>([%receive-contacts [[now.bowl contact.pass] ~]])]
         (create our.bowl friend-type:common [%friend new-fren])
     ==
   [cards state]
@@ -386,7 +388,6 @@
         kickcard
         (edit our.bowl friend-type:common id.new-fren [%friend friend.new-fren])
         [%pass /selfpoke %agent [ship dap.bowl] %poke %passport-action !>([%respond-to-friend-request accept])]
-        (req ship dap.bowl)
     ==
   [cards state]
 ::
