@@ -175,6 +175,10 @@
         [%db ~]  :: the "everything" path
           ?>  =(our.bowl src.bowl)
           ~  :: we are not "priming" this subscription with anything, since the client can just scry if they need. the sub is for receiving new updates
+      ::
+        [%db %common ~]  :: the "common-types only" path
+          ?>  =(our.bowl src.bowl)
+          ~  :: we are not "priming" this subscription with anything, since the client can just scry if they need. the sub is for receiving new updates
       :: /path/the/actual/path/
         [%path *]  :: the "path" path, subscribe by path explicitly
           ?>  =(our.bowl src.bowl)
