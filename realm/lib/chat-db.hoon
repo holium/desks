@@ -469,7 +469,6 @@
   ?>  ?.  =(type.pathrow %nft-gated)  %.y
       :: we need to verify
       :: 1. that they own the addr they passed in (with the signature verification)
-      :: TODO #2
       :: 2. that `addr` owns the nft (which we do via calling outside api)
       ?~  signature.act  %.n
       ?~  nft.pathrow  %.n
@@ -478,8 +477,9 @@
   ?:  =(type.pathrow %nft-gated)
     =/  url=@t
     %-  crip
-    :: TODO update to send `chain:(need nft.pathrow)`
     :~  'https://realm-server-test.plymouth.network/alchemy/nfts/'
+      chain:(need nft.pathrow)
+      '/'
       addr:(need signature.act)
     ==
     =/  =request:http  [%'GET' url ~ ~]
