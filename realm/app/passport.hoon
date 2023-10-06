@@ -145,7 +145,9 @@
           ``passport-template-root+!>(p)
         =/  m=passport-data-link-metadata:common
         [
-          'FILL_IN'
+          ?.  =((lent chain-owner-entities.pki-state.crypto.op) 1)
+            'FILL_IN'
+          (snag 0 chain-owner-entities.pki-state.crypto.op)
           'FILL_IN'
           1
           'FILL_IN'
