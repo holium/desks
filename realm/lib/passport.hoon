@@ -782,7 +782,7 @@
         %-  some
         ?+  `@tas`p.typ  !!
           %image  [%image (so (~(got by p.jon) 'img'))]
-          %nft    [%nft (so (~(got by p.jon) 'nft'))]
+          %nft    [%nft (so (~(got by p.jon) 'img'))]
         ==
     ==
   ::
@@ -1217,7 +1217,7 @@
       :-
         ?-  -.u.a
           %image  ['img' s+img.u.a]
-          %nft  ['nft' s+nft.u.a]
+          %nft    ['img' s+nft.u.a]
         ==
       :~  ['type' [%s -.u.a]]
       ==
