@@ -72,7 +72,7 @@
         [%create-comment (ot ~[path+pa comment+de-comment])]
         [%delete-comment (ot ~[path+pa id+de-id])]
         [%add-forerunners-bedrock (ot ~[force+bo])]
-        [%convert-message (ot ~[msg-id+msg-id msg-part-id+ni to+pa])]
+        [%convert-message (ot ~[msg-id+msg-id msg-part-id+ni to+(ar pa)])]
         [%add-random-emojis (ot ~[path+pa])]
         [%scry-test ul]
         [%crash-test ul]

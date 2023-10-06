@@ -20,7 +20,7 @@
       [%create-comment =path =comment:common]
       [%delete-comment =path =id:common]
       [%add-forerunners-bedrock force=?]
-      [%convert-message =msg-id:cd =msg-part-id:cd to=path]
+      [%convert-message =msg-id:cd =msg-part-id:cd to=(list path)]
       [%add-random-emojis =path]
       [%scry-test ~]
       [%crash-test ~]

@@ -221,14 +221,15 @@
       (convert-chat-db-msg-part [msg-id msg-part-id]:axn)
     ?~  post
       ~&(>>> %failed-to-process-message-part !!)
+    |-
+    ?~  to.axn  (pure:m !>(`~))
     =/  =action:db
       :*  %create  req-id.u.post
-          to.axn  [%timeline-post 0v0]
+          i.to.axn  [%timeline-post 0v0]
           [%timeline-post post.u.post]  ~
       ==
-    ;<  out=^vase  bind:m  (run-thread %realm %venter !>(`action))
-    =+  ;;(vnt=vent:db q.out)
-    (pure:m !>(?>(?=(%row -.vnt) `[%timeline-post +.vnt])))
+    ;<  ^vase  bind:m  (run-thread %realm %venter !>(`action))
+    $(to.axn t.to.axn)
     ::
       %add-forerunners-bedrock
     =/  fore=path  /spaces/~lomder-librun/realm-forerunners/chats/0v2.68end.ets6m.29fgc.ntejl.jbeo7
