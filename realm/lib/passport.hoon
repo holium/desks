@@ -1,6 +1,3 @@
-::  db [realm]:
-::  TODO:
-::  - constraints via paths-table settings
 /-  *passport, common, db
 /+  scries=bedrock-scries, eth=ethereum
 |%
@@ -72,9 +69,6 @@
 ++  verify-message
   |=  [msg=@t sig=@t addr=@t]  ^-  ?
   =/  pubkey=@ux  (recover-pub-key msg sig addr)
-  ~&  >>>  pubkey
-  ~&  >>>  "addr {<addr>} address-from-pub {<(address-from-pub:key:eth pubkey)>}"
-
   :: if the passed in address equals the address for the the recovered public key of the sig, then it is verified
   =((hex-to-num:eth addr) (address-from-pub:key:eth pubkey))
 ::
@@ -93,7 +87,12 @@
       ?:  =(1 (mod i 2))
         $(reordered ['.' b1 b2 reordered], ta +.+.ta, i +(i))
       $(reordered [b1 b2 reordered], ta +.+.ta, i +(i))
-  `@ux`(slav %ux (crip ['0' 'x' ready]))
+  |- :: handle the urbit bullshit %ux parsing rules
+    ?:  =('0' (snag 0 ready))
+      $(ready +.ready)
+    ?:  =('.' (snag 0 ready))
+      $(ready +.ready)
+    `@ux`(slav %ux (crip ['0' 'x' ready]))
 ::
 ++  parse-signing-key
   |=  ln=passport-link-container:common
@@ -300,6 +299,7 @@
   =/  log1  (maybe-log hide-logs.state "%add-friend: {<req-id>} {<ship>}")
 
   =/  new-fren=friend:common      [ship %pending-outgoing %.n mtd]
+  =/  pass=passport:common   (our-passport:scries bowl)
 
   :: check that we don't already have a friendship with this ship
   =/  frs=(list friend:common)    (get-friends:scries bowl)
@@ -308,7 +308,7 @@
     ?~  (find [ship ~] ships)
       :~  (create-req our.bowl friend-type:common [%friend new-fren] req-id)
           [%pass /selfpoke %agent [ship dap.bowl] %poke %passport-action !>([%get-friend mtd])]
-          (req ship dap.bowl)
+          [%pass /contacts %agent [ship dap.bowl] %poke %passport-action !>([%receive-contacts [[now.bowl contact.pass] ~]])]
       ==
     ~
   [cards state]
@@ -320,9 +320,10 @@
   =/  log1  (maybe-log hide-logs.state "%get-friend: {<mtd>} from {<src.bowl>}")
 
   =/  new-fren=friend:common  [src.bowl %pending-incoming %.n mtd]
+  =/  pass=passport:common   (our-passport:scries bowl)
 
   =/  cards=(list card)
-    :~  (req src.bowl dap.bowl)
+    :~  [%pass /contacts %agent [src.bowl dap.bowl] %poke %passport-action !>([%receive-contacts [[now.bowl contact.pass] ~]])]
         (create our.bowl friend-type:common [%friend new-fren])
     ==
   [cards state]
@@ -387,7 +388,6 @@
         kickcard
         (edit our.bowl friend-type:common id.new-fren [%friend friend.new-fren])
         [%pass /selfpoke %agent [ship dap.bowl] %poke %passport-action !>([%respond-to-friend-request accept])]
-        (req ship dap.bowl)
     ==
   [cards state]
 ::
@@ -414,16 +414,14 @@
 ::passport &passport-action [%get [our now]]
   |=  [=req-id state=state-0 =bowl:gall]
   ^-  (quip card state-0)
+  ?<  =(src.bowl our.bowl)  :: crash if we're poking ourself, that's dumb
   =/  log1  (maybe-log hide-logs.state "%get: {<req-id>} from {<src.bowl>}")
 
   =/  vent-path=path  /vent/(scot %p src.req-id)/(scot %da now.req-id)
   =/  kickcard=card  [%give %kick ~[vent-path] ~]
 
-  ~&  "getting passport"
   =/  pass=passport:common   (our-passport:scries bowl)
-  ~&  >  pass
   =/  src-fren=?  (is-friend:scries src.bowl bowl)
-  ~&  >  src-fren
   :: only actually give out the passport if we are discoverable
   :: OR we are friends with the requester
   ?>  |(discoverable.pass src-fren)
@@ -431,6 +429,30 @@
   =/  cards=(list card)
     :-  [%give %fact ~[vent-path] passport-vent+!>([%passport pass])]
     :-  kickcard
+    :-  [%pass /contacts %agent [src.bowl dap.bowl] %poke %passport-action !>([%receive-contacts [[now.bowl contact.pass] ~]])]
+    ~
+  [cards state]
+::
+++  get-contact
+:: for getting our contact
+::passport &passport-action [%get-contact [our now]]
+  |=  [=req-id state=state-0 =bowl:gall]
+  ^-  (quip card state-0)
+  =/  log1  (maybe-log hide-logs.state "%get: {<req-id>} from {<src.bowl>}")
+
+  =/  vent-path=path  /vent/(scot %p src.req-id)/(scot %da now.req-id)
+  =/  kickcard=card  [%give %kick ~[vent-path] ~]
+
+  =/  pass=passport:common   (our-passport:scries bowl)
+  =/  src-fren=?  (is-friend:scries src.bowl bowl)
+  :: only actually give out the passport if we are discoverable
+  :: OR we are friends with the requester
+  ?>  |(discoverable.pass src-fren)
+
+  =/  cards=(list card)
+    :-  [%give %fact ~[vent-path] passport-vent+!>([%contact contact.pass])]
+    :-  kickcard
+    :-  [%pass /contacts %agent [src.bowl dap.bowl] %poke %passport-action !>([%receive-contacts [[now.bowl contact.pass] ~]])]
     ~
   [cards state]
 ::
@@ -483,9 +505,7 @@
 
   =/  p=passport:common   (our-passport:scries bowl)
   =/  old-contact=contact:common  contact.p
-  :: TODO verify the link is valid, then save it to bedrock
-  :: also probably need to make updates to `crypto.p` and the pki state
-
+  :: verify the link is valid, then save it to bedrock
   :: validate the hash of data is what the payload claims it is
   ?>  =((shax data.ln) (ether-hash-to-ux hash.ln))
 
@@ -504,11 +524,12 @@
       =/  sig=crypto-signature:common  [data.ln hash.ln hash-signature.ln t-pk]
       =.  addresses.p   [(need wallet-source) addr t-pk sig]~
       p
+
+    =/  parsed-link=passport-data-link:common   (passport-data-link:dejs (need (de:json:html data.ln)))
+    ?>  (prev-link-hash-matches parsed-link chain.p)
+    :: only allow keys that are already in the crypto state to make changes
+    ?>  (validate-signing-key p ln)   
     ?:  =('KEY_ADD' link-type.ln)
-      ?>  (validate-signing-key p ln)   :: only allow keys that are already in the crypto state to add other keys
-      :: TODO check previous_link_hash
-      =/  parsed-link=passport-data-link:common   (passport-data-link:dejs (need (de:json:html data.ln)))
-      ?>  (prev-link-hash-matches parsed-link chain.p)
       =/  entity=@t     from-entity.mtd.parsed-link
       =/  key=@t        signing-address.mtd.parsed-link
       ?+  -.data.parsed-link  !!
@@ -529,14 +550,40 @@
       =/  pk=@ux  (recover-pub-key hash.ln hash-signature.ln addr)
       =/  t-pk=@t  (crip (num-to-hex:eth pk))
       =/  sig=crypto-signature:common  [data.ln hash.ln hash-signature.ln t-pk]
-      =.  addresses.p  (snoc addresses.p [new-key-type new-key t-pk sig])
+      =.  addresses.p  (snoc addresses.p [new-key-type new-key '' sig])
+      p
+      ==
+    ?:  =('KEY_REMOVE' link-type.ln)
+      =/  entity=@t     from-entity.mtd.parsed-link
+      =/  key=@t        signing-address.mtd.parsed-link
+      ?+  -.data.parsed-link  !!
+        %key-remove
+      =/  bye-key=@t        address.data.parsed-link
+      ::  remove key from the pki-state
+      =.  entity-to-addresses.pki-state.crypto.p  (~(run by entity-to-addresses.pki-state.crypto.p) |=(ts=(list @t) (skip ts |=(t=@t =(t bye-key)))))
+      =.  address-to-entity.pki-state.crypto.p   (~(del by address-to-entity.pki-state.crypto.p) bye-key)
+
+      =.  address-to-nonce.pki-state.crypto.p  :: increment signing key nonce
+        (~(put by address-to-nonce.pki-state.crypto.p) key +((~(got by address-to-nonce.pki-state.crypto.p) key)))
+      :: set new-key nonce to 0
+      =.  address-to-nonce.pki-state.crypto.p    (~(del by address-to-nonce.pki-state.crypto.p) bye-key)
+      :: update known addresses
+      =.  addresses.p  (skip addresses.p |=(a=linked-address:common =(address.a bye-key)))
       p
       ==
     ?:  =('NAME_RECORD_SET' link-type.ln)
-      ?>  (validate-signing-key p ln)   :: only allow keys that are already in the crypto state to update the name_record
-      :: TODO check previous_link_hash
-      =/  parsed-link=passport-data-link:common   (passport-data-link:dejs (need (de:json:html data.ln)))
-      ?>  (prev-link-hash-matches parsed-link chain.p)
+      :: update the `addresses` record of this signing key to fill in
+      :: their public key
+      =/  pk=@ux  (recover-pub-key hash.ln hash-signature.ln addr)
+      =/  t-pk=@t  (crip (num-to-hex:eth pk))
+      =.  addresses.p
+        %+  turn
+          addresses.p
+        |=  a=linked-address:common
+        ^-  linked-address:common
+        ?.  =(address.a addr)  a
+        [wallet.a addr t-pk crypto-signature.a]
+      :: do the name record update
       ?+  -.data.parsed-link  !!
         %name-record-set
       ?:  =('display-name' name.data.parsed-link)
@@ -769,7 +816,7 @@
         %-  some
         ?+  `@tas`p.typ  !!
           %image  [%image (so (~(got by p.jon) 'img'))]
-          %nft    [%nft (so (~(got by p.jon) 'nft'))]
+          %nft    [%nft (so (~(got by p.jon) 'img'))]
         ==
     ==
   ::
@@ -791,10 +838,10 @@
     ^-  passport-data-link:common
     ?>  ?=([%o *] jon)
     =/  gt  ~(got by p.jon)
-    =/  pmtd=passport-data-link-metadata:common  (de-passport-data-link-metadata (gt 'link_metadata'))
+    =/  pmtd=passport-data-link-metadata:common  (de-passport-data-link-metadata (gt 'link-metadata'))
     [
       pmtd
-      (de-passport-link (gt 'link_data') link-id.pmtd)
+      (de-passport-link (gt 'link-data') link-id.pmtd)
     ]
   ::
   ++  de-passport-link
@@ -803,7 +850,9 @@
     ?>  ?=([%o *] jon)
     =/  gt  ~(got by p.jon)
     ?:  =('KEY_ADD' typ)
-      [%key-add (so (gt 'address')) (so (gt 'address_type')) (so (gt 'entity_name'))]
+      [%key-add (so (gt 'address')) (so (gt 'address-type')) (so (gt 'entity-name'))]
+    ?:  =('KEY_REMOVE' typ)
+      [%key-remove (so (gt 'address'))]
     ?:  =('NAME_RECORD_SET' typ)
       [%name-record-set (so (gt 'name')) (so (gt 'record'))]
     !!
@@ -817,7 +866,6 @@
 ::        %key-add
 ::      [%key-add (so (gt 'address')) (so (gt 'address-type')) (so (gt 'name'))]
 ::        %key-remove
-::      [%key-remove (so (gt 'name'))]
 ::        %post-add
 ::      [%post-add (so (gt 'type')) (gt 'data')]
 ::        %post-edit
@@ -836,30 +884,30 @@
   ::
   ++  de-passport-data-link-metadata
     %-  ot
-    :~  ['from_entity' so]
-        ['signing_address' so]
+    :~  ['from-entity' so]
+        ['signing-address' so]
         ['value' ni]
-        ['link_id' so]
-        ['epoch_block_number' ni]
-        ['previous_epoch_nonce' ni]
-        ['previous_epoch_hash' so]
+        ['link-id' so]
+        ['epoch-block-number' ni]
+        ['previous-epoch-nonce' ni]
+        ['previous-epoch-hash' so]
         ['nonce' ni]
-        ['previous_link_hash' so]
-        ['data_block_number' ni]
+        ['previous-link-hash' so]
+        ['data-block-number' ni]
         ['timestamp' di]
     ==
   ::
   ++  passport-root
     %-  ot
-    :~  ['link_id' so]
-        ['epoch_block_number' ni]
-        ['data_block_number' ni]
+    :~  ['link-id' so]
+        ['epoch-block-number' ni]
+        ['data-block-number' ni]
         ['timestamp' di]
-        ['previous_epoch_hash' so]
-        ['pki_state' de-pki-state]
-        ['transaction_types' (ot ~[['link_names' (ar so)] ['link_structs' so]])]
-        ['data_structs' (ot ~[['struct_names' (ar so)] ['struct_types' so]])]
-        ['sig_chain_settings' (ot ~[['new_entity_balance' ni] ['epoch_length' ni] ['signing_key' so] ['data_state' nuthing]])]
+        ['previous-epoch-hash' so]
+        ['pki-state' de-pki-state]
+        ['transaction-types' (ot ~[['link-names' (ar so)] ['link-structs' so]])]
+        ['data-structs' (ot ~[['struct-names' (ar so)] ['struct-types' so]])]
+        ['sig-chain-settings' (ot ~[['new-entity-balance' ni] ['epoch-length' ni] ['signing-key' so] ['data-state' nuthing]])]
     ==
   ::
   ++  nuthing
@@ -888,11 +936,11 @@
     ==
   ++  de-pki-state
     %-  ot
-    :~  ['chain_owner_entities' (ar so)]
-        ['entity_to_addresses' (om (ar so))]
-        ['address_to_nonce' (om ni)]
-        ['entity_to_value' (om ni)]
-        ['address_to_entity' (om so)]
+    :~  ['chain-owner-entities' (ar so)]
+        ['entity-to-addresses' (om (ar so))]
+        ['address-to-nonce' (om ni)]
+        ['entity-to-value' (om ni)]
+        ['address-to-entity' (om so)]
     ==
   ::
   ++  de-contact
@@ -948,6 +996,7 @@
       %-  of
       :~  [%add-link add-link]
           [%get de-get]
+          [%get-contact de-get]
           [%add-friend de-add-friend]
           [%cancel-friend-request de-cancel-friend-request]
           [%handle-friend-request de-handle-friend-request]
@@ -1020,10 +1069,10 @@
     ::
     ++  de-add-link
       %-  ot
-      :~  ['link_type' so]
+      :~  [%link-type so]
           [%data so]
           [%hash so]
-          ['signature_of_hash' so]
+          [%signature-of-hash so]
       ==
     ++  de-get
       :: allow people to pass {"request-id": "/~zod/~2000.1.1"} or {"ship": "~zod"}
@@ -1056,6 +1105,7 @@
       ?-  -.vent
         %ack        s/%ack
         %passport   (en-passport passport.vent)
+        %contact    (en-contact contact.vent)
         %friend     (en-friend friend.vent)
         %link       ~
       ==
@@ -1081,18 +1131,27 @@
       ^-  json
       %-  pairs
       :~  ['link-id' s+link-id.cryp]
-          ['epoch-block' (numb epoch-block.cryp)]
-          ['data-block' (numb data-block.cryp)]
+          ['epoch-block-number' (numb epoch-block.cryp)]
+          ['data-block-number' (numb data-block.cryp)]
           ['timestamp' (time timestamp.cryp)]
           ['previous-epoch-hash' s+previous-epoch-hash.cryp]
           ['pki-state' (en-pki-state pki-state.cryp)]
-          ['transaction-types' s+%not-implemented]
-          ['data-structs' s+%not-implemented]
+          :-  'transaction-types'
+          %-  pairs
+          :~  ['link-names' a+(turn link-names.transaction-types.cryp |=(t=@t s+t))]
+              ['link-structs' s+link-structs.transaction-types.cryp]
+          ==
+          :-  'data-structs'
+          %-  pairs
+          :~  ['struct-names' a+(turn struct-names.data-structs.cryp |=(t=@t s+t))]
+              ['struct-types' s+struct-types.data-structs.cryp]
+          ==
           :-  'sig-chain-settings'
           %-  pairs
           :~  ['new-entity-balance' (numb new-entity-balance.sig-chain-settings.cryp)]
               ['epoch-length' (numb epoch-length.sig-chain-settings.cryp)]
               ['signing-key' s+signing-key.sig-chain-settings.cryp]
+              ['data-state' data-state.sig-chain-settings.cryp]
           ==
       ==
     ::
@@ -1111,10 +1170,10 @@
       |=  ln=passport-link-container:common
       ^-  json
       %-  pairs
-      :~  ['link_type' s+link-type.ln]
+      :~  [%link-type s+link-type.ln]
           ['data' s+data.ln]
           ['hash' s+hash.ln]
-          ['signature_of_hash' s+hash-signature.ln]
+          [%signature-of-hash s+hash-signature.ln]
       ==
     ::
     ++  en-link
@@ -1151,7 +1210,7 @@
         ==
           %key-remove
         :~  ['link-type' [%s -.ln]]
-            ['name' s+name.ln]
+            ['address' s+address.ln]
         ==
           %post-add
         :~  ['link-type' [%s -.ln]]
@@ -1194,7 +1253,7 @@
       :-
         ?-  -.u.a
           %image  ['img' s+img.u.a]
-          %nft  ['nft' s+nft.u.a]
+          %nft    ['img' s+nft.u.a]
         ==
       :~  ['type' [%s -.u.a]]
       ==
@@ -1246,6 +1305,23 @@
           ['status' s+status.n]
           ['pinned' b+pinned.n]
           ['mtd' (metadata-to-json mtd.n)]
+      ==
+    ::
+    ++  en-pdl-metadata
+      |=  m=passport-data-link-metadata:common
+      ^-  json
+      %-  pairs
+      :~  ['from-entity' s+from-entity.m]
+          ['signing-address' s+signing-address.m]
+          ['value' (numb value.m)]
+          ['link-id' s+link-id.m]
+          ['epoch-block-number' (numb epoch-block-number.m)]
+          ['previous-epoch-nonce' (numb previous-epoch-nonce.m)]
+          ['previous-epoch-hash' s+previous-epoch-hash.m]
+          ['nonce' (numb nonce.m)]
+          ['previous-link-hash' s+previous-link-hash.m]
+          ['data-block-number' (numb data-block-number.m)]
+          ['timestamp' (time timestamp.m)]
       ==
     ::
     ++  row-id-to-json
