@@ -215,16 +215,12 @@
             ?+  -.ch  ~
               %add-peer
             ?:  =(our.bowl ship.peer.ch)  ~ :: skip ourself, duh
-            ?.  ?|  (lte (how-many-peers-in-path:scries path.peer.ch bowl) 50)
-                    =(our.bowl (scry-bedrock-path-host:scries path.peer.ch bowl))
-                ==
-                ~&  >>>  "not sharing contacts for {<path.peer.ch>}, too many peers, and we aren't the host"
-                ~
-            ~&  >  "sharing contacts with {<ship.peer.ch>}"
-            :: send the new peer a `req`uest for his contacts
-            :~  (req:passport ship.peer.ch dap.bowl)
-            :: and give him all our contacts
-                [%pass /contacts %agent [ship.peer.ch dap.bowl] %poke %passport-action !>([%receive-contacts (current-contacts:passport bowl)])]
+            ~&  >  "sharing our contact with {<ship.peer.ch>}"
+            =/  pass=passport:common   (our-passport:scries bowl)
+            :: send the new peer a request for his contact
+            :~  [%pass /contacts %agent [ship.peer.ch dap.bowl] %poke %passport-action !>([%get-contact [our.bowl now.bowl]])]
+            :: and give him our contact
+                [%pass /contacts %agent [ship.peer.ch dap.bowl] %poke %passport-action !>([%receive-contacts [[now.bowl contact.pass] ~]])]
             ==
             ==
             [cards this]
