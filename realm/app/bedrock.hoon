@@ -175,6 +175,10 @@
         [%db ~]  :: the "everything" path
           ?>  =(our.bowl src.bowl)
           ~  :: we are not "priming" this subscription with anything, since the client can just scry if they need. the sub is for receiving new updates
+      ::
+        [%db %common ~]  :: the "common-types only" path
+          ?>  =(our.bowl src.bowl)
+          ~  :: we are not "priming" this subscription with anything, since the client can just scry if they need. the sub is for receiving new updates
       :: /path/the/actual/path/
         [%path *]  :: the "path" path, subscribe by path explicitly
           ?>  =(our.bowl src.bowl)
@@ -192,7 +196,7 @@
           =/  thepathrow    (~(got by paths.state) t.t.path)
           :: if the @da they passed was behind, %give them the current version, and %kick them
           ?:  (gth updated-at.thepathrow t)
-            ~&  >>>  "{<src.bowl>} tried to sub on old @da {<t>}, %kicking them from {<t.t.path>}"
+            :: ~&  >>>  "{<src.bowl>} tried to sub on old @da {<t>}, %kicking them from {<t.t.path>}"
             =/  thepeers    (~(got by peers.state) t.t.path)
             =/  tbls        (tables-by-path:db tables.state t.t.path)
             =/  dels=(list [@da db-del-change])
@@ -292,6 +296,15 @@
         ``ud+!>(0)    :: true, because the pathrow exsits
          :: test existence of given type
     ::
+      [%x %loobean %table @ @ ~]
+        =/  tblname=@tas      i.t.t.t.path
+        =/  typ=type:common   [tblname (slav %uv i.t.t.t.t.path)]
+        =/  thetbl  (~(get by tables.state) typ)
+        ?~  thetbl
+          ``ud+!>(1)  :: false
+        ``ud+!>(0)    :: true, because the pathrow exsits
+    ::
+    :: test existence of given type
       [%x %loobean %table @ @ ~]
         =/  tblname=@tas      i.t.t.t.path
         =/  typ=type:common   [tblname (slav %uv i.t.t.t.t.path)]

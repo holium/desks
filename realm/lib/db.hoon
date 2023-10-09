@@ -3,11 +3,28 @@
 ::  - constraints via paths-table settings
 /-  *db, common, mstore=membership, sstore=spaces-store
 /-  vstore=visas
-/+  spaces-chat
+/+  spaces-chat, passport-lib=passport
 |%
 ::
 :: helpers
 ::
+++  is-common
+  |=  =type:common
+  ^-  ?
+  ?|  =(type vote-type:common)
+      =(type rating-type:common)
+      =(type comment-type:common)
+      =(type react-type:common)
+      =(type tag-type:common)
+      =(type link-type:common)
+      =(type relay-type:common)
+      =(type creds-type:common)
+      =(type friend-type:common)
+      =(type passport-type:common)
+      =(type contact-type:common)
+      =(type chat-type:common)
+      =(type message-type:common)
+  ==
 ++  living-peers
 :: filter for peers who ARE NOT `our` AND have an updated-at within the
 :: %keep-alive window (on a 2hr cadence)
@@ -87,6 +104,30 @@
   ?+  -.data.rel  %.n
     %relay
       &(=(id.data.rel id.r) =(ship.id.rel our.bowl))
+  ==
+::
+++  meets-constraints-edit
+  |=  [=path-row =row state=state-1 =bowl:gall]
+  ^-  ?
+  =/  tbl=(unit table)    (get-tbl type.row path.path-row state)
+  ?~  tbl  %.y  :: there's nothing in this table, so any row we add is unique along all possible columns
+  =/  uconst=(unit constraint)  (~(get by constraints.path-row) type.row)
+  =/  const=(unit constraint)
+    ?~  uconst  (~(get by default-constraints) type.row)
+    uconst
+  ?~  const  %.y  :: there is neither a defined-constraint nor a default-constraint, thus this "meets constraints"
+  %-  ~(all in uniques.u.const)
+  |=  cols=unique-columns
+  ^-  ?
+  =/  where=(list [column-accessor *])
+    %+  turn
+      ~(tap in cols)
+    |=  ca=column-accessor
+    :-  ca
+    (snag-val-from-row ca row)
+  =/  matches=(list ^row)  (find-from-where u.tbl where)
+  ?&  =(1 (lent matches))
+      =((lent `(list ^row)`(skim matches |=(r=^row =(id.r id.row)))) 1)
   ==
 ::
 ++  meets-constraints
@@ -575,7 +616,7 @@
 ::bedrock &db-action [%create-path /target %host ~ ~ ~ ~[[~bus %host] [~fed %member]]]
   |=  [=input-path-row state=state-1 =bowl:gall]
   ^-  (quip card state-1)
-  =/  log1  (maybe-log hide-logs.state "%create-path {<path.input-path-row>} {<peers.input-path-row>}")
+  =/  log1  (maybe-log hide-logs.state "{<dap.bowl>}%create-path {<path.input-path-row>} {<peers.input-path-row>}")
   :: ensure the path doesn't already exist
   =/  pre-existing    (~(get by paths.state) path.input-path-row)
   ?>  =(~ pre-existing)
@@ -637,7 +678,7 @@
   :: emit the change to self-subscriptions (our clients)
   =/  thechange  db-changes+!>([[%add-path path-row] (turn peerslist |=(p=peer [%add-peer p]))])
   =/  subscription-facts=(list card)  :~
-    [%give %fact [/db (weld /path path.path-row) ~] thechange]
+    [%give %fact [/db /db/common (weld /path path.path-row) ~] thechange]
   ==
 
   =/  cards  (weld peer-pokes subscription-facts)
@@ -653,7 +694,7 @@
 ::   %initiate, every ship in the members list, regardless of role or joined status
   |=  [[=path sp=[=ship space=cord] sr=role:mstore] state=state-1 =bowl:gall]
   ^-  (quip card state-1)
-  =/  log1  (maybe-log hide-logs.state "%create-from-space")
+  =/  log1  (maybe-log hide-logs.state "{<dap.bowl>}%create-from-space")
   =/  members     .^(view:mstore %gx /(scot %p our.bowl)/spaces/(scot %da now.bowl)/(scot %p ship.sp)/(scot %tas space.sp)/members/noun)
   ?>  ?=(%members -.members)
   =/  filtered-members
@@ -723,7 +764,7 @@
   :: emit the change to self-subscriptions (our clients)
   =/  thechange  db-changes+!>([[%add-path path-row] (turn peers |=(p=peer [%add-peer p]))])
   =/  client-facts=(list card)  :~
-    [%give %fact [/db (weld /path path.path-row) ~] thechange]
+    [%give %fact [/db /db/common (weld /path path.path-row) ~] thechange]
   ==
 
   =/  cards  (weld peer-pokes client-facts)
@@ -776,7 +817,7 @@
   =/  thechange         db-path+!>(full)
 
   =/  cards=(list card)
-    :-  [%give %fact [/db (weld /path path.path-row) ~] thechange]
+    :-  [%give %fact [/db /db/common (weld /path path.path-row) ~] thechange]
     pokes
 
   [cards state]
@@ -791,7 +832,7 @@
   ?>  =(host.original src.bowl)
   :: ensure new path is same as old path
   ?>  =(path.original path.new)
-  =/  log1  (maybe-log hide-logs.state "%put-path: updating {<path.new>} metadata")
+  =/  log1  (maybe-log hide-logs.state "{<dap.bowl>}%put-path: updating {<path.new>} metadata")
 
   :: update paths table
   =.  received-at.new  now.bowl
@@ -799,7 +840,7 @@
 
   :: emit the change to clients
   =/  cards=(list card)
-    [%give %fact [/db (weld /path path.new) ~] db-changes+!>([%upd-path new]~)]~
+    [%give %fact [/db /db/common (weld /path path.new) ~] db-changes+!>([%upd-path new]~)]~
   [cards state]
 ::
 ++  remove-path
@@ -823,7 +864,7 @@
 
   :: emit the change to subscribers
   =/  sub-facts=(list card)
-    [%give %fact [/db (weld /path path) ~] db-changes+!>([%del-path path now.bowl]~)]~
+    [%give %fact [/db /db/common (weld /path path) ~] db-changes+!>([%del-path path now.bowl]~)]~
   =/  cards=(list card)  (weld del-pokes sub-facts)
 
   :: remove from paths table, and peers table
@@ -841,7 +882,7 @@
 ::bedrock &db-action [%add-peer /example ~fed %member]
   |=  [[=path =ship =role] state=state-1 =bowl:gall]
   ^-  (quip card state-1)
-  =/  log1  (maybe-log hide-logs.state "%add-peer: {<ship>} to {(spud path)} as {<role>}")
+  =/  log1  (maybe-log hide-logs.state "{<dap.bowl>}%add-peer: {<ship>} to {(spud path)} as {<role>}")
   :: ensure the path actually exists
   =/  path-row=path-row    (~(got by paths.state) path)
   =/  is-allowed=?
@@ -874,7 +915,7 @@
     :: poke `ship` with %get path
     :-  (get-path-card ship path-row (peers-to-ship-roles (~(got by peers.state) path)))
     :: tell clients about the new peer
-    :-  [%give %fact [/db (weld /path path) ~] db-changes+!>(thechange)]
+    :-  [%give %fact [/db /db/common (weld /path path) ~] db-changes+!>(thechange)]
     :: tell subs about the new peer
     %+  turn
       (living-peers original-peers now.bowl our.bowl)
@@ -894,7 +935,7 @@
   ?>  =(host.path-row our.bowl)
   :: ensure this came from our ship
   ?>  =(our.bowl src.bowl)
-  =/  log1  (maybe-log hide-logs.state "%kick-peer: {(scow %p ship)} from {<path>}")
+  =/  log1  (maybe-log hide-logs.state "{<dap.bowl>}%kick-peer: {(scow %p ship)} from {<path>}")
 
   :: local state updates
   :: update paths table
@@ -911,7 +952,7 @@
     :: poke %delete-path to the ship we are kicking
     :-  [%pass /dbpoke %agent [ship %bedrock] %poke %db-action !>([%delete-path path])]
     :: tell clients about the new peer
-    :-  [%give %fact [/db (weld /path path) ~] db-changes+!>(thechange)]
+    :-  [%give %fact [/db /db/common (weld /path path) ~] db-changes+!>(thechange)]
     :: tell subs about the new peer
     %+  turn
       (living-peers newlist now.bowl our.bowl)
@@ -924,7 +965,7 @@
 ++  get-path
   |=  [[=path-row peers=ship-roles] state=state-1 =bowl:gall]
   ^-  (quip card state-1)
-  =/  log1  (maybe-log hide-logs.state "%get-path {<path.path-row>}")
+  =/  log1  (maybe-log hide-logs.state "{<dap.bowl>}%get-path {<path.path-row>}")
   :: ensure the path doesn't already exist
   =/  pre-existing    (~(get by paths.state) path.path-row)
   ?>  =(~ pre-existing)
@@ -958,7 +999,7 @@
 
   :: emit the change to subscribers
   =/  sub-facts=(list card)
-    [%give %fact [/db (weld /path path.path-row) ~] db-changes+!>([%add-path path-row]~)]~
+    [%give %fact [/db /db/common (weld /path path.path-row) ~] db-changes+!>([%add-path path-row]~)]~
   :: subscribe to src.bowl on /next/updated-at.path-row/[path] for data-changes in this path
   =/  subs  :~
     [
@@ -979,7 +1020,7 @@
   |=  [=path state=state-1 =bowl:gall]
   ^-  (quip card state-1)
   :: ensure the path actually exists
-  =/  log1  (maybe-log hide-logs.state "attempting to delete {<path>}")
+  =/  log1  (maybe-log hide-logs.state "{<dap.bowl>}%delete-path: {<path>}")
   =/  path-row=path-row    (~(got by paths.state) path)
   :: ensure this came from host ship
   ?>  =(host.path-row src.bowl)
@@ -997,14 +1038,14 @@
 
   :: emit the change to subscribers
   =/  cards=(list card)
-    [%give %fact [/db (weld /path path) ~] db-changes+!>([%del-path path now.bowl]~)]~
+    [%give %fact [/db /db/common (weld /path path) ~] db-changes+!>([%del-path path now.bowl]~)]~
   [cards state]
 ::
 ++  refresh-path
 ::~bus/bedrock &db-action [%refresh-path now /path]
   |=  [[t=@da =path] state=state-1 =bowl:gall]
   ^-  (quip card state-1)
-  =/  log1  (maybe-log hide-logs.state "%refresh-path {(spud path)}")
+  =/  log1  (maybe-log hide-logs.state "{<dap.bowl>}%refresh-path {(spud path)}")
   :: sanity checking
   =/  path-row=path-row   (~(got by paths.state) path)
   ?>  =(src.bowl host.path-row)
@@ -1023,7 +1064,7 @@
 ::  subs send this to host on a heartbeat to prevent from being skipped
   |=  [=path state=state-1 =bowl:gall]
   ^-  (quip card state-1)
-  =/  log1  (maybe-log hide-logs.state "%keep-alive {<src.bowl>} {(spud path)}")
+  =/  log1  (maybe-log hide-logs.state "{<dap.bowl>}%keep-alive {<src.bowl>} {(spud path)}")
   :: sanity checking
   =/  path-row=path-row   (~(got by paths.state) path)
   =/  old-peers=(list peer)  (~(got by peers.state) path)
@@ -1063,7 +1104,17 @@
   =/  path-row=path-row   (~(got by paths.state) path)
   ?>  =(host.path-row src.bowl)  :: only accept changes from host for now
 
-  =/  log1  (maybe-log hide-logs.state "%handle-changes: on {<path>} => {<changes>}")
+  =/  log1  (maybe-log hide-logs.state "{<dap.bowl>}%handle-changes: on {<path>} => {<changes>}")
+  =/  touches-common-type=?
+    %+  lien
+      changes
+    |=  c=db-change
+    ^-  ?
+    ?+  -.c  %.n
+      %add-row  (is-common type.row.c)
+      %upd-row  (is-common type.row.c)
+      %del-row  (is-common type.c)
+    ==
 
   =/  index=@ud           0
   =/  result-cards   *(list card)
@@ -1076,7 +1127,13 @@
       %+  weld
         result-cards
       ^-  (list card)
-      [%give %fact [/db (weld /path path) ~] db-changes+!>(changes)]~
+      =/  sub-paths=(list ^path)
+      %+  weld
+        `(list ^path)`[/db (weld /path path) ~]
+      ^-  (list ^path)
+      ?:  touches-common-type  [/db/common ~]
+      ~
+      [%give %fact sub-paths db-changes+!>(changes)]~
     :: main iterator
     =/  change   (snag index changes)
     :: dependent cards to emit for when %relay stuff happens
@@ -1189,7 +1246,7 @@
 ::~zod/bedrock &db-action [%create /example %vote 0 [%vote %.y our %foo [~zod now] /example] ~]
   |=  [[=req-id =input-row] state=state-1 =bowl:gall]
   ^-  (quip card state-1)
-  =/  log4  (maybe-log hide-logs.state "%create: {<req-id>} {<input-row>}")
+  =/  log4  (maybe-log hide-logs.state "{<dap.bowl>}%create: {<req-id>} {<input-row>}")
   =/  vent-path=path  /vent/(scot %p src.req-id)/(scot %da now.req-id)
   =/  kickcard=card  [%give %kick ~[vent-path] ~]
   :: form row from input
@@ -1243,12 +1300,18 @@
   :: emit the change to subscribers
   =/  thechange=db-changes    [%add-row row schema.input-row]~
   =/  peers=(list peer)       (~(got by peers.state) path.row)
+  =/  sub-paths=(list path)
+  %+  weld
+    `(list path)`[/db (weld /path path.row) ~]
+  ^-  (list path)
+  ?:  (is-common type.row)  [/db/common ~]
+  ~
   =/  cards=(list card)
     :: give vent response
     :-  [%give %fact ~[vent-path] db-vent+!>([%row row schema.input-row])]
     :-  kickcard
     :: tell clients about the new peer
-    :-  [%give %fact [/db (weld /path path.row) ~] db-changes+!>(thechange)]
+    :-  [%give %fact sub-paths db-changes+!>(thechange)]
     :: tell subs about the new peer
     %+  turn
       (living-peers peers now.bowl our.bowl)
@@ -1263,7 +1326,7 @@
 ::db &db-action [%edit [our ~2023.5.22..17.21.47..9d73] /example %foo 0 [%general ~[2 'b']] ~]
   |=  [[=req-id =id:common =input-row] state=state-1 =bowl:gall]
   ^-  (quip card state-1)
-  =/  log1  (maybe-log hide-logs.state "%edit: {<req-id>} {<id>} {<input-row>}")
+  =/  log1  (maybe-log hide-logs.state "{<dap.bowl>}%edit: {<req-id>} {<id>} {<input-row>}")
   =/  vent-path=path  /vent/(scot %p src.req-id)/(scot %da now.req-id)
   =/  kickcard=card  [%give %kick ~[vent-path] ~]
 
@@ -1284,12 +1347,6 @@
     ?~  schema.input-row
       (~(got by schemas.state) type.input-row) :: crash if they didn't pass a schema AND we don't already have one
     schema.input-row
-  :: TODO check that new version doesn't violate constraints
-
-  :: update path
-  =.  updated-at.path-row     now.bowl
-  =.  received-at.path-row    now.bowl
-  =.  paths.state             (~(put by paths.state) path.path-row path-row)
 
   :: cleanup input
   =/  row=row  [
@@ -1302,17 +1359,33 @@
     now.bowl
   ]
 
+  :: ensure that the row meets constraints
+  ?.  (meets-constraints-edit path-row row state bowl)
+    =/  log4  (maybe-log hide-logs.state "{(scow %p src.bowl)} tried to edit a %{(scow %tas name.type.row)} row where they violated constraints")
+    [~[kickcard] state]
+
+  :: update path
+  =.  updated-at.path-row     now.bowl
+  =.  received-at.path-row    now.bowl
+  =.  paths.state             (~(put by paths.state) path.path-row path-row)
+
   =.  state             (add-row-to-db row sch state)
 
   :: emit the change to subscribers
   =/  thechange=db-changes    [%upd-row row sch]~
   =/  peers=(list peer)       (~(got by peers.state) path.row)
+  =/  sub-paths=(list path)
+  %+  weld
+    `(list path)`[/db (weld /path path.row) ~]
+  ^-  (list path)
+  ?:  (is-common type.row)  [/db/common ~]
+  ~
   =/  cards=(list card)
     :: give vent response
     :-  [%give %fact ~[vent-path] db-vent+!>([%row row sch])]
     :-  kickcard
     :: tell clients about the new peer
-    :-  [%give %fact [/db (weld /path path.row) ~] db-changes+!>(thechange)]
+    :-  [%give %fact sub-paths db-changes+!>(thechange)]
     :: tell subs about the new peer
     %+  turn
       (living-peers peers now.bowl our.bowl)
@@ -1323,12 +1396,12 @@
   [cards state]
 ::
 ++  remove
-::bedrock &db-action [%remove [~zod now] %foo /example [our ~2023.5.22..19.22.29..d0f7]]
+::bedrock &db-action [%remove [our now] [%friend 0v0] /private [our ~2023.9.15..19.23.10..46c2]]
   |=  [[=req-id =type:common =path =id:common] state=state-1 =bowl:gall]
   ^-  (quip card state-1)
   =/  vent-path=^path  /vent/(scot %p src.req-id)/(scot %da now.req-id)
   =/  kickcard=card  [%give %kick ~[vent-path] ~]
-  =/  log3  (maybe-log hide-logs.state "%remove: {<req-id>} {<type>} {<path>} {<id>}")
+  =/  log3  (maybe-log hide-logs.state "{<dap.bowl>}%remove: {<req-id>} {<type>} {<path>} {<id>}")
   :: permissions
   =/  pt                  (~(got by tables.state) type)
   =/  tbl                 (~(got by pt) path)
@@ -1359,12 +1432,18 @@
   :: emit the change
   =/  thechange=db-changes    ~[log]
   =/  peers=(list peer)       (~(got by peers.state) path)
+  =/  sub-paths=(list ^path)
+  %+  weld
+    `(list ^path)`[/db (weld /path path) ~]
+  ^-  (list ^path)
+  ?:  (is-common type)  [/db/common ~]
+  ~
   =/  cards=(list card)
     :: give vent response
     :-  [%give %fact ~[vent-path] db-vent+!>([%del-row id type path])]
     :-  kickcard
     :: tell clients about the new peer
-    :-  [%give %fact [/db (weld /path path) ~] db-changes+!>(thechange)]
+    :-  [%give %fact sub-paths db-changes+!>(thechange)]
     :: tell subs about the new peer
     %+  turn
       (living-peers peers now.bowl our.bowl)
@@ -1378,7 +1457,7 @@
 ::bedrock &db-action [%remove-many %foo /example [[our ~2023.5.22..19.22.29..d0f7] [our ~2023.5.22..19.22.29..d0f7] ~]]
   |=  [[=req-id =path ids=(list [=id:common =type:common])] state=state-1 =bowl:gall]
   ^-  (quip card state-1)
-  =/  log3  (maybe-log hide-logs.state "%remove-many {<path>} {<ids>}")
+  =/  log3  (maybe-log hide-logs.state "{<dap.bowl>}%remove-many {<path>} {<ids>}")
   =/  vent-path=^path  /vent/(scot %p src.req-id)/(scot %da now.req-id)
   =/  kickcard=card  [%give %kick ~[vent-path] ~]
 
@@ -1418,12 +1497,18 @@
       =/  last  (snag (dec index) logs)
       :: emit the change
       =/  peers=(list peer)       (~(got by peers.state) path)
+      =/  sub-paths=(list ^path)
+      %+  weld
+        `(list ^path)`[/db (weld /path path) ~]
+      ^-  (list ^path)
+      ?:  (is-common type.last)  [/db/common ~]
+      ~
       =/  cards=(list card)
         :: give vent response
         :-  [%give %fact ~[vent-path] db-vent+!>([%del-row id.last type.last path.last])]
         :-  kickcard
         :: tell clients about the new peer
-        :-  [%give %fact [/db (weld /path path) ~] db-changes+!>(logs)]
+        :-  [%give %fact sub-paths db-changes+!>(logs)]
         :: tell subs about the new peer
         %+  turn
           (living-peers peers now.bowl our.bowl)
@@ -1447,7 +1532,7 @@
 ++  remove-before :: similar to TRUNCATE, removes all rows of a given type and path up to and including a certain timestamp
 ::bedrock &db-action [%remove-before [%foo *@uvH] /example ~2023.5.22..19.22.29..d0f7]
   |=  [[=type:common =path t=@da] state=state-1 =bowl:gall]
-  =/  log1  (maybe-log hide-logs.state "%remove-before")
+  =/  log1  (maybe-log hide-logs.state "{<dap.bowl>}%remove-before {<t>}")
   ^-  (quip card state-1)
 
   :: forward the request if we aren't the host
@@ -1488,11 +1573,16 @@
       =.  pt              (~(put by pt) path tbl)           :: update the pathed-table
       =.  tables.state    (~(put by tables.state) type pt)  :: update the tables.state
       :: TODO remove remote-scry paths for the row
-
+      =/  sub-paths=(list ^path)
+      %+  weld
+        `(list ^path)`[/db (weld /path path) foreign-ship-sub-wire ~]
+      ^-  (list ^path)
+      ?:  (is-common type)  [/db/common ~]
+      ~
       :: emit the change to subscribers
       =/  cards=(list card)  :~
         :: tell subs about the new row
-        [%give %fact [/db (weld /path path) foreign-ship-sub-wire ~] db-changes+!>(logs)]
+        [%give %fact sub-paths db-changes+!>(logs)]
         :: kick foreign ship subs to force them to re-sub for next update
         [%give %kick [foreign-ship-sub-wire ~] ~]
       ==
@@ -1507,7 +1597,7 @@
 ::bedrock &db-action [%relay [~bus now] /target %relay 0 [%relay [~zod ~2023.6.13..15.57.34..aa97] %foo /example 0 %all %.n] ~]
   |=  [[=req-id =input-row] state=state-1 =bowl:gall]
   ^-  (quip card state-1)
-  =/  log1  (maybe-log hide-logs.state "%relay: {<req-id>} {<input-row>}")
+  =/  log1  (maybe-log hide-logs.state "{<dap.bowl>}%relay: {<req-id>} {<input-row>}")
   :: first check that the input is actually a %relay
   ?+  -.data.input-row   !!
     %relay 
@@ -1582,7 +1672,7 @@
 ::  macro for chat-db to force bedrock to refresh all the chat-paths
   |=  [state=state-1 =bowl:gall]
   ^-  (quip card state-1)
-  =/  log1  (maybe-log hide-logs.state "%refresh-chat-paths")
+  =/  log1  (maybe-log hide-logs.state "{<dap.bowl>}%refresh-chat-paths")
   =/  paths=(list path-row)
     %+  skim
       ~(val by paths.state)
@@ -2285,6 +2375,33 @@
                 expires-at+(time-bunt-null expires-at.data.row)
                 ['content' a+(turn content.data.row en-msg-part)]
                 ['sender' s+(scot %p ship.id.row)]
+            ==
+          %friend
+            :~  ['ship' s+(scot %p ship.data.row)]
+                ['status' s+status.data.row]
+                ['pinned' b+pinned.data.row]
+                ['mtd' (metadata-to-json mtd.data.row)]
+            ==
+          %passport
+            =/  en-pass  enjs:passport-lib
+            :~  ['contact' (en-contact:en-pass contact.data.row)]
+                ['ship' s+(scot %p ship.contact.data.row)]
+                ['cover' ?~(cover.data.row ~ s+u.cover.data.row)]
+                ['user-status' s+user-status.data.row]
+                ['discoverable' b+discoverable.data.row]
+                ['nfts' a+(turn nfts.data.row en-linked-nft:en-pass)]
+                ['addresses' a+(turn addresses.data.row en-linked-address:en-pass)]
+                ['default-address' s+default-address.data.row]
+                ['recommendations' a+(turn ~(tap in recommendations.data.row) en-recommendation:en-pass)]
+                ['chain' a+(turn chain.data.row en-link-container:en-pass)]
+                ['crypto' (en-p-crypto:en-pass crypto.data.row)]
+            ==
+          %contact
+            :~  ['ship' s+(scot %p ship.data.row)]
+                ['avatar' (en-avatar:enjs:passport-lib avatar.data.row)]
+                ['color' ?~(color.data.row ~ s+u.color.data.row)]
+                ['bio' ?~(bio.data.row ~ s+u.bio.data.row)]
+                ['display-name' ?~(display-name.data.row ~ s+u.display-name.data.row)]
             ==
         ==
       =/  keyvals
