@@ -257,6 +257,7 @@
 ::passport &passport-action [%receive-contacts [now [~zod ~ ~ ~ [~ 'ZOOOD']]]~]
   |=  [contacts=(list [t=@da =contact:common]) state=state-0 =bowl:gall]
   ^-  (quip card state-0)
+  ?<  =(src.bowl our.bowl)  :: assert we aren't receiving from ourself
   =/  log1  (maybe-log hide-logs.state "%receive-contacts: {<contacts>}")
 
   :: loop through the contacts they sent us
@@ -414,7 +415,6 @@
 ::passport &passport-action [%get [our now]]
   |=  [=req-id state=state-0 =bowl:gall]
   ^-  (quip card state-0)
-  ?<  =(src.bowl our.bowl)  :: crash if we're poking ourself, that's dumb
   =/  log1  (maybe-log hide-logs.state "%get: {<req-id>} from {<src.bowl>}")
 
   =/  vent-path=path  /vent/(scot %p src.req-id)/(scot %da now.req-id)
@@ -428,6 +428,33 @@
 
   =/  cards=(list card)
     :-  [%give %fact ~[vent-path] passport-vent+!>([%passport pass])]
+    :-  kickcard
+    :-  [%pass /contacts %agent [src.bowl dap.bowl] %poke %passport-action !>([%receive-contacts [[now.bowl contact.pass] ~]])]
+    ~
+  [cards state]
+::
+++  get-as-row
+:: for getting our passport
+::passport &passport-action [%get-as-row [our now]]
+  |=  [=req-id state=state-0 =bowl:gall]
+  ^-  (quip card state-0)
+  =/  log1  (maybe-log hide-logs.state "%get: {<req-id>} from {<src.bowl>}")
+
+  =/  vent-path=path  /vent/(scot %p src.req-id)/(scot %da now.req-id)
+  =/  kickcard=card  [%give %kick ~[vent-path] ~]
+
+  =/  r=row:db   (our-passport-row:scries bowl)
+  =/  pass=passport:common   
+  ?+  -.data.r  !!
+    %passport  +.data.r
+  ==
+  =/  src-fren=?  (is-friend:scries src.bowl bowl)
+  :: only actually give out the passport if we are discoverable
+  :: OR we are friends with the requester
+  ?>  |(discoverable.pass src-fren)
+
+  =/  cards=(list card)
+    :-  [%give %fact ~[vent-path] db-vent+!>([%row r ~])]
     :-  kickcard
     :-  [%pass /contacts %agent [src.bowl dap.bowl] %poke %passport-action !>([%receive-contacts [[now.bowl contact.pass] ~]])]
     ~
@@ -996,6 +1023,7 @@
       %-  of
       :~  [%add-link add-link]
           [%get de-get]
+          [%get-as-row de-get]
           [%get-contact de-get]
           [%add-friend de-add-friend]
           [%cancel-friend-request de-cancel-friend-request]
