@@ -15,6 +15,7 @@
                                                                 :: @da is updated-at on the bedrock row
       [%request-contacts ~] :: other ship send this to us to ask us to give them our whole peers list
       [%get =req-id]  :: when a client wants to threadpoke and get a full passport for a given ship
+      [%get-as-row =req-id]  :: when a client wants to threadpoke and get a full passport for a given ship
       [%get-contact =req-id]  :: when a client wants to threadpoke and get a contact for a given ship
       [%add-friend =req-id =ship mtd=(map @t @t)]     :: client to ship
       [%get-friend mtd=(map @t @t)]                   :: ship to ship

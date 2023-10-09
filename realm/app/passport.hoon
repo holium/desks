@@ -56,6 +56,8 @@
 
       %get     :: for getting someone else's passport via a threadpoke
         (get:passport +.act state bowl)
+      %get-as-row  :: for getting someone else's passport via a threadpoke
+        (get-as-row:passport +.act state bowl)
       %get-contact  :: for getting someone else's contact via a threadpoke
         (get-contact:passport +.act state bowl)
       %add-link
