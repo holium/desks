@@ -10,7 +10,7 @@
 :: helpers
 ::
 ++  maybe-log
-  |=  [hide-debug=? msg=*]
+  |=  [hide-debug=? msg=tape]
   ?:  =(%.y hide-debug)  ~
   ~&  >>>  msg
   ~
@@ -773,6 +773,7 @@
           [%edit-message de-edit-info]
           [%delete-message path-and-msg-id]
           [%delete-backlog (ot ~[[%path pa]])]
+          [%room-action (ot ~[[%path pa] [%kind de-kind]])]
 
           [%enable-push ul]
           [%disable-push ul]
@@ -915,6 +916,20 @@
           [%path pa]
           [%msg-id de-msg-id]
           [%pin bo]
+      ==
+    ::
+    ++  de-kind
+      |=  jon=json
+      ^-  ?(%start %join %leave)
+      ?+  jon  !!
+        [%s *]
+          =/  tas=@tas  `@tas`p.jon
+          ?+  tas  !!
+            %start  %start
+            %join   %join
+            %leave  %leave
+          ==
+        ~       %start
       ==
     ::
     ++  dri   :: specify in integer milliseconds, returns a @dr
