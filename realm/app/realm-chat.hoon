@@ -1,5 +1,5 @@
 ::  app/realm-chat.hoon
-/-  *realm-chat, db-sur=chat-db, ndb=notif-db, fr=friends, spc=spaces-store
+/-  *realm-chat, db-sur=chat-db, ndb=notif-db, spc=spaces-store
 /+  dbug, lib=realm-chat, db-lib=chat-db
 =|  state-1
 =*  state  -
@@ -82,6 +82,8 @@
         (delete-message:lib +.act state bowl)
       %delete-backlog
         (delete-backlog:lib +.act state bowl)
+      %room-action
+        (room-action:lib +.act state bowl)
       :: notification preferences pokes
       %disable-push
         (disable-push:lib state bowl)
@@ -178,8 +180,6 @@
             ==
           %fact
             ?+    p.cage.sign  `this
-              %chat-db-dump
-                `this
               %chat-db-change
                 =/  thechange=db-change:db-sur  !<(db-change:db-sur q.cage.sign)
 
@@ -205,11 +205,20 @@
                   ^-  (list card)
                   =/  parts     (skim new-msg-parts |=(p=msg-part:db-sur =(msg-id.p id)))
                   =/  first-msg-part  (snag 0 parts)
-                  ?:  =(-.content.first-msg-part %status) :: don't send notifs on %status msgs
-                    ~
+
+                  =/  skip-status=? :: don't send notifs on %status msgs
+                    ?:  =(%status -.content.first-msg-part)
+                      ?>  ?=(%status -.content.first-msg-part)
+                      :: unless they are the "started a call with you" kind
+                      =/  ucall  (find "a call with you" (trip p.content.first-msg-part))
+                      ?~  ucall  %.y
+                      %.n
+                    %.n
+                  ?:  skip-status  ~
+
+                  ?:  =(sender.id our.bowl)   ~  :: if it's our message, don't do anything
+
                   =/  thepath   path.first-msg-part
-                  ?:  =(sender.id our.bowl) :: if it's our message, don't do anything
-                    ~
                   ::  if it's a %react AND it's not reacting to our
                   ::  message, don't do anything
                   =/  not-replying-to-us=?
@@ -235,14 +244,14 @@
                       =/  path-final=path   (weld (weld path-first path-second) /noun)
                       (some .^(view:spc %gx path-final))
 
-                    =/  push-title      (notif-from-nickname-or-patp sender.id bowl)
-                    =/  push-subtitle   
+                    =/  push-title      (notif-from-nickname-or-patp:lib sender.id bowl)
+                    =/  push-subtitle
                       ?~  space-scry
-                        (group-name-or-blank prow)
+                        (group-name-or-blank:lib prow)
                       ?.  =(%space type.prow)
-                        (group-name-or-blank prow)
+                        (group-name-or-blank:lib prow)
                       ?>  ?=(%space -.u.space-scry)
-                      (crip [name.space:(need space-scry) ' - ' (group-name-or-blank prow) ~])
+                      (crip [name.space:(need space-scry) ' - ' (group-name-or-blank:lib prow) ~])
                     =/  push-contents   (notif-msg parts bowl)
                     =/  unread-count    +(.^(@ud %gx /(scot %p our.bowl)/notif-db/(scot %da now.bowl)/db/unread-count/(scot %tas %realm-chat)/noun))
                     =/  avatar=(unit @t)
@@ -363,7 +372,7 @@
   ^-  card
   =/  msg-part  (snag 0 message)
   =/  title     (notif-msg message bowl)
-  =/  content   (notif-from-nickname-or-patp sender.msg-id.msg-part bowl)
+  =/  content   (notif-from-nickname-or-patp:lib sender.msg-id.msg-part bowl)
   :: NOTE, %notif-db agent now depends on us setting this properly so it
   :: can delete notifs for deleted messages automatically
   =/  link      (msg-id-to-cord:encode:db-lib msg-id.msg-part)
@@ -469,28 +478,4 @@
       t
     $(t (weld (trip c) t))
 ::
-++  group-name-or-blank
-  |=  [=path-row:db-sur]
-  ^-  @t
-  =/  title       (~(get by metadata.path-row) 'title')
-  ?:  =(type.path-row %dm)   '' :: always blank for DMs
-  ?~  title     'Group Chat'    :: if it's a group chat without a title, just say "group chat"
-  (need title)                  :: otherwise, return the title of the group
-::
-++  notif-from-nickname-or-patp
-  |=  [patp=ship =bowl:gall]
-  ^-  @t
-  =/  cv=view:fr
-    .^  view:fr
-        %gx
-        /(scot %p our.bowl)/friends/(scot %da now.bowl)/contact-hoon/(scot %p patp)/noun
-    ==
-  =/  nickname=@t
-    ?+  -.cv  (scot %p patp) :: if the scry came back wonky, just fall back to patp
-      %contact-info
-        nickname.contact-info.cv
-    ==
-  ?:  =('' nickname)
-    (scot %p patp)
-  nickname
 --
