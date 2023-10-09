@@ -3,16 +3,20 @@
 ++  our-passport
   |=  =bowl:gall
   ^-  passport:common
-  =/  r=row:bedrock
-    %+  snag  0
-    %+  skim
-      (all-rows-by-path-type passport-type:common /private bowl)
-    |=  r=row:bedrock  ^-  ?
-    ?+  -.data.r  %.n
-      %passport  =(ship.contact.data.r our.bowl)
-    ==
+  =/  r=row:bedrock  (our-passport-row bowl)
   ?+  -.data.r  !!
     %passport  +.data.r
+  ==
+::
+++  our-passport-row
+  |=  =bowl:gall
+  ^-  row:bedrock
+  %+  snag  0
+  %+  skim
+    (all-rows-by-path-type passport-type:common /private bowl)
+  |=  r=row:bedrock  ^-  ?
+  ?+  -.data.r  %.n
+    %passport  =(ship.contact.data.r our.bowl)
   ==
 ::
 ++  our-passport-id
@@ -153,8 +157,9 @@
   |=  [=type:common =path =bowl:gall]
   ^-  (list row:bedrock)
   =/  all-rows=[=type:common pt=pathed-table:bedrock =schemas:bedrock]
+    ;;  [=type:common pt=pathed-table:bedrock =schemas:bedrock]  :: hard-casting for efficeincy?
     .^
-      [=type:common pt=pathed-table:bedrock =schemas:bedrock]
+      *
       %gx
       %+  weld
         %+  weld

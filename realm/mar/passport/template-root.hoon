@@ -1,16 +1,17 @@
 /-  common
 /+  lib=passport
 ::
-|_  c=(list contact:common)
+|_  c=passport-crypto:common
 ++  grad  %noun
 ++  grow
   |%
   ++  noun  c
-  ++  json  a+(turn c en-contact:enjs:lib)
+  ++  json  (en-p-crypto:enjs:lib c)
   --
 ::
 ++  grab
   |%
-  ++  noun  (list contact:common)
+  ++  noun  passport-crypto:common
   --
 --
+

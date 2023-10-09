@@ -45,7 +45,6 @@
 ++  verify-message
   |=  [msg=@t sig=@t addr=@t]  ^-  ?
   =/  pubkey=@ux  (recover-pub-key msg sig addr)
-  ~&  >>>  "addr {<addr>} address-from-pub {<(address-from-pub:key:eth pubkey)>}"
   :: if the passed in address equals the address for the the recovered public key of the sig, then it is verified
   =((hex-to-num:eth addr) (address-from-pub:key:eth pubkey))
 ::
@@ -64,6 +63,11 @@
       ?:  =(1 (mod i 2))
         $(reordered ['.' b1 b2 reordered], ta +.+.ta, i +(i))
       $(reordered [b1 b2 reordered], ta +.+.ta, i +(i))
-  `@ux`(slav %ux (crip ['0' 'x' ready]))
+  |- :: handle the urbit bullshit %ux parsing rules
+    ?:  =('0' (snag 0 ready))
+      $(ready +.ready)
+    ?:  =('.' (snag 0 ready))
+      $(ready +.ready)
+    `@ux`(slav %ux (crip ['0' 'x' ready]))
 ::
 --
