@@ -345,10 +345,11 @@
   ^-  (quip card state-2)
   ?:  =(0 (lent message))  `state  :: if the list is empty, don't do anything
   =/  index=@ud   0
-  =/  st=state-2
+  =/  changes=db-change:sur  *db-change:sur
+  =/  changes-and-state=[db-change:sur state-2]
     |-
       ?:  =(index (lent message))
-        state
+        [changes state]
       =/  msg=msg-part:sur  (snag index message)
       ::
       :: backlog-pokes are only allowed if all the following are true:
@@ -367,11 +368,20 @@
       ?>  peers-get-backlog.pathrow
       =.  received-at.msg   now.bowl
 
-      $(messages-table.state (put:msgon:sur messages-table.state [msg-id.msg msg-part-id.msg] msg), index +(index))
+      %=  $
+        messages-table.state    (put:msgon:sur messages-table.state [msg-id.msg msg-part-id.msg] msg)
+        index                   +(index)
+        changes                 [[%add-row %messages msg] changes]
+      ==
 
-  :: SILENTLY adding these messages to the state... will cause problems
-  :: if clients aren't smart enough to check the chat-path message count
-  [~ st]
+  :: message-paths is all the sup.bowl paths that start with
+  :: /db/messages/start since every new message will need to go out to
+  :: those subscriptions
+  =/  message-paths  (messages-start-paths bowl)
+  =/  gives  :~
+    [%give %fact (weld message-paths (limo [/db (weld /db/path path:(snag 0 message)) ~])) chat-db-change+!>(-.changes-and-state)]
+  ==
+  [gives +.changes-and-state]
 ::
 ++  edit
 ::  :chat-db &db-action [%edit [[~2023.2.2..23.11.10..234a ~zod] /a/path/to/a/chat (limo [[[%plain 'poop'] ~ ~] ~])]]
