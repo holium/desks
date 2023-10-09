@@ -15,6 +15,7 @@
 +$  state-0
   $:  %0
       toc=glob
+      opengraph-image=(unit @t)
   ==
 --
 %-  agent:dbug
@@ -123,6 +124,7 @@
 ++  handle-http-request
   |=  [eyre-id=@ta inbound-request:eyre]
   ^-  (quip card _state)
+  ~&  >>  "{<url.request>}"
   ::
   =;  [payload=simple-payload:http caz=(list card) =_state]
     :_  state
@@ -137,6 +139,7 @@
     (cat 3 '/~/login?redirect=' url.request)
   ::
   =*  headers   header-list.request
+  =/  dict      `(map @t @t)`(malt header-list.request)
   =/  req-line  (parse-request-line url.request)
   ::
   |^  ?+  method.request  [[405^~ ~] ~ state]
@@ -156,12 +159,14 @@
       [[200 ~] `(upload-page ~)]
     ::
         [[%passport ~] ?(~ [~ %html])]
+      =/  =passport:common  .^(passport:common %gx /(scot %p our.bowl)/passport/(scot %da now.bowl)/'our-passport'/noun)
       =/  content  %+  payload-from-glob
         %passport
       [[ext=[~ ~.html] site=site.req-line] args=~]
       ?~  data.content  content
       =/  bod=[t=@ud c=@t]  ^-([@ud @t] u.data.content)
-      [response-header.content (replace-html c.bod)]
+      =/  host  (~(get by dict) 'host')
+      [response-header.content (replace-html host c.bod passport)]
     ::
         [[%passport @ *] *]
       %+  payload-from-glob
@@ -360,14 +365,22 @@
     ~[max-1-wk:gen]
   :: Thomas (nod to ~dister-dozzod-niblyx-malnus)
   ++  replace-html
-    |=  htm=@t
+    |=  [host=(unit @t) htm=@t =passport:common]
     ^-  (unit octs)
+    ::  todo: figure out how to determine https vs http
+    =/  url   ?~(host '' (crip "https://{<(need host)>}/passport"))
+    =/  display-name  ?~(display-name.contact.passport '' (need display-name.contact.passport))
+    =/  bio  ?~(bio.contact.passport '' (need bio.contact.passport))
+    =/  opengraph-image  ?~(opengraph-image '' (need opengraph-image.state))
     =/  rus
       %+  rush  htm
       %-  star
       ;~  pose
         (cold (scot %p our.bowl) (jest '{og-title}'))
-        (cold 'passport bio here' (jest '{og-description}'))
+        (cold display-name (jest '{og-username}'))
+        (cold bio (jest '{og-description}'))
+        (cold url (jest '{og-url}'))
+        (cold opengraph-image (jest '{og-image}'))
         next
       ==
     ?~(rus ~ (some (as-octs:mimes:html (rap 3 u.rus)))) :: `(rap 3 u.rus))
