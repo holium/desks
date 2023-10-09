@@ -153,8 +153,9 @@
   |=  [=type:common =path =bowl:gall]
   ^-  (list row:bedrock)
   =/  all-rows=[=type:common pt=pathed-table:bedrock =schemas:bedrock]
+    ;;  [=type:common pt=pathed-table:bedrock =schemas:bedrock]  :: hard-casting for efficeincy?
     .^
-      [=type:common pt=pathed-table:bedrock =schemas:bedrock]
+      *
       %gx
       %+  weld
         %+  weld

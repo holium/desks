@@ -1,6 +1,6 @@
 ::  app/api-store.hoon
 /-  *api-store, db, common
-/+  dbug
+/+  dbug, scries=bedrock-scries
 =|  state-0
 =*  state  -
 =<
@@ -12,8 +12,9 @@
   ++  on-init
     ^-  (quip card _this)
     =/  default-state=state-0   *state-0
-    =/  default-cards
+    =/  default-cards=(list card)
       :~  [%pass /selfpoke %agent [our.bowl dap.bowl] %poke %api-store-action !>([%sync-to-bedrock ~])]
+          [%pass /storage %agent [our.bowl %storage] %watch /all]
       ==
     [default-cards this(state default-state)]
   ++  on-save   !>(state)
@@ -21,9 +22,14 @@
     |=  old-state=vase
     ^-  (quip card _this)
     =/  old  !<(versioned-state old-state)
-    =/  default-cards
+    =/  default-cards=(list card)
       :~  [%pass /selfpoke %agent [our.bowl dap.bowl] %poke %api-store-action !>([%sync-to-bedrock ~])]
       ==
+    =.  default-cards
+      ?:  =(wex.bowl ~)  
+        :-  [%pass /storage %agent [our.bowl %storage] %watch /all]
+        default-cards
+      default-cards
     [default-cards this(state old)]
   ::
   ++  on-poke
@@ -76,7 +82,12 @@
   ++  on-agent
     |=  [=wire =sign:agent:gall]
     ^-  (quip card _this)
-    `this
+    ?+  wire  `this
+      [%storage ~]
+    ~&  >  "got new creds from %storage agent, syncing to bedrock"
+    :_  this  
+    [%pass /selfpoke %agent [our.bowl dap.bowl] %poke %api-store-action !>([%sync-to-bedrock ~])]~
+    ==
   ::
   ++  on-leave
     |=  =path
@@ -121,9 +132,33 @@
         ?:(=('' current-bucket.s3-conf) current-bucket.stoconf current-bucket.s3-conf)
         ?:(=('' region.s3-conf) region.stoconf region.s3-conf)
       ]
-  =/  private-path  [%create-path /private %host ~ ~ ~ [our.bowl %host]~]
   =/  creds  [%create [our.bowl now.bowl] [/private creds-type:common merged ~]]
-  =/  cards=(list card)  
+  =/  cards=(list card)
+  ?:  (test-bedrock-path-existence:scries /private bowl)
+    ?:  (test-bedrock-table-existence:scries creds-type:common bowl)
+      =/  del-old-creds=(list card)
+        %+  turn
+          (all-rows-by-path-type:scries creds-type:common /private bowl)
+        |=  r=row:db
+        ^-  card
+        ~&  id.r
+        ?+  -.data.r  !!
+          %creds
+        [
+          %pass
+          /dbpoke
+          %agent
+          [our.bowl %bedrock]
+          %poke
+          %db-action
+          !>([%remove [our.bowl now.bowl] creds-type:common path.r id.r])
+        ]
+        ==
+      :-  [%pass /dbpoke %agent [our.bowl %bedrock] %poke %db-action !>(creds)]
+      del-old-creds
+    :~  [%pass /dbpoke %agent [our.bowl %bedrock] %poke %db-action !>(creds)]
+    ==
+  =/  private-path  [%create-path /private %host ~ ~ ~ [our.bowl %host]~]
   :~  [%pass /dbpoke %agent [our.bowl %bedrock] %poke %db-action !>(private-path)]
       [%pass /dbpoke %agent [our.bowl %bedrock] %poke %db-action !>(creds)]
   ==
