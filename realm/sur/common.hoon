@@ -255,6 +255,7 @@
       [%token-burn from-entity=@t amount=@rd]
       [%token-mint to-entity=@t amount=@rd]
       [%token-transfer to-entity=@t amount=@rd]
+      [%signed-key-add address=@t address-type=@t address-signature=@t name=@t]
   ==
 +$  passport-data-link
   $:  mtd=passport-data-link-metadata
