@@ -224,13 +224,10 @@
   =.  peers-table.state  (~(put by peers-table.state) path.row thepeers)
   =/  thechange  chat-db-change+!>((limo [[%add-row %paths row] (turn thepeers |=(p=peer-row:sur [%add-row %peers p]))]))
   =/  vent-path=path  /chat-vent/(scot %da created-at.row)
-  =/  vnt
-  ?:  =(0 expected-msg-count)  chat-vent+!>([%path row])
-  chat-vent+!>([%path-and-count row expected-msg-count])
   =/  gives  :~
     [%give %fact [/db (weld /db/path path.row) ~] thechange]
     :: give vent response
-    [%give %fact ~[vent-path] vnt]
+    [%give %fact ~[vent-path] chat-vent+!>([%path-and-count row expected-msg-count])]
     [%give %kick ~[vent-path] ~]
   ==
   [gives state]
