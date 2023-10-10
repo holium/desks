@@ -43,7 +43,6 @@
 ::
 ++  on-load
   |=  old-state=vase
-  ~&  >>  "on-load"
   ^-  (quip card _this)
   =/  old  !<(versioned-state old-state)
   :_  this(state old)

@@ -12,17 +12,14 @@
 ^-  form:m
 =/  axn=(unit action:store)  !<((unit action:store) arg)
 ?~  axn  (strand-fail %no-arg ~)
-~&  >>  "{<-.u.axn>}"
 ?.  =(%save-opengraph-image -.u.axn)
-    :: ==
     (strand-fail %bad-action ~)
 ;<  our=@p   bind:m  get-our
 ;<  now=@da  bind:m  get-time
 =/  =wire  /vent/(scot %p our)/(scot %da now)
 
-?-  -.u.axn  ::(strand-fail %type-not-supported ~)
+?-  -.u.axn
   %save-opengraph-image
-      ~&  >>  "{<img.u.axn>}"
     ;<  ~  bind:m  (watch wire [our %profile] wire)
     ;<  ~  bind:m  (poke [our %profile] profile-action+!>([%save-opengraph-image [our now] +>.u.axn]))
     ;<  cage=(unit cage)  bind:m  (take-fact-or-kick wire)
