@@ -44,11 +44,19 @@
 ++  on-load
   |=  old-state=vase
   ^-  (quip card _this)
-  =/  old  !<(versioned-state old-state)
-  :_  this(state old)
-  ::  bind this agent to requests to /passport route
-  :~  [%pass /passport-route %arvo %e %connect `/'passport' %profile]
-  ==
+  :: =/  old  !<(versioned-state old-state)
+  :: :_  this(state old)
+  :: ::  bind this agent to requests to /passport route
+  :: :~  [%pass /passport-route %arvo %e %connect `/'passport' %profile]
+  :: ==
+  %-  (slog leaf+"nuking old %profile state" ~) ::  temporarily doing this for making development easier
+  =^  cards  this  on-init
+  :_  this
+  =-  (welp - cards)
+  %+  turn  ~(tap in ~(key by wex.bowl))
+  |=  [=wire =ship =term]
+  ^-  card
+  [%pass wire %agent [ship term] %leave ~]
 ::
 ++  on-poke
   |=  [=mark =vase]
@@ -162,6 +170,8 @@
   =*  headers   header-list.request
   =/  dict      `(map @t @t)`(malt header-list.request)
   =/  req-line  (parse-request-line url.request)
+
+  ~&  >>  dict
   ::
   |^  ?+  method.request  [[405^~ ~] ~ state]
         %'GET'   [handle-get-request ~ state]
@@ -398,8 +408,13 @@
   ++  replace-html
     |=  [host=(unit @t) htm=@t =passport:common]
     ^-  (unit octs)
-    ::  todo: figure out how to determine https vs http
-    =/  url   ?~(host '' (crip "https://{<(need host)>}/passport"))
+    :: =/  host  ?~  host  ~&  >>>  "host is null"  u.host
+    :: =/  prefix
+    :: ?.  ?&  =(~ (rush 'localhost' (jest host)))
+    ::         =(~ (rush '127.0.0.1' (jest host)))
+    ::         =(~ (rush '0.0.0.0' (jest host)))
+    ::     ==  "https:/"  "http:/"
+    =/  url   ?~(host '' (crip (weld "https:/" (spud /[(need host)]/'passport'))))
     =/  display-name  ?~(display-name.contact.passport '' (need display-name.contact.passport))
     =/  bio  ?~(bio.contact.passport '' (need bio.contact.passport))
     =/  opengraph-image  ?~(opengraph-image '' (need opengraph-image.state))
