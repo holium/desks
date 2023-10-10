@@ -168,6 +168,16 @@
       =/  host  (~(get by dict) 'host')
       [response-header.content (replace-html host c.bod passport)]
     ::
+        [[%passport %edit ~] ?(~ [~ %html])]
+      =/  =passport:common  .^(passport:common %gx /(scot %p our.bowl)/passport/(scot %da now.bowl)/'our-passport'/noun)
+      =/  content  %+  payload-from-glob
+        %passport
+      [[ext=[~ ~.html] site=site.req-line] args=~]
+      ?~  data.content  content
+      =/  bod=[t=@ud c=@t]  ^-([@ud @t] u.data.content)
+      =/  host  (~(get by dict) 'host')
+      [response-header.content (replace-html host c.bod passport)]
+    ::
         [[%passport @ *] *]
       %+  payload-from-glob
         %passport
