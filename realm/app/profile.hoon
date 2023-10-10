@@ -4,7 +4,7 @@
 :: purpose: http/web interface into passport profile
 ::
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-/-  *passport, common, *docket
+/-  *passport, common, *docket, store=profile-store
 /+  *server, default-agent, multipart, dbug, verb
 :: =*  card  card:agent:gall
 |%
@@ -61,6 +61,23 @@
         %handle-http-request
       =+  !<([id=@ta req=inbound-request:eyre] vase)
       (handle-http-request:ext id req)
+
+        %profile-action
+      =/  =action:store  !<(action:store vase)
+      ?-  -.action  ::(on-poke:def mark vase)
+        %save-opengraph-image
+          :: assure it's us
+          ?>  =(our.bowl src.bowl)
+          =/  vent-path=path  /vent/(scot %p src.req-id.action)/(scot %da now.req-id.action)
+          =/  kickcard=card  [%give %kick ~[vent-path] ~]
+          =/  cards=(list card)
+          :~  [%give %fact ~[vent-path] profile-vent+!>([%ack ~])]
+              kickcard
+          ==
+          =.  opengraph-image.state  (some img.action)
+          [cards state]
+
+      ==
     ==
   [cards this]
 ::
@@ -73,6 +90,11 @@
       [%http-response *]
         ?>  (team:title [our src]:bowl)
         %-  (slog leaf+"Eyre subscribed to {(spud path)}." ~)
+        `this
+
+      [%vent @ @ ~] :: poke response comes on this path
+        =/  src=ship  (slav %p i.t.path)
+        ?>  =(src src.bowl)
         `this
   ==
 ++  on-leave  on-leave:def
