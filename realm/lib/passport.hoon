@@ -258,13 +258,14 @@
   |=  [contacts=(list [t=@da =contact:common]) state=state-0 =bowl:gall]
   ^-  (quip card state-0)
   ?<  =(src.bowl our.bowl)  :: assert we aren't receiving from ourself
-  =/  log1  (maybe-log hide-logs.state "%receive-contacts: {<contacts>}")
+  =/  log1  (maybe-log hide-logs.state "%receive-contacts: {<(lent contacts)>} contacts {<now.bowl>}")
 
   :: loop through the contacts they sent us
   =/  old=(list [id:common @da contact:common])  (our-contacts:scries bowl)
   =/  cards=(list card)  ~
   |-
     ?:  =(0 (lent contacts))
+      =/  log2  (maybe-log hide-logs.state "%receive-contacts finished at {<now.bowl>} ")
       [cards state]
     =/  con=contact:common  (cleanup-contact contact:(snag 0 contacts))
     ?:  =(our.bowl ship.con)  :: don't create a contact record for ourselves
