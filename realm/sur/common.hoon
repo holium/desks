@@ -247,7 +247,7 @@
       [%entity-add address=@t address-type=@t name=@t]
       [%entity-remove name=@t]
       [%key-add address=@t address-type=@t name=@t]
-      [%key-remove name=@t]
+      [%key-remove address=@t]
       [%post-add type=@t data=json]
       [%post-edit link-hash=@t type=@t data=json]
       [%post-remove link-hash=@t]

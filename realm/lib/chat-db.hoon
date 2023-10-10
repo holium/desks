@@ -374,15 +374,18 @@
       ?>  peers-get-backlog.pathrow
       =.  received-at.msg   now.bowl
 
-      $(messages-table.state (put:msgon:sur messages-table.state [msg-id.msg msg-part-id.msg] msg), index +(index), changes [[%add-row %messages msg] changes])
+      %=  $
+        messages-table.state    (put:msgon:sur messages-table.state [msg-id.msg msg-part-id.msg] msg)
+        index                   +(index)
+        changes                 [[%add-row %messages msg] changes]
+      ==
 
-  =/  thechange  chat-db-change+!>(-.changes-and-state)
   :: message-paths is all the sup.bowl paths that start with
   :: /db/messages/start since every new message will need to go out to
   :: those subscriptions
   =/  message-paths  (messages-start-paths bowl)
   =/  gives  :~
-    [%give %fact (weld message-paths (limo [/db (weld /db/path path:(snag 0 message)) ~])) thechange]
+    [%give %fact (weld message-paths (limo [/db (weld /db/path path:(snag 0 message)) ~])) chat-db-change+!>(-.changes-and-state)]
   ==
   [gives +.changes-and-state]
 ::

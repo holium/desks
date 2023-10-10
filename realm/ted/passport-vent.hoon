@@ -13,6 +13,8 @@
 =/  axn=(unit action:passport)  !<((unit action:passport) arg)
 ?~  axn  (strand-fail %no-arg ~)
 ?.  ?|  ?=(%get -.u.axn)
+        ?=(%get-as-row -.u.axn)
+        ?=(%get-contact -.u.axn)
         ?=(%add-friend -.u.axn)
         ?=(%cancel-friend-request -.u.axn)
         ?=(%handle-friend-request -.u.axn)
@@ -26,9 +28,23 @@
 =/  =wire  /vent/(scot %p our)/(scot %da now)
 
 ?+  -.u.axn  (strand-fail %type-not-supported ~)
+  %get-as-row
+    ;<  ~  bind:m  (watch wire [src.req-id.u.axn %passport] wire)
+    ;<  ~  bind:m  (poke [src.req-id.u.axn %passport] passport-action+!>([%get-as-row [our now]]))
+    ;<  cage=(unit cage)  bind:m  (take-fact-or-kick wire)
+    ?^  cage
+      (pure:m q.u.cage)
+    (pure:m !>([%ack ~]))
   %get
     ;<  ~  bind:m  (watch wire [src.req-id.u.axn %passport] wire)
     ;<  ~  bind:m  (poke [src.req-id.u.axn %passport] passport-action+!>([%get [our now]]))
+    ;<  cage=(unit cage)  bind:m  (take-fact-or-kick wire)
+    ?^  cage
+      (pure:m q.u.cage)
+    (pure:m !>([%ack ~]))
+  %get-contact
+    ;<  ~  bind:m  (watch wire [src.req-id.u.axn %passport] wire)
+    ;<  ~  bind:m  (poke [src.req-id.u.axn %passport] passport-action+!>([%get-contact [our now]]))
     ;<  cage=(unit cage)  bind:m  (take-fact-or-kick wire)
     ?^  cage
       (pure:m q.u.cage)
