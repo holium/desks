@@ -95,6 +95,14 @@
     ^-  (unit (unit cage))
     ?+    path  !!
     ::
+      [%x %code ~]
+        ?>  =(src.bowl our.bowl)
+        =/  code=tape
+        %+  slag  1
+        %+  scow  %p
+        .^(@p %j /(scot %p our.bowl)/code/(scot %da now.bowl)/(scot %p our.bowl))
+        ``tape+!>(code)
+    ::
       [%x %contacts ~]
         ``passport-contacts+!>((turn (our-contacts:scries bowl) |=(c=[=id:common @da =contact:common] contact.c)))
     ::

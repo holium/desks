@@ -78,8 +78,6 @@
     %+  turn  all-peers
     |=  [s=ship role=@tas]
     (create-path-db-poke:rc-lib s pathrow all-peers)
-  ~&  (snag 0 cards)
-  ~&  (snag 1 cards)
   [cards new-chat]
 
 :: matching members are status %joined or %host AND have
