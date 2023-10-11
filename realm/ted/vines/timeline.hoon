@@ -231,6 +231,15 @@
     ;<  ^vase  bind:m  (run-thread %realm %venter !>(`action))
     $(to.axn t.to.axn)
     ::
+      %create-personal-timeline
+    =/  =path  /timeline/(scot %p our.gowl)/our
+    ?:  (test-bedrock-path-existence:scries path gowl)
+      ~&  >>  %personal-timeline-already-exists
+      (pure:m !>([~[%personal-timeline-already-exists] ~]))
+    ;<  vnt=vent:t  bind:m
+      ((vent ,vent:t) [our dap]:gowl timeline-action+[%create-timeline %our])
+    (pure:m !>(vnt))
+    ::
       %add-forerunners-bedrock
     =/  fore=path  /spaces/~lomder-librun/realm-forerunners/chats/0v2.68end.ets6m.29fgc.ntejl.jbeo7
     =/  db-fore=path  /timeline/(scot %p our.gowl)/forerunners

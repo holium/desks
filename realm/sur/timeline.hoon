@@ -1,4 +1,5 @@
 /-  common, db, cd=chat-db
+:: create personal timeline 
 |%
 +$  cid  @t
 ::
@@ -20,6 +21,7 @@
       [%create-comment =path =comment:common]
       [%delete-comment =path =id:common]
       [%add-forerunners-bedrock force=?]
+      [%create-personal-timeline ~]
       [%convert-message =msg-id:cd =msg-part-id:cd to=(list path)]
       [%add-random-emojis =path]
       [%scry-test ~]

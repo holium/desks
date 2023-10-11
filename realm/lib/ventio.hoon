@@ -285,4 +285,42 @@
   ?.  -.a
     (pure:m ~)
   (pure:m `p.a)
+::
+++  pass-arvo
+  |=  [=wire =note-arvo]
+  =/  m  (strand ,~)
+  ^-  form:m
+  (send-raw-card %pass wire %arvo note-arvo)
+::
+++  take-sign
+  |=  =wire
+  =/  m  (strand ,sign-arvo)
+  ^-  form:m
+  |=  tin=strand-input:strand
+  ?+  in.tin  `[%skip ~]
+    ~  `[%wait ~]
+      [~ %sign *]
+    ?.  =(wire wire.u.in.tin)
+      `[%skip ~]
+    `[%done sign-arvo.u.in.tin]
+  ==
+::
+++  take-fact-or-kick
+  |=  =wire
+  =/  m  (strand ,(unit cage))
+  ^-  form:m
+  |=  tin=strand-input:strand
+  ?+  in.tin  `[%skip ~]
+      ~  `[%wait ~]
+    ::
+      [~ %agent * %fact *]
+    ?.  =(watch+wire wire.u.in.tin)
+      `[%skip ~]
+    `[%done `cage.sign.u.in.tin]
+    ::
+      [~ %agent * %kick *]
+    ?.  =(watch+wire wire.u.in.tin)
+      `[%skip ~]
+    `[%done ~]
+  ==
 --
