@@ -44,11 +44,19 @@
   |=  old-state=vase
   ~&  >>  "on-load"
   ^-  (quip card _this)
-  =/  old  !<(versioned-state old-state)
-  :_  this(state old)
-  ::  bind this agent to requests to /passport route
-  :~  [%pass /passport-route %arvo %e %connect `/'passport' %profile]
-  ==
+  :: =/  old  !<(versioned-state old-state)
+  :: :_  this(state old)
+  :: ::  bind this agent to requests to /passport route
+  :: :~  [%pass /passport-route %arvo %e %connect `/'passport' %profile]
+  :: ==
+  %-  (slog leaf+"nuking old %profile state" ~) ::  temporarily doing this for making development easier
+  =^  cards  this  on-init
+  :_  this
+  =-  (welp - cards)
+  %+  turn  ~(tap in ~(key by wex.bowl))
+  |=  [=wire =ship =term]
+  ^-  card
+  [%pass wire %agent [ship term] %leave ~]
 ::
 ++  on-poke
   |=  [=mark =vase]
