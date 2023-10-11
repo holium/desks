@@ -12,8 +12,10 @@
 ^-  form:m
 =/  axn=(unit action:store)  !<((unit action:store) arg)
 ?~  axn  (strand-fail %no-arg ~)
-?.  ?|  =(%initialize -.u.axn)
+?.  ?|  =(%update-crux -.u.axn)
         =(%save-opengraph-image -.u.axn)
+        =(%register -.u.axn)
+        =(%update-available -.u.axn)
     ==
     (strand-fail %bad-action ~)
 ;<  our=@p   bind:m  get-our
@@ -29,9 +31,25 @@
       (pure:m q.u.cage)
     (pure:m !>([%ack ~]))
 
-  %initialize
+  %update-crux
     ;<  ~  bind:m  (watch wire [our %profile] wire)
-    ;<  ~  bind:m  (poke [our %profile] profile-action+!>([%initialize [our now] +>.u.axn]))
+    ;<  ~  bind:m  (poke [our %profile] profile-action+!>([%update-crux [our now] +>.u.axn]))
+    ;<  cage=(unit cage)  bind:m  (take-fact-or-kick wire)
+    ?^  cage
+      (pure:m q.u.cage)
+    (pure:m !>([%ack ~]))
+
+  %register
+    ;<  ~  bind:m  (watch wire [our %profile] wire)
+    ;<  ~  bind:m  (poke [our %profile] profile-action+!>([%register [our now] +>.u.axn]))
+    ;<  cage=(unit cage)  bind:m  (take-fact-or-kick wire)
+    ?^  cage
+      (pure:m q.u.cage)
+    (pure:m !>([%ack ~]))
+
+  %update-available
+    ;<  ~  bind:m  (watch wire [our %profile] wire)
+    ;<  ~  bind:m  (poke [our %profile] profile-action+!>([%update-available [our now] +>.u.axn]))
     ;<  cage=(unit cage)  bind:m  (take-fact-or-kick wire)
     ?^  cage
       (pure:m q.u.cage)

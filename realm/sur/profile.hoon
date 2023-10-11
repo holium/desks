@@ -1,7 +1,9 @@
 |%
 +$  action
   $%
-      [%initialize =req-id parm=(unit @t)]
+      [%register =req-id =ship]
+      [%update-available =req-id parm=(unit ship)]
+      [%update-crux =req-id parm=(unit @t)]
       [%save-opengraph-image =req-id img=@t]
   ==
 ::

@@ -14,7 +14,12 @@
     ==
 +$  state-0
   $:  %0
+      ::  map of filename => mime data
       toc=glob
+      :: registry is a list of ships that want to be notified when the passport
+      ::  UI is updated
+      registry=(set =ship)
+      ::  passport profile open graph image. used in <meta> tag of served passport page
       opengraph-image=(unit @t)
   ==
 --
@@ -35,8 +40,11 @@
   :_  this
   ::  bind this agent to requests to /passport route
   :~  [%pass /passport-route %arvo %e %connect `/'passport' %profile]
+  :: register this agent with the app host so that we are notified when the passport
+  ::  app glob is updated
+      [%pass /crux/register %agent [-.byk.bowl %profile] %poke profile-action+!>([%register [our.bowl now.bowl] our.bowl])]
   ::  initialize by reaching out to the remote desks where this agent was installed from
-      [%pass / %agent [our.bowl %profile] %poke profile-action+!>([%initialize ~])]
+      [%pass /crux/update %agent [our.bowl %profile] %poke profile-action+!>([%update-crux [our.bowl now.bowl] ~])]
   ==
 ++  on-save
     ^-  vase
@@ -86,29 +94,57 @@
           [cards state]
 
       ::
-        %initialize
-        ~&  >>  "byk => {<byk.bowl>}"
-        =/  listing  .^((list path) %gx /(scot %p -.byk.bowl)/profile/(scot %da now.bowl)/'crux-listing'/noun)
-        ~&  "processing {<(lent listing)>} files..."
-        =.  toc.state  ~
-        =/  result
-        %+  roll  listing
-        |=  [=path acc=[files-processed=(map path mime)]]
-        :: ~&  >>  "processing file: {<path>}..."
-        =/  glob  .^((unit mime) %gx (weld (weld /(scot %p -.byk.bowl)/profile/(scot %da now.bowl)/'glob' path) /noun))
-        ?~  glob  ~&  >>  "warning: null glob returned by %profile blob scry"  acc
-        :: =/  key  (stab path)
-        (~(put by files-processed.acc) path `mime`u.glob)
-        :: =.  toc.state  (~(put by toc.state) key u.glob)
-        :: (add num-files-processed.acc 1)
-        ~&  >  "total # of files processed: {<~(wyt in ~(key by files-processed.result))>}"
-        =/  vent-path=path  /vent/(scot %p src.req-id.action)/(scot %da now.req-id.action)
-        =/  kickcard=card  [%give %kick ~[vent-path] ~]
-        =.  toc.state  files-processed.result
-        :_  state
-        :~  [%give %fact ~[vent-path] profile-vent+!>([%ack ~])]
-            kickcard
-        ==
+        %register
+      %-  (slog leaf+"{<dap.bowl>}: registering {<src.bowl>}..." ~)
+      =/  vent-path=path  /vent/(scot %p src.req-id.action)/(scot %da now.req-id.action)
+      =/  kickcard=card  [%give %kick ~[vent-path] ~]
+      =.  registry.state
+        ?.  (~(has in registry.state) src.bowl)
+          %-  (slog leaf+"{<dap.bowl>}: {<src.bowl>} not found. adding..." ~)
+          (~(put in registry.state) src.bowl)
+        %-  (slog leaf+"{<dap.bowl>}: {<src.bowl>} found. skipping..." ~)
+        registry.state
+      :_  state
+      :~  [%give %fact ~[vent-path] profile-vent+!>([%ack ~])]
+          kickcard
+      ==
+
+      ::
+        %update-available
+        %-  (slog leaf+"{<dap.bowl>}: updates available. starting download from {<src.bowl>}..." ~)
+          :: for now, if update available, start downlod
+          =/  vent-path=path  /vent/(scot %p src.req-id.action)/(scot %da now.req-id.action)
+          =/  kickcard=card  [%give %kick ~[vent-path] ~]
+          :_  state
+          :~  [%give %fact ~[vent-path] profile-vent+!>([%ack ~])]
+              kickcard
+              [%pass /crux/update %agent [src.bowl %profile] %poke profile-action+!>([%update-crux [our.bowl now.bowl] ~])]
+          ==
+
+      ::
+        %update-crux
+          ~&  >>  "byk => {<byk.bowl>}"
+          =/  listing  .^((list path) %gx /(scot %p -.byk.bowl)/profile/(scot %da now.bowl)/'crux-listing'/noun)
+          ~&  "processing {<(lent listing)>} files..."
+          =.  toc.state  ~
+          =/  result
+          %+  roll  listing
+          |=  [=path acc=[files-processed=(map path mime)]]
+          :: ~&  >>  "processing file: {<path>}..."
+          =/  glob  .^((unit mime) %gx (weld (weld /(scot %p -.byk.bowl)/profile/(scot %da now.bowl)/'glob' path) /noun))
+          ?~  glob  ~&  >>  "warning: null glob returned by %profile blob scry"  acc
+          :: =/  key  (stab path)
+          (~(put by files-processed.acc) path `mime`u.glob)
+          :: =.  toc.state  (~(put by toc.state) key u.glob)
+          :: (add num-files-processed.acc 1)
+          ~&  >  "total # of files processed: {<~(wyt in ~(key by files-processed.result))>}"
+          =/  vent-path=path  /vent/(scot %p src.req-id.action)/(scot %da now.req-id.action)
+          =/  kickcard=card  [%give %kick ~[vent-path] ~]
+          =.  toc.state  files-processed.result
+          :_  state
+          :~  [%give %fact ~[vent-path] profile-vent+!>([%ack ~])]
+              kickcard
+          ==
       ==
     ==
   [cards this]
@@ -172,7 +208,41 @@
     ==
   ==
 ::
-++  on-agent  on-agent:def
+++  on-agent
+  |=  [=wire =sign:agent:gall]
+  ^-  (quip card _this)
+  ?+  wire  (on-agent:def wire sign)
+    [%crux %register ~]
+      ?+  -.sign  (on-agent:def wire sign)
+        %poke-ack
+          ?~  p.sign
+            :: ~&  >  "{<dap.bowl>}: successfully registered with app host"
+            `this
+          ~&  >>>  "{<dap.bowl>}: failed to register with app host"
+          `this
+      ==
+
+    [%crux %update ~]
+      ?+  -.sign  (on-agent:def wire sign)
+        %poke-ack
+          ?~  p.sign
+            :: ~&  >  "{<dap.bowl>}: successfully updated from app host"
+            `this
+          ~&  >>>  "{<dap.bowl>}: failed to update from app host"
+          `this
+      ==
+
+    [%crux %check ~]
+      ?+  -.sign  (on-agent:def wire sign)
+        %poke-ack
+          ?~  p.sign
+            :: ~&  >  "{<dap.bowl>}: successfully notified from app host"
+            `this
+          ~&  >>>  "{<dap.bowl>}: failed to notify subscriber to available app updates"
+          `this
+      ==
+  ==
+::
 ++  on-arvo
   |=  [=wire =sign-arvo]
   ^-  (quip card _this)
@@ -357,7 +427,12 @@
       ::   base.href.docket.charge
       :: =.  toc  glob
       ::
-      `state(toc glob)
+      :: inform all subscribers that there is an update available
+      =/  card-set=(set card)
+      %-  ~(run in registry.state)
+      |=  =ship
+      [%pass /crux/check %agent [ship %profile] %poke profile-action+!>([%update-available [our.bowl now.bowl] ~])]
+      [~(tap in card-set) state(toc glob)]
     ::
     ?~  parts=(de-request:multipart [header-list body]:request)
       ~&  headers=header-list.request
@@ -450,7 +525,7 @@
     ^-  (unit octs)
     =/  host  ?~  host  ~&  >>>  "host is null"  !!  u.host
     =/  prefix
-    ?.  ?&  =(~ (rush 'localhost' (jest host)))
+    ?.  ?|  =(~ (rush 'localhost' (jest host)))
             =(~ (rush '127.0.0.1' (jest host)))
             =(~ (rush '0.0.0.0' (jest host)))
         ==  "https:/"  "http:/"
