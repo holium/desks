@@ -94,7 +94,7 @@
         =/  result
         %+  roll  listing
         |=  [=path acc=[files-processed=(map path mime)]]
-        ~&  >>  "processing file: {<path>}..."
+        :: ~&  >>  "processing file: {<path>}..."
         =/  glob  .^((unit mime) %gx (weld (weld /(scot %p our.bowl)/profile/(scot %da now.bowl)/'glob' path) /noun))
         ?~  glob  ~&  >>  "warning: null glob returned by %profile blob scry"  acc
         :: =/  key  (stab path)
@@ -149,13 +149,13 @@
       ``noun+!>(keys)
   ::
     [%x %glob *]
-      ~&  >>  "requested {<t.t.path>}"
+      :: ~&  >>  "requested {<t.t.path>}"
       :: =/  paff  (stab `@t`i.t.t.path)
       =/  pod  (~(get by toc.state) t.t.path)
       ?~  pod
-        ~&  >>  "not found"
+        ~&  >>  "{<t.t.path>} not found"
         ``noun+!>(~)
-      ~&  >>  "found"
+      :: ~&  >>  "found"
       ``noun+!>((some u.pod))
   ::
       [%x %dbug %state ~]
