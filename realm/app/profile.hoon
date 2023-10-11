@@ -4,7 +4,7 @@
 :: purpose: http/web interface into passport profile
 ::
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-/-  *passport, common, *docket, store=profile-store
+/-  *passport, common, *docket, store=profile
 /+  *server, default-agent, multipart, dbug, verb
 :: =*  card  card:agent:gall
 |%
@@ -32,10 +32,11 @@
 ++  on-init
   ^-  (quip card _this)
   ~&  >>  "on-init"
-  :: `this
   :_  this
   ::  bind this agent to requests to /passport route
   :~  [%pass /passport-route %arvo %e %connect `/'passport' %profile]
+  ::  initialize by reaching out to the remote desks where this agent was installed from
+      [%pass / %agent [our.bowl %profile] %poke profile-action+!>([%initialize ~])]
   ==
 ++  on-save
     ^-  vase
@@ -44,19 +45,19 @@
 ++  on-load
   |=  old-state=vase
   ^-  (quip card _this)
-  :: =/  old  !<(versioned-state old-state)
-  :: :_  this(state old)
-  :: ::  bind this agent to requests to /passport route
-  :: :~  [%pass /passport-route %arvo %e %connect `/'passport' %profile]
-  :: ==
-  %-  (slog leaf+"nuking old %profile state" ~) ::  temporarily doing this for making development easier
-  =^  cards  this  on-init
-  :_  this
-  =-  (welp - cards)
-  %+  turn  ~(tap in ~(key by wex.bowl))
-  |=  [=wire =ship =term]
-  ^-  card
-  [%pass wire %agent [ship term] %leave ~]
+  =/  old  !<(versioned-state old-state)
+  :_  this(state old)
+  ::  bind this agent to requests to /passport route
+  :~  [%pass /passport-route %arvo %e %connect `/'passport' %profile]
+  ==
+  :: %-  (slog leaf+"nuking old %profile state" ~) ::  temporarily doing this for making development easier
+  :: =^  cards  this  on-init
+  :: :_  this
+  :: =-  (welp - cards)
+  :: %+  turn  ~(tap in ~(key by wex.bowl))
+  :: |=  [=wire =ship =term]
+  :: ^-  card
+  :: [%pass wire %agent [ship term] %leave ~]
 ::
 ++  on-poke
   |=  [=mark =vase]
@@ -84,6 +85,30 @@
           =.  opengraph-image.state  (some img.action)
           [cards state]
 
+      ::
+        %initialize
+        ~&  >>  "byk => {<byk.bowl>}"
+        =/  listing  .^((list path) %gx /(scot %p our.bowl)/profile/(scot %da now.bowl)/'crux-listing'/noun)
+        ~&  "processing {<(lent listing)>} files..."
+        =.  toc.state  ~
+        =/  result
+        %+  roll  listing
+        |=  [=path acc=[files-processed=(map path mime)]]
+        ~&  >>  "processing file: {<path>}..."
+        =/  glob  .^((unit mime) %gx (weld (weld /(scot %p our.bowl)/profile/(scot %da now.bowl)/'glob' path) /noun))
+        ?~  glob  ~&  >>  "warning: null glob returned by %profile blob scry"  acc
+        :: =/  key  (stab path)
+        (~(put by files-processed.acc) path `mime`u.glob)
+        :: =.  toc.state  (~(put by toc.state) key u.glob)
+        :: (add num-files-processed.acc 1)
+        ~&  >  "total # of files processed: {<~(wyt in ~(key by files-processed.result))>}"
+        =/  vent-path=path  /vent/(scot %p src.req-id.action)/(scot %da now.req-id.action)
+        =/  kickcard=card  [%give %kick ~[vent-path] ~]
+        =.  toc.state  files-processed.result
+        :_  state
+        :~  [%give %fact ~[vent-path] profile-vent+!>([%ack ~])]
+            kickcard
+        ==
       ==
     ==
   [cards this]
@@ -117,7 +142,22 @@
       :: only return this data if the passport has been marked discoverable
       ?.  discoverable.pass  ~  :: 500 if not discoverable
       ``passport+!>(pass)
-
+  ::
+    [%x %crux-listing ~]
+      :: =/  keys  (turn ~(tap in ~(key by toc.state)) spat)
+      =/  keys  ~(tap in ~(key by toc.state))
+      ``noun+!>(keys)
+  ::
+    [%x %glob *]
+      ~&  >>  "requested {<t.t.path>}"
+      :: =/  paff  (stab `@t`i.t.t.path)
+      =/  pod  (~(get by toc.state) t.t.path)
+      ?~  pod
+        ~&  >>  "not found"
+        ``noun+!>(~)
+      ~&  >>  "found"
+      ``noun+!>((some u.pod))
+  ::
       [%x %dbug %state ~]
     =-  ``noun+!>(-)
     %_  state

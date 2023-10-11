@@ -1,4 +1,4 @@
-/-  store=profile-store
+/-  store=profile
 =<  [store .]
 =,  store
 |%
@@ -14,8 +14,14 @@
     ++  decode
       %-  of
       :~
+          [%initialize de-init]
           [%save-opengraph-image save-opengraph-image]
       ==
+    ::
+    ++  de-init
+      |=  jon=json
+      ^-  [req-id (unit @t)]
+      [[~zod ~2000.1.1] ?~(jon ~ (some (so jon)))]
     ::
     ++  save-opengraph-image
       |=  jon=json

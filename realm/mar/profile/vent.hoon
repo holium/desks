@@ -1,4 +1,4 @@
-/-  sur=profile-store
+/-  sur=profile
 /+  lib=profile
 ::
 |_  =vent:sur
