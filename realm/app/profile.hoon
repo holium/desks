@@ -88,14 +88,14 @@
       ::
         %initialize
         ~&  >>  "byk => {<byk.bowl>}"
-        =/  listing  .^((list path) %gx /(scot %p our.bowl)/profile/(scot %da now.bowl)/'crux-listing'/noun)
+        =/  listing  .^((list path) %gx /(scot %p -.byk.bowl)/profile/(scot %da now.bowl)/'crux-listing'/noun)
         ~&  "processing {<(lent listing)>} files..."
         =.  toc.state  ~
         =/  result
         %+  roll  listing
         |=  [=path acc=[files-processed=(map path mime)]]
         :: ~&  >>  "processing file: {<path>}..."
-        =/  glob  .^((unit mime) %gx (weld (weld /(scot %p our.bowl)/profile/(scot %da now.bowl)/'glob' path) /noun))
+        =/  glob  .^((unit mime) %gx (weld (weld /(scot %p -.byk.bowl)/profile/(scot %da now.bowl)/'glob' path) /noun))
         ?~  glob  ~&  >>  "warning: null glob returned by %profile blob scry"  acc
         :: =/  key  (stab path)
         (~(put by files-processed.acc) path `mime`u.glob)
@@ -448,13 +448,13 @@
   ++  replace-html
     |=  [host=(unit @t) htm=@t =passport:common]
     ^-  (unit octs)
-    :: =/  host  ?~  host  ~&  >>>  "host is null"  u.host
-    :: =/  prefix
-    :: ?.  ?&  =(~ (rush 'localhost' (jest host)))
-    ::         =(~ (rush '127.0.0.1' (jest host)))
-    ::         =(~ (rush '0.0.0.0' (jest host)))
-    ::     ==  "https:/"  "http:/"
-    =/  url   ?~(host '' (crip (weld "https:/" (spud /[(need host)]/'passport'))))
+    =/  host  ?~  host  ~&  >>>  "host is null"  !!  u.host
+    =/  prefix
+    ?.  ?&  =(~ (rush 'localhost' (jest host)))
+            =(~ (rush '127.0.0.1' (jest host)))
+            =(~ (rush '0.0.0.0' (jest host)))
+        ==  "https:/"  "http:/"
+    =/  url   (crip (weld prefix (spud /[host]/'passport')))
     =/  display-name  ?~(display-name.contact.passport '' (need display-name.contact.passport))
     =/  bio  ?~(bio.contact.passport '' (need bio.contact.passport))
     =/  opengraph-image  ?~(opengraph-image '' (need opengraph-image.state))
