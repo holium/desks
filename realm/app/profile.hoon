@@ -14,7 +14,13 @@
     ==
 +$  state-0
   $:  %0
+      ::  map of filename => mime data
       toc=glob
+      :: registry is a list of ships that want to be notified when the passport
+      ::  UI is updated
+      registry=(set =ship)
+      ::  passport profile open graph image. used in <meta> tag of served passport page
+      opengraph-image=(unit @t)
   ==
 --
 %-  agent:dbug
