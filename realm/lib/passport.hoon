@@ -26,6 +26,14 @@
   ?~  (find [key]~ keys)  %.n  ::invalid signing key
   %.y
 ::
+++  ud-to-t
+  |=  a=@u
+  ^-  @t
+  ?:  =(0 a)  '0'
+  %-  crip
+  %-  flop
+  |-  ^-  ^tape
+  ?:(=(0 a) ~ [(add '0' (mod a 10)) $(a (div a 10))])
 ++  split-sig
   |=  sig=@
   ^-  [v=@ r=@ s=@]
@@ -541,14 +549,16 @@
   =/  addr=@t  (parse-signing-key ln)
   :: and verify that the signing key matches the signature and the message
   ?>  (verify-message hash.ln hash-signature.ln addr)
+  =/  t-pk=@t
+  %-  crip
+  %-  num-to-hex:eth
+  (recover-pub-key hash.ln hash-signature.ln addr)
 
   =.  p
     ?:  =('PASSPORT_ROOT' link-type.ln)
       ?>  =((lent chain.p) 0) :: only allow passport_root as first link in chain
       =.  crypto.p   (passport-root:dejs (need (de:json:html data.ln)))
       =.  default-address.p   addr
-      =/  pk=@ux        (recover-pub-key hash.ln hash-signature.ln addr)
-      =/  t-pk=@t       (crip (num-to-hex:eth pk))
       =/  sig=crypto-signature:common  [data.ln hash.ln hash-signature.ln t-pk]
       =.  addresses.p   [(need wallet-source) addr t-pk sig]~
       p
@@ -575,8 +585,6 @@
       :: set new-key nonce to 0
       =.  address-to-nonce.pki-state.crypto.p    (~(put by address-to-nonce.pki-state.crypto.p) new-key 0)
       :: update known addresses
-      =/  pk=@ux  (recover-pub-key hash.ln hash-signature.ln addr)
-      =/  t-pk=@t  (crip (num-to-hex:eth pk))
       =/  sig=crypto-signature:common  [data.ln hash.ln hash-signature.ln t-pk]
       =.  addresses.p  (snoc addresses.p [new-key-type new-key '' sig])
       p
@@ -586,11 +594,22 @@
       =/  key=@t        signing-address.mtd.parsed-link
       ?+  -.data.parsed-link  !!
         %signed-key-add
-      =/  new-sig=@t        address-signature.data.parsed-link
+      =/  new-sig=@t        key-signature.data.parsed-link
       =/  new-key-type=@t   address-type.data.parsed-link
       =/  new-key=@t        address.data.parsed-link
       =/  new-entity=@t     name.data.parsed-link
-      ?>  (verify-message new-key new-sig new-key)
+      =/  msg=@t
+      %-  crip
+      ^-  tape
+      :~  new-entity
+          ' owns '
+          new-key
+          ', '
+          (ud-to-t nonce.data.parsed-link)
+          ', '
+          (ud-to-t timestamp.data.parsed-link)
+      ==  
+      ?>  (verify-message msg new-sig new-key)
       ::  add new key to the pki-state for the new-entity
       =/  keys=(list @t)  (~(got by entity-to-addresses.pki-state.crypto.p) new-entity)
       =.  entity-to-addresses.pki-state.crypto.p  (~(put by entity-to-addresses.pki-state.crypto.p) new-entity (snoc keys new-key))
@@ -601,13 +620,11 @@
       :: set new-key nonce to 0
       =.  address-to-nonce.pki-state.crypto.p    (~(put by address-to-nonce.pki-state.crypto.p) new-key 0)
       :: update known addresses
-      =/  pk=@ux  (recover-pub-key hash.ln hash-signature.ln addr)
-      =/  t-pk=@t  (crip (num-to-hex:eth pk))
       =/  sig=crypto-signature:common  [data.ln hash.ln hash-signature.ln t-pk]
       =/  new-pk=@t
       %-  crip
       %-  num-to-hex:eth
-      (recover-pub-key new-key new-sig new-key)
+      (recover-pub-key msg new-sig new-key)
       =.  addresses.p  (snoc addresses.p [new-key-type new-key new-pk sig])
       p
       ==
@@ -632,8 +649,6 @@
     ?:  =('NAME_RECORD_SET' link-type.ln)
       :: update the `addresses` record of this signing key to fill in
       :: their public key
-      =/  pk=@ux  (recover-pub-key hash.ln hash-signature.ln addr)
-      =/  t-pk=@t  (crip (num-to-hex:eth pk))
       =.  addresses.p
         %+  turn
           addresses.p
@@ -913,8 +928,10 @@
       :*  %signed-key-add
           (so (gt 'address'))
           (so (gt 'address-type'))
-          (so (gt 'address-signature'))
+          (so (gt 'key-signature'))
           (so (gt 'entity-name'))
+          (ni (gt 'nonce'))
+          (ni (gt 'timestamp'))
       ==
     ?:  =('KEY_REMOVE' typ)
       [%key-remove (so (gt 'address'))]
