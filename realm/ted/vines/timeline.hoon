@@ -217,16 +217,14 @@
     (pure:m !>(`~))
     ::
       %convert-message
-    ;<  post=(unit [req-id=[@p @da] post=timeline-post:t])  bind:m
+    ;<  post=[req-id=[@p @da] post=timeline-post:t]  bind:m
       (convert-chat-db-msg-part [msg-id msg-part-id]:axn)
-    ?~  post
-      ~&(>>> %failed-to-process-message-part !!)
     |-
     ?~  to.axn  (pure:m !>(`~))
     =/  =action:db
-      :*  %create  req-id.u.post
+      :*  %create  req-id.post
           i.to.axn  [%timeline-post 0v0]
-          [%timeline-post post.u.post]  ~
+          [%timeline-post post.post]  ~
       ==
     ;<  ^vase  bind:m  (run-thread %realm %venter !>(`action))
     $(to.axn t.to.axn)
@@ -388,7 +386,7 @@
 ::
 ++  convert-chat-db-msg-part
   |=  [=msg-id:cd =msg-part-id:cd]
-  =/  m  (strand ,(unit [[@p @da] timeline-post:t]))
+  =/  m  (strand ,[[@p @da] timeline-post:t])
   ^-  form:m
   ;<  dump=db-dump:cd  bind:m
     (scry db-dump:cd /gx/chat-db/db/chat-db-dump)
@@ -401,7 +399,8 @@
   =+  (got:msgon:cd messages-table.table [msg-id msg-part-id])
   ;<  our=ship  bind:m  get-our
   %-  pure:m
-  (convert-message:t our created-at msg-id msg-part-id content metadata)
+  :-  [our created-at]
+  (convert-message:t msg-id msg-part-id content metadata)
 ::
 ++  convert-chat-db-msg-parts
   |=  =path
@@ -420,7 +419,8 @@
   %+  murn  (tap:msgon:cd messages-table.table)
   |=  [* msg-part:cd]
   ?.  =(^path path)  ~
-  (convert-message:t our created-at msg-id msg-part-id content metadata)
+  :-  ~  :-  [our created-at]
+  (convert-message:t msg-id msg-part-id content metadata)
 ::
 ++  timeline-post-ids
   |=  =path

@@ -1,15 +1,33 @@
 /-  *timeline, cd=chat-db
 |%
 ++  convert-message
-  |=  $:  our=@p
-          created-at=@da
-          =msg-id:cd
+  |=  $:  =msg-id:cd
           =msg-part-id:cd
           =content:cd
           metadata=(map cord cord)
       ==
-  ^-  (unit [[@p @da] timeline-post])
-  ?+    -.content  ~
+  ^-  timeline-post
+  :-  ~  :-  ~
+  ?-    -.content
+    %custom               [%text (rap name.content ': ' value.content ~) %md %normal %normal]~
+    %markdown             [%text p.content %md %normal %normal]~
+    %plain                [%text p.content %md %normal %normal]~
+    %bold                 [%text p.content %md %bold %normal]~
+    %italics              [%text p.content %md %normal %italic]~
+    %strike               [%text p.content %md %normal %normal]~
+    %bold-italics         [%text p.content %md %bold %italic]~
+    %bold-strike          [%text p.content %md %bold %normal]~
+    %italics-strike       [%text p.content %md %normal %italic]~
+    %bold-italics-strike  [%text p.content %md %bold %italic]~
+    %blockquote           [%text p.content %md %normal %normal]~
+    %inline-code          [%text p.content %md %normal %normal]~
+    %ship                 [%text (scot %p p.content) %md %normal %normal]~
+    %code                 [%text p.content %md %normal %normal]~
+    %ur-link              [%text p.content %md %normal %normal]~
+    %react                [%text p.content %md %normal %normal]~
+    %status               [%text p.content %md %normal %normal]~
+    %break                [%text '\0a' %sm %normal %normal]~
+    ::
       %image
     =/  width=(unit @ud)
       ?~  get=(~(get by metadata) 'width')  ~
@@ -21,21 +39,13 @@
       ?~  rus=(rush u.get (cook head ;~(plug dem (jest 'px'))))
         ~&(failed-to-parse-height+u.get ~)
       rus
-    :-  ~
-    :-  [our created-at]  :-  ~  :-  ~
-    :~  [%text 'This is a test.' %md %bold %italic]
+    :~  [%text '' %md %bold %italic]
         [%link p.content %image width height]
     ==
     ::
       %link
     ?^  vid=(parse-video p.content)
-      :-  ~
-      :-  [our created-at]
-      :-  ~  :-  ~
-      :~  :*  %text
-              'This is a test.'
-              %md  %bold  %italic
-          ==
+      :~  [%text '' %md %bold %italic]
           :*  %link
               p.content
               %video
@@ -55,9 +65,7 @@
         ?~  rus=(rush u.get (cook head ;~(plug dem (jest 'px'))))
           ~&(failed-to-parse-height+u.get ~)
         rus
-      :-  ~
-      :-  [our created-at]  :-  ~  :-  ~
-      :~  [%text 'This is a test.' %md %bold %italic]
+      :~  [%text '' %md %bold %italic]
           [%link p.content %image width height]
       ==
     =/  description=(unit @t)  ?~(get=(~(get by metadata) 'ogDescription') ~ get)
@@ -66,18 +74,10 @@
     =/  title=(unit @t)        ?~(get=(~(get by metadata) 'ogTitle') ~ get)
     =/  type=(unit @t)         ?~(get=(~(get by metadata) 'ogType') ~ get)
     ?:  =([~ ~ ~ ~ ~] [description image site-name title type])
-      :-  ~
-      :-  [our created-at]  :-  ~  :-  ~
-      :~  [%text 'This is a test.' %md %bold %italic]
+      :~  [%text '' %md %bold %italic]
           [%link p.content %raw ~]
       ==
-    :-  ~
-    :-  [our created-at]
-    :-  ~  :-  ~
-    :~  :*  %text
-            'This is a test.'
-            %md  %bold  %italic
-        ==
+    :~  [%text '' %md %bold %italic]
         :*  %link
             p.content
             %opengraph
