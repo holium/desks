@@ -88,6 +88,8 @@
     ::
         %handle-http-request
       =+  !<([id=@ta req=inbound-request:eyre] vase)
+      =.  authenticated.req  %.y
+      ~&  authenticated.req
       (handle-http-request:ext id req)
 
         %profile-interaction
@@ -161,15 +163,15 @@
           ::     %poke
           ::     profile-interaction+!>([%update-file path mime])
           :: ==
-          :: =/  updates
-          :: %+  snoc  updates
-          :: :*  %pass
-          ::     /crux/end-download
-          ::     %agent
-          ::     [src.bowl %profile]
-          ::     %poke
-          ::     profile-interaction+!>([%end-download ~])
-          :: ==
+          =/  updates
+          %+  snoc  updates
+          :*  %pass
+              /crux/end-download
+              %agent
+              [src.bowl %profile]
+              %poke
+              profile-interaction+!>([%end-download ~])
+          ==
           [updates state]
       ::
         %update-files
@@ -450,36 +452,41 @@
 ++  def   ~(. (default-agent state %|) bowl)
 ::
 ++  handle-http-request
-  |=  [eyre-id=@ta inbound-request:eyre]
+  |=  [eyre-id=@ta req=inbound-request:eyre]
   ^-  (quip card _state)
-  ~&  >>  "{<url.request>}"
+  ~&  >>  "{<url.request.req>}"
+
+  =.  authenticated.req  %.y
   ::
   =;  [payload=simple-payload:http caz=(list card) =_state]
+    ~&  >  ?~(data.payload ~ (html-response:gen u.data.payload))
     :_  state
     %+  weld  caz
     (give-simple-payload:app eyre-id payload)
+    :: (give-simple-payload:app eyre-id payload)
+
   ::
   ::NOTE  we don't use +require-authorization-simple here because we want
   ::      to short-circuit all the below logic for the unauthenticated case.
-  ?.  authenticated
-    :_  [~ state]
-    =-  [[307 ['location' -]~] ~]
-    (cat 3 '/~/login?redirect=' url.request)
+  :: ?.  authenticated
+  ::   :_  [~ state]
+  ::   =-  [[307 ['location' -]~] ~]
+  ::   (cat 3 '/~/login?redirect=' url.request)
   ::
-  =*  headers   header-list.request
-  =/  dict      `(map @t @t)`(malt header-list.request)
-  =/  req-line  (parse-request-line url.request)
+  =*  headers   header-list.request.req
+  =/  dict      `(map @t @t)`(malt header-list.request.req)
+  =/  req-line  (parse-request-line url.request.req)
 
-  ~&  >>  dict
+  :: ~&  >>  dict
   ::
-  |^  ?+  method.request  [[405^~ ~] ~ state]
+  |^  ?+  method.request.req  [[405^~ ~] ~ state]
         %'GET'   [handle-get-request ~ state]
         %'POST'  handle-upload
       ==
   ::
   ++  handle-get-request
     ^-  simple-payload:http
-    ~&  >>  req-line
+    :: ~&  >>  req-line
     ?+  [site ext]:req-line  (redirect:gen '/apps/grid/')
         [[%session ~] [~ %js]]
       %-  inline-js-response
@@ -487,6 +494,11 @@
     ::
         [[%passport %upload ~] ?(~ [~ %html])]
       [[200 ~] `(upload-page ~)]
+    ::
+        [[%passport %our ~] ?(~ [~ %json])]
+      =/  jon  .^(json %gx /(scot %p our.bowl)/passport/(scot %da now.bowl)/'our-passport'/json)
+      =/  data   (as-octs:mimes:html (en:json:html jon))
+       [[200 [['content-type' 'application/json'] ~]] (some data)]
     ::
         [[%passport ~] ?(~ [~ %html])]
       =/  =passport:common  .^(passport:common %gx /(scot %p our.bowl)/passport/(scot %da now.bowl)/'our-passport'/noun)
@@ -623,8 +635,8 @@
       [%pass /crux/update-available %agent [ship %profile] %poke profile-interaction+!>([%update-available ~])]
       [~(tap in card-set) state(toc glob)]
     ::
-    ?~  parts=(de-request:multipart [header-list body]:request)
-      ~&  headers=header-list.request
+    ?~  parts=(de-request:multipart [header-list body]:request.req)
+      ~&  headers=header-list.request.req
       [*glob 'failed to parse submitted data' ~]
     ::
     %+  roll  u.parts
@@ -656,7 +668,7 @@
     ::
     :_  err
     %+  ~(put by glob)  (slag 1 `path`u.filp)
-    ~&  >>  [u.type (slag 1 `path`u.filp)]
+    :: ~&  >>  [u.type (slag 1 `path`u.filp)]
     [u.type (as-octs:mimes:html body)]
   ::
   ++  fip
@@ -680,26 +692,15 @@
   ++  payload-from-glob
     |=  [from=@ta what=request-line]
     ^-  simple-payload:http
-    ~&  >>  [from what]
-    :: ~&  >>  [from what]
-    :: =/  des=(unit desk)
-    ::   (~(get by by-base) from)
-    :: ?~  des  not-found:gen
-    :: =/  cha=(unit charge)
-    ::   (~(get by charges) u.des)
-    :: ?~  cha  not-found:gen
-    :: ?.  ?=(%glob -.chad.u.cha)  not-found:gen
-    :: =*  glob  glob.chad.u.cha
     =/  suffix=^path
       (weld site.what (drop ext.what))
-    ~&  >  suffix
+    :: ~&  >  suffix
     ?:  =(suffix /desk/js)
       %-  inline-js-response
       (rap 3 'window.desk = "' q.byk.bowl '";' ~)
     =/  requested
       ?:  (~(has by toc) suffix)  suffix
       /index/html
-    ~&  >  requested
     =/  data=mime
       (~(got by toc) requested)
     =/  mime-type=@t  (rsh 3 (crip <p.data>))
