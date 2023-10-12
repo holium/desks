@@ -70,6 +70,8 @@
       %toggle-hide-logs
         (toggle-hide-logs:passport +.act state bowl)
 
+      %reset
+        (reset:passport state bowl)
       %init-our-passport
         (init-our-passport:passport state bowl)
     ==

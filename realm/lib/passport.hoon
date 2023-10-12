@@ -755,6 +755,19 @@
 ::
 ::  initializers (also pokes)
 ::
+++  reset
+::passport &passport-action [%reset ~]
+  |=  [state=state-0 =bowl:gall]
+  ^-  (quip card state-0)
+  ?>  =(src.bowl our.bowl)
+  =/  id  (our-passport-id:scries bowl)
+  =/  cid  (our-contact-id:scries bowl)
+  :_  state
+  :~  [%pass /dbpoke %agent [our.bowl %bedrock] %poke db-action+!>([%remove [our.bowl *@da] passport-type:common /private id])]
+      [%pass /dbpoke %agent [our.bowl %bedrock] %poke db-action+!>([%remove [our.bowl *@da] contact-type:common /private cid])]
+      [%pass /dbpoke %agent [our.bowl dap.bowl] %poke passport-action+!>([%init-our-passport ~])]
+  ==
+::
 ++  init-our-passport  :: (does nothing if already exists)
 ::passport &passport-action [%init-our-passport ~]
   |=  [state=state-0 =bowl:gall]
@@ -1079,12 +1092,18 @@
       :~  [%add-link add-link]
           [%get de-get]
           [%get-as-row de-get]
+          [%reset null]
           [%get-contact de-get]
           [%add-friend de-add-friend]
           [%cancel-friend-request de-cancel-friend-request]
           [%handle-friend-request de-handle-friend-request]
           [%change-contact de-change-contact]
       ==
+    ::
+    ++  null
+      |=  jon=json
+      ^-  ~
+      ~
     ::
     ++  de-change-contact
       |=  jon=json
