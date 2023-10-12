@@ -709,6 +709,18 @@
 ::
 ::  initializers (also pokes)
 ::
+++  reset  :: only called from dojo
+::passport &passport-action [%reset ~]
+  |=  [state=state-0 =bowl:gall]
+  ^-  (quip card state-0)
+  =/  id  (our-passport-id:scries bowl)
+  =/  cid  (our-contact-id:scries bowl)
+  :_  state
+  :~  [%pass /dbpoke %agent [our.bowl %bedrock] %poke db-action+!>([%remove [our.bowl *@da] passport-type:common /private id])]
+      [%pass /dbpoke %agent [our.bowl %bedrock] %poke db-action+!>([%remove [our.bowl *@da] contact-type:common /private cid])]
+      [%pass /dbpoke %agent [our.bowl dap.bowl] %poke passport-action+!>([%init-our-passport ~])]
+  ==
+::
 ++  init-our-passport  :: (does nothing if already exists)
 ::passport &passport-action [%init-our-passport ~]
   |=  [state=state-0 =bowl:gall]
