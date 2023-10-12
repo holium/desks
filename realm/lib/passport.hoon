@@ -709,10 +709,11 @@
 ::
 ::  initializers (also pokes)
 ::
-++  reset  :: only called from dojo
+++  reset
 ::passport &passport-action [%reset ~]
   |=  [state=state-0 =bowl:gall]
   ^-  (quip card state-0)
+  ?>  =(src.bowl our.bowl)
   =/  id  (our-passport-id:scries bowl)
   =/  cid  (our-contact-id:scries bowl)
   :_  state
@@ -1036,12 +1037,18 @@
       :~  [%add-link add-link]
           [%get de-get]
           [%get-as-row de-get]
+          [%reset null]
           [%get-contact de-get]
           [%add-friend de-add-friend]
           [%cancel-friend-request de-cancel-friend-request]
           [%handle-friend-request de-handle-friend-request]
           [%change-contact de-change-contact]
       ==
+    ::
+    ++  null
+      |=  jon=json
+      ^-  ~
+      ~
     ::
     ++  de-change-contact
       |=  jon=json
