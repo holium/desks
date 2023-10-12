@@ -26,6 +26,14 @@
   ?~  (find [key]~ keys)  %.n  ::invalid signing key
   %.y
 ::
+++  ud-to-t
+  |=  a=@u
+  ^-  @t
+  ?:  =(0 a)  '0'
+  %-  crip
+  %-  flop
+  |-  ^-  ^tape
+  ?:(=(0 a) ~ [(add '0' (mod a 10)) $(a (div a 10))])
 ++  split-sig
   |=  sig=@
   ^-  [v=@ r=@ s=@]
@@ -101,6 +109,7 @@
     =/  pr=passport-crypto:common           (passport-root:dejs (need (de:json:html data.ln)))
     signing-key.sig-chain-settings.pr
   ?:  ?|  =('KEY_ADD' link-type.ln)
+          =('SIGNED_KEY_ADD' link-type.ln)
           =('KEY_REMOVE' link-type.ln)
           =('NAME_RECORD_SET' link-type.ln)
       ==
@@ -540,14 +549,16 @@
   =/  addr=@t  (parse-signing-key ln)
   :: and verify that the signing key matches the signature and the message
   ?>  (verify-message hash.ln hash-signature.ln addr)
+  =/  t-pk=@t
+  %-  crip
+  %-  num-to-hex:eth
+  (recover-pub-key hash.ln hash-signature.ln addr)
 
   =.  p
     ?:  =('PASSPORT_ROOT' link-type.ln)
       ?>  =((lent chain.p) 0) :: only allow passport_root as first link in chain
       =.  crypto.p   (passport-root:dejs (need (de:json:html data.ln)))
       =.  default-address.p   addr
-      =/  pk=@ux        (recover-pub-key hash.ln hash-signature.ln addr)
-      =/  t-pk=@t       (crip (num-to-hex:eth pk))
       =/  sig=crypto-signature:common  [data.ln hash.ln hash-signature.ln t-pk]
       =.  addresses.p   [(need wallet-source) addr t-pk sig]~
       p
@@ -574,10 +585,47 @@
       :: set new-key nonce to 0
       =.  address-to-nonce.pki-state.crypto.p    (~(put by address-to-nonce.pki-state.crypto.p) new-key 0)
       :: update known addresses
-      =/  pk=@ux  (recover-pub-key hash.ln hash-signature.ln addr)
-      =/  t-pk=@t  (crip (num-to-hex:eth pk))
       =/  sig=crypto-signature:common  [data.ln hash.ln hash-signature.ln t-pk]
       =.  addresses.p  (snoc addresses.p [new-key-type new-key '' sig])
+      p
+      ==
+    ?:  =('SIGNED_KEY_ADD' link-type.ln)
+      =/  entity=@t     from-entity.mtd.parsed-link
+      =/  key=@t        signing-address.mtd.parsed-link
+      ?+  -.data.parsed-link  !!
+        %signed-key-add
+      =/  new-sig=@t        key-signature.data.parsed-link
+      =/  new-key-type=@t   address-type.data.parsed-link
+      =/  new-key=@t        address.data.parsed-link
+      =/  new-entity=@t     name.data.parsed-link
+      =/  msg=@t
+      %-  crip
+      ^-  tape
+      :~  new-entity
+          ' owns '
+          new-key
+          ', '
+          (ud-to-t nonce.data.parsed-link)
+          ', '
+          (ud-to-t timestamp.data.parsed-link)
+      ==  
+      ?>  (verify-message msg new-sig new-key)
+      ::  add new key to the pki-state for the new-entity
+      =/  keys=(list @t)  (~(got by entity-to-addresses.pki-state.crypto.p) new-entity)
+      =.  entity-to-addresses.pki-state.crypto.p  (~(put by entity-to-addresses.pki-state.crypto.p) new-entity (snoc keys new-key))
+      =.  address-to-entity.pki-state.crypto.p   (~(put by address-to-entity.pki-state.crypto.p) new-key new-entity)
+
+      =.  address-to-nonce.pki-state.crypto.p  :: increment signing key nonce
+        (~(put by address-to-nonce.pki-state.crypto.p) key +((~(got by address-to-nonce.pki-state.crypto.p) key)))
+      :: set new-key nonce to 0
+      =.  address-to-nonce.pki-state.crypto.p    (~(put by address-to-nonce.pki-state.crypto.p) new-key 0)
+      :: update known addresses
+      =/  sig=crypto-signature:common  [data.ln hash.ln hash-signature.ln t-pk]
+      =/  new-pk=@t
+      %-  crip
+      %-  num-to-hex:eth
+      (recover-pub-key msg new-sig new-key)
+      =.  addresses.p  (snoc addresses.p [new-key-type new-key new-pk sig])
       p
       ==
     ?:  =('KEY_REMOVE' link-type.ln)
@@ -601,8 +649,6 @@
     ?:  =('NAME_RECORD_SET' link-type.ln)
       :: update the `addresses` record of this signing key to fill in
       :: their public key
-      =/  pk=@ux  (recover-pub-key hash.ln hash-signature.ln addr)
-      =/  t-pk=@t  (crip (num-to-hex:eth pk))
       =.  addresses.p
         %+  turn
           addresses.p
@@ -708,6 +754,19 @@
 ::
 ::
 ::  initializers (also pokes)
+::
+++  reset
+::passport &passport-action [%reset ~]
+  |=  [state=state-0 =bowl:gall]
+  ^-  (quip card state-0)
+  ?>  =(src.bowl our.bowl)
+  =/  id  (our-passport-id:scries bowl)
+  =/  cid  (our-contact-id:scries bowl)
+  :_  state
+  :~  [%pass /dbpoke %agent [our.bowl %bedrock] %poke db-action+!>([%remove [our.bowl *@da] passport-type:common /private id])]
+      [%pass /dbpoke %agent [our.bowl %bedrock] %poke db-action+!>([%remove [our.bowl *@da] contact-type:common /private cid])]
+      [%pass /dbpoke %agent [our.bowl dap.bowl] %poke passport-action+!>([%init-our-passport ~])]
+  ==
 ::
 ++  init-our-passport  :: (does nothing if already exists)
 ::passport &passport-action [%init-our-passport ~]
@@ -878,6 +937,15 @@
     =/  gt  ~(got by p.jon)
     ?:  =('KEY_ADD' typ)
       [%key-add (so (gt 'address')) (so (gt 'address-type')) (so (gt 'entity-name'))]
+    ?:  =('SIGNED_KEY_ADD' typ)
+      :*  %signed-key-add
+          (so (gt 'address'))
+          (so (gt 'address-type'))
+          (so (gt 'key-signature'))
+          (so (gt 'entity-name'))
+          (ni (gt 'nonce'))
+          (ni (gt 'timestamp'))
+      ==
     ?:  =('KEY_REMOVE' typ)
       [%key-remove (so (gt 'address'))]
     ?:  =('NAME_RECORD_SET' typ)
@@ -1024,12 +1092,18 @@
       :~  [%add-link add-link]
           [%get de-get]
           [%get-as-row de-get]
+          [%reset null]
           [%get-contact de-get]
           [%add-friend de-add-friend]
           [%cancel-friend-request de-cancel-friend-request]
           [%handle-friend-request de-handle-friend-request]
           [%change-contact de-change-contact]
       ==
+    ::
+    ++  null
+      |=  jon=json
+      ^-  ~
+      ~
     ::
     ++  de-change-contact
       |=  jon=json

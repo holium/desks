@@ -35,14 +35,7 @@
   %add-ship-to-chat
     ~&  %add-ship-to-chat
     =/  act=[t=@da =path =ship host=(unit ship)]  [now +>.u.axn]
-    :: if we are trying to add ourselves, then we need to watch the host
-    :: ship, otherwise we watch our own ship
-    =/  watch-ship=@p
-      ?:  =(our ship.act)
-        (need host.act)
-      our
-    ~&  watch-ship
-    ;<  ~          bind:m  (watch wire [watch-ship %chat-db] wire)
+    ;<  ~          bind:m  (watch wire [our %chat-db] wire)
     ;<  ~          bind:m  (poke [our %realm-chat] chat-action+!>([%add-ship-to-chat now +>.u.axn]))
     ;<  cage=(unit cage)  bind:m  (take-fact-or-kick wire)
     ?^  cage

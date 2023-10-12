@@ -170,7 +170,7 @@
 ++  create-path-db-poke
   |=  [=ship row=path-row:db peers=ship-roles:db]
   ^-  card
-  [%pass /dbpoke %agent [ship %chat-db] %poke %chat-db-action !>([%create-path row peers 0])]
+  [%pass /dbpoke %agent [ship %chat-db] %poke %chat-db-action !>([%create-path row peers 0 ~])]
 ::
 ++  create-path-bedrock-poke
   |=  [=ship row=path-row:db peers=ship-roles:db]
@@ -472,17 +472,18 @@
     :-  [%pass /thread/(scot %da now.bowl) %agent [our.bowl %spider] %poke %spider-start !>(start-args)]
     ~
 
+  :: order matters here, for performance
   =/  cards=(list card)
 ::    :-  (add-bedrock-peer-poke (scry-bedrock-path-host:db-scry path.act bowl) path.act ship.act)
     %+  weld
-      %+  snoc
-        :: we poke all original peers db with add-peer (including ourselves)
-        %+  turn
-          pathpeers
-        |=(p=peer-row:db [%pass /dbpoke %agent [patp.p %chat-db] %poke %chat-db-action !>([%add-peer t.act path.act ship.act])])
       ::  we poke the newly-added ship's db with a create-path,
       ::  since that will automatically handle them joining as a member
-      [%pass /dbpoke %agent [ship.act %chat-db] %poke %chat-db-action !>([%create-path pathrow all-peers expected-msg-count])]
+      :-  [%pass /dbpoke %agent [ship.act %chat-db] %poke %chat-db-action !>([%create-path pathrow all-peers expected-msg-count `t.act])]
+      :: we poke all original peers db with add-peer (including ourselves)
+      %+  turn
+        pathpeers
+      |=(p=peer-row:db [%pass /dbpoke %agent [patp.p %chat-db] %poke %chat-db-action !>([%add-peer t.act path.act ship.act])])
+    :: then we send the backlog
     backlog-poke-cards
   [cards state]
 ::  allows self to remove self, or %host to kick others

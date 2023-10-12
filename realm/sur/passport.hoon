@@ -30,6 +30,7 @@
 
       [%toggle-hide-logs toggle=?]
 
+      [%reset ~]
       [%init-our-passport ~]
   ==
 ::
