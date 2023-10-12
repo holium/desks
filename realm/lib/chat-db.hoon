@@ -208,8 +208,8 @@
 ::
 :: MUST EXPLICITLY INCLUDE SELF, this function will not add self into peers list
 ++  create-path
-::chat-db &chat-db-action [%create-path [/example ~ %nft-gated *@da *@da ~ %host %.y *@dr *@da (some ['0x000386E3F7559d9B6a2F5c46B4aD1A9587D59Dc3' 'eth-mainnet' 'ERC721'])] ~[[~zod %host] [~bus %member]]]
-  |=  [[row=path-row:sur peers=ship-roles:sur] state=state-3 =bowl:gall]
+::chat-db &chat-db-action [%create-path [/example ~ %nft-gated *@da *@da ~ %host %.y *@dr *@da (some ['0x000386E3F7559d9B6a2F5c46B4aD1A9587D59Dc3' 'eth-mainnet' 'ERC721'])] ~[[~zod %host] [~bus %member]] 100 ~]
+  |=  [[row=path-row:sur peers=ship-roles:sur expected-msg-count=@ud t=(unit @da)] state=state-3 =bowl:gall]
   ^-  (quip card state-3)
 
   ?>  ?!((~(has by paths-table.state) path.row))  :: ensure the path doesn't already exist!!!
@@ -223,11 +223,13 @@
 
   =.  peers-table.state  (~(put by peers-table.state) path.row thepeers)
   =/  thechange  chat-db-change+!>((limo [[%add-row %paths row] (turn thepeers |=(p=peer-row:sur [%add-row %peers p]))]))
-  =/  vent-path=path  /chat-vent/(scot %da created-at.row)
+  =/  vent-path=path
+    ?~  t  /chat-vent/(scot %da created-at.row)
+    /chat-vent/(scot %da u.t)
   =/  gives  :~
     [%give %fact [/db (weld /db/path path.row) ~] thechange]
     :: give vent response
-    [%give %fact ~[vent-path] chat-vent+!>([%path row])]
+    [%give %fact ~[vent-path] chat-vent+!>([%path-and-count row expected-msg-count])]
     [%give %kick ~[vent-path] ~]
   ==
   [gives state]
@@ -289,6 +291,8 @@
   |=  [=path state=state-3 =bowl:gall]
   ^-  (quip card state-3)
   ?>  =(our.bowl src.bowl)  :: leave pokes are only valid from ourselves. if others want to kick us, that is a different matter
+  ~&  %leaving-path
+  ~&  path
   =.  messages-table.state  messages-table:s:(remove-messages-for-path state path now.bowl)
   =.  paths-table.state  (~(del by paths-table.state) path)
   =.  peers-table.state  (~(del by peers-table.state) path)
@@ -361,7 +365,7 @@
       :: created-at.msg (because the message was from *before* we
       :: joined the chat)
       =/  us-peer   (snag 0 (skim peers |=(p=peer-row:sur =(patp.p our.bowl))))
-      ?>  (gth created-at.us-peer created-at.msg)
+      ?:  (lth created-at.us-peer created-at.msg)  $(index +(index))  :: skip msgs from after we joined
       :: has to be from a ship that has invite-potential in the path
       ?>  (is-valid-inviter pathrow peers src.bowl our.bowl)
       :: the path has to be %.y on peers-get-backlog
@@ -912,6 +916,11 @@
         %ack     s/%ack
         %msg     a+(turn message.chat-vent |=(m=msg-part:sur (messages-row [msg-id.m msg-part-id.m] m)))
         %path    (path-row path-row.chat-vent)
+        %path-and-count
+      %-  pairs
+      :~  path+(path-row path-row.chat-vent)
+          msg-count+(numb msg-count.chat-vent)
+      ==
       ==
     ::
     ++  time-bunt-null

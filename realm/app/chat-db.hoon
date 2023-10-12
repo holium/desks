@@ -191,7 +191,7 @@
   ++  on-watch
     |=  =path
     ^-  (quip card _this)
-    ?>  =(our.bowl src.bowl)
+    ?>  |(?=([%chat-vent *] path) =(our.bowl src.bowl)) :: chat-vent path allows non-our ships
     =/  cards=(list card)
     ::  each path should map to a list of cards
     ?+  path      !!
