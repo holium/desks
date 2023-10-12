@@ -327,7 +327,8 @@
     (on-watch:def path)
   ::
       [%http-response *]
-        ?>  (team:title [our src]:bowl)
+        ~&  >>  "{<team:title>}, {<[our src]:bowl>}"
+        :: ?>  (team:title [our src]:bowl)
         %-  (slog leaf+"Eyre subscribed to {(spud path)}." ~)
         `this
 
@@ -459,7 +460,7 @@
   =.  authenticated.req  %.y
   ::
   =;  [payload=simple-payload:http caz=(list card) =_state]
-    ~&  >  ?~(data.payload ~ (html-response:gen u.data.payload))
+    :: ~&  >  ?~(data.payload ~ (html-response:gen u.data.payload))
     :_  state
     %+  weld  caz
     (give-simple-payload:app eyre-id payload)
@@ -700,14 +701,14 @@
       (rap 3 'window.desk = "' q.byk.bowl '";' ~)
     =/  requested
       ?:  (~(has by toc) suffix)  suffix
-      /index/html
+      /passport/html
     =/  data=mime
       (~(got by toc) requested)
     =/  mime-type=@t  (rsh 3 (crip <p.data>))
     =;  headers
       [[200 headers] `q.data]
     :-  content-type+mime-type
-    ?:  =(/index/html requested)  ~
+    ?:  =(/passport/html requested)  ~
     ~[max-1-wk:gen]
   :: Thomas (nod to ~dister-dozzod-niblyx-malnus)
   ++  replace-html
