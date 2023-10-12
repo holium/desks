@@ -208,8 +208,8 @@
 ::
 :: MUST EXPLICITLY INCLUDE SELF, this function will not add self into peers list
 ++  create-path
-::chat-db &db-action [%create-path /a/path/to/a/chat ~ %chat *@da *@da ~ %host *@dr *@dr ~[[~zod %host] [~bus %member]] 100]
-  |=  [[row=path-row:sur peers=ship-roles:sur expected-msg-count=@ud] state=state-2 =bowl:gall]
+::chat-db &db-action [%create-path /a/path/to/a/chat ~ %chat *@da *@da ~ %host *@dr *@dr ~[[~zod %host] [~bus %member]] 100 ~]
+  |=  [[row=path-row:sur peers=ship-roles:sur expected-msg-count=@ud t=(unit @da)] state=state-2 =bowl:gall]
   ^-  (quip card state-2)
 
   ?>  ?!((~(has by paths-table.state) path.row))  :: ensure the path doesn't already exist!!!
@@ -223,7 +223,9 @@
 
   =.  peers-table.state  (~(put by peers-table.state) path.row thepeers)
   =/  thechange  chat-db-change+!>((limo [[%add-row %paths row] (turn thepeers |=(p=peer-row:sur [%add-row %peers p]))]))
-  =/  vent-path=path  /chat-vent/(scot %da created-at.row)
+  =/  vent-path=path
+    ?~  t  /chat-vent/(scot %da created-at.row)
+    /chat-vent/(scot %da u.t)
   =/  gives  :~
     [%give %fact [/db (weld /db/path path.row) ~] thechange]
     :: give vent response

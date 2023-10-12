@@ -105,7 +105,7 @@
 +$  ship-roles  (list [s=@p role=@tas])
 +$  action
   $%  
-      [%create-path =path-row peers=ship-roles expected-msg-count=@ud]
+      [%create-path =path-row peers=ship-roles expected-msg-count=@ud t=(unit @da)]
       [%edit-path =path metadata=(map cord cord) peers-get-backlog=? invites=@tas max-expires-at-duration=@dr]
       [%edit-path-pins =path =pins]
       [%leave-path =path]
