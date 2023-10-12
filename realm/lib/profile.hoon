@@ -14,25 +14,26 @@
     ++  decode
       %-  of
       :~
-          [%register reg]
-          [%update-available de-avail]
-          [%update-crux de-init]
+          :: [%register reg]
+          :: [%update-available de-avail]
+          :: [%update-crux de-init]
           [%save-opengraph-image save-opengraph-image]
       ==
-    ::
-    ++  reg
-      ^-  [req-id =ship]
-    [[~zod ~2000.1.1] (su ;~(pfix sig fed:ag))]
-    ::
-    ++  de-avail
-      |=  jon=json
-      ^-  [req-id (unit ship)]
-      [[~zod ~2000.1.1] ?~(jon ~ (some (su ;~(pfix sig fed:ag))))]
-    ::
-    ++  de-init
-      |=  jon=json
-      ^-  [req-id (unit @t)]
-      [[~zod ~2000.1.1] ?~(jon ~ (some (so jon)))]
+    :: ::
+    :: ++  reg
+    ::   ^-  [req-id @p]
+    :: [[~zod ~2000.1.1] (su ;~(pfix sig fed:ag))]
+    :: ::
+    :: ++  de-avail
+    ::   |=  jon=json
+    ::   ^-  [req-id (unit @p)]
+    ::   :: [[~zod ~2000.1.1] ?~(jon ~ (some (su ;~(pfix sig fed:ag))))]
+    ::   [[~zod ~2000.1.1] ~]
+    :: ::
+    :: ++  de-init
+    ::   |=  jon=json
+    ::   ^-  [req-id (unit @t)]
+    ::   [[~zod ~2000.1.1] ?~(jon ~ (some (so jon)))]
     ::
     ++  save-opengraph-image
       |=  jon=json
