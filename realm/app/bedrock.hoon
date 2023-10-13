@@ -17,6 +17,8 @@
 
 /-  *db, sstore=spaces-store, vstore=visas
 /+  dbug, db
+/=  dbs  /mar/db/state
+::
 =|  state-2
 =*  state  -
 =<
@@ -175,6 +177,8 @@
         (received-invite-receipt:db +.act state bowl)
       %received-request-receipt
         (received-request-receipt:db +.act state bowl)
+      %update-graylist
+        (update-graylist:db +.act state bowl)
 
       %keep-alive
         (keep-alive:db +.act state bowl)
@@ -287,6 +291,9 @@
     ::
       [%x %db ~]
         ``db-state+!>(state)
+    ::
+      [%x %tickets ~]
+        ``db-tickets+!>(tickets.state)
     ::
     :: full information about a given path
       [%x %db %path *]

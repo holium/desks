@@ -168,6 +168,13 @@
       rest=(unit ?)           :: auto reject/accept remaining
   ==
 ::
++$  graylist-field
+  $%  [%ship p=(each [ship ?] ship)]
+      [%rank p=(each [rank:title ?] rank:title)]
+      [%rest p=(unit ?)]
+      [%graylist =graylist]
+  ==
+::
 +$  db-row-del-change    [%del-row =path =type:common =id:common t=@da]
 +$  db-peer-del-change   [%del-peer =path =ship t=@da]
 +$  db-path-del-change   [%del-path =path t=@da]
@@ -206,13 +213,13 @@
       [%add-peer =path =ship =role]           :: add a peer to an existing peers list, sends %get-path to that peer
       [%kick-peer =path =ship]                :: remove a peer from an existing peers list, sends %delete-path to that peer
       :: ticket actions
-      [%send-invite =path =ship]
+      [%send-invite =path =ship force=?]
       [%cancel-invite =path =ship]
       [%accept-request =path =ship]
       [%reject-request =path =ship]
       [%accept-invite host=ship =path]
       [%reject-invite host=ship =path]
-      [%send-request host=ship =path]
+      [%send-request host=ship =path force=?]
       [%cancel-request host=ship =path]
       [%kick-blacklisted =path]
       [%sent-invite-receipt =path sent-at=@da]
@@ -225,6 +232,7 @@
       [%reject-request-receipt =path resolved-at=@da]
       [%cancel-invite-receipt =path]
       [%cancel-request-receipt =path]
+      [%update-graylist =path fields=(list graylist-field)]
       :: only from host foreign ship
       [%get-path =path-row peers=ship-roles]  :: when we are being informed that we were added to a peers list. we don't know the list, only the host (which is who sent it to us)
       [%delete-path =path]                    :: when we are being informed that we got kicked (or host deleted the path entirely). also deletes all attached objects

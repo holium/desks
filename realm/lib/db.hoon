@@ -946,7 +946,7 @@
   [cards state]
 ::
 ++  send-invite
-  |=  [[=path =ship] state=state-2 =bowl:gall]
+  |=  [[=path =ship force=?] state=state-2 =bowl:gall]
   ^-  (quip card state-2)
   :: ensure the path actually exists
   =/  path-row=path-row    (~(got by paths.state) path)
@@ -956,10 +956,13 @@
   ?>  =(our.bowl src.bowl)
   ~?  >>  hide-logs.state
     "{<dap.bowl>}%send-invite: {(scow %p ship)} to {<path>}"
+  =/  invites=(map ^ship ticket)  (~(gut by outgoing-invites.tickets.state) path ~)
+  :: assert we haven't already made an invite
+  ?:  &(!force (~(has by invites) ship))
+    ~&(>>> "already invited!" !!)
   :: add to outgoing invites
   =|  =ticket
   =.  sent-at.ticket  now.bowl
-  =/  invites=(map ^ship ^ticket)  (~(gut by outgoing-invites.tickets.state) path ~)
   =.  invites  (~(put by invites) ship ticket)
   =.  outgoing-invites.tickets.state
     (~(put by outgoing-invites.tickets.state) path invites)
@@ -994,7 +997,6 @@
 ++  accept-request
   |=  [[=path =ship] state=state-2 =bowl:gall]
   ^-  (quip card state-2)
-  :: TODO: add ship to peers
   :: ensure the path actually exists
   =/  path-row=path-row    (~(got by paths.state) path)
   :: and that we are the %host of it
@@ -1006,15 +1008,23 @@
   :: resolve request associated with ship
   =/  requests=(map ^ship ticket)  (~(got by incoming-requests.tickets.state) path)
   =/  request=ticket  (~(got by requests) ship)
-  ?>  =(~ status.request)
+  ?.  =(~ status.request)
+    ?+  status.request  !!
+      [~ %|]  ~&(>>> "request already rejected!" !!)
+      [~ %&]  ~&(>>> "request already accepted!" !!)
+    ==
   =.  status.request       `&
   =.  resolved-at.request  `now.bowl
   =.  requests  (~(put by requests) ship request)
   =.  incoming-requests.tickets.state
     (~(put by incoming-requests.tickets.state) path requests)
   =/  cards=(list card)
-    :: send accept request receipt to requestee
-    [%pass /dbpoke %agent [ship %bedrock] %poke %db-action !>([%accept-request-receipt path now.bowl])]~
+    :~
+      :: send accept request receipt to requestee
+      [%pass /dbpoke %agent [ship %bedrock] %poke %db-action !>([%accept-request-receipt path now.bowl])]
+      :: add ship to peers
+      [%pass /dbpoke %agent [our.bowl %bedrock] %poke %db-action !>([%add-peer path ship %$])]
+    ==
   [cards state]
 ::
 ++  reject-request
@@ -1031,7 +1041,11 @@
   :: resolve request associated with ship
   =/  requests=(map ^ship ticket)  (~(got by incoming-requests.tickets.state) path)
   =/  request=ticket  (~(got by requests) ship)
-  ?>  =(~ status.request)
+  ?.  =(~ status.request)
+    ?+  status.request  !!
+      [~ %|]  ~&(>>> "request already rejected!" !!)
+      [~ %&]  ~&(>>> "request already accepted!" !!)
+    ==
   =.  status.request       `|
   =.  resolved-at.request  `now.bowl
   =.  requests  (~(put by requests) ship request)
@@ -1051,7 +1065,11 @@
     "{<dap.bowl>}%accept-invite: to {<path>}"
   :: resolve request associated with ship
   =/  invite=ticket  (~(got by incoming-invites.tickets.state) [host path])
-  ?>  =(~ status.invite)
+  ?.  =(~ status.invite)
+    ?+  status.invite  !!
+      [~ %|]  ~&(>>> "invite already rejected!" !!)
+      [~ %&]  ~&(>>> "invite already accepted!" !!)
+    ==
   =.  status.invite       `&
   =.  resolved-at.invite  `now.bowl
   =.  incoming-invites.tickets.state
@@ -1070,7 +1088,11 @@
     "{<dap.bowl>}%reject-invite: to {<path>}"
   :: resolve request associated with ship
   =/  invite=ticket  (~(got by incoming-invites.tickets.state) [host path])
-  ?>  =(~ status.invite)
+  ?.  =(~ status.invite)
+    ?+  status.invite  !!
+      [~ %|]  ~&(>>> "invite already rejected!" !!)
+      [~ %&]  ~&(>>> "invite already accepted!" !!)
+    ==
   =.  status.invite       `|
   =.  resolved-at.invite  `now.bowl
   =.  incoming-invites.tickets.state
@@ -1081,12 +1103,15 @@
   [cards state]
 ::
 ++  send-request
-  |=  [[host=ship =path] state=state-2 =bowl:gall]
+  |=  [[host=ship =path force=?] state=state-2 =bowl:gall]
   ^-  (quip card state-2)
   :: ensure this came from our ship
   ?>  =(our.bowl src.bowl)
   ~?  >>  hide-logs.state
     "{<dap.bowl>}%send-request: to {<path>}"
+  :: assert we haven't already made a request
+  ?:  &(!force (~(has by outgoing-requests.tickets.state) [host path]))
+    ~&(>>> "already requested!" !!)
   :: add to outgoing requests
   =|  =ticket
   =.  sent-at.ticket  now.bowl
@@ -1120,6 +1145,8 @@
 ++  sent-invite-receipt
   |=  [[=path sent-at=@da] state=state-2 =bowl:gall]
   ^-  (quip card state-2)
+  ~?  >>  hide-logs.state
+    "{<dap.bowl>}%sent-invite-receipt: from {<path>}"
   :: put in incoming invites
   =|  invite=ticket  
   =.  sent-at.invite      sent-at
@@ -1136,22 +1163,38 @@
 ++  sent-request-receipt
   |=  [[=path sent-at=@da] state=state-2 =bowl:gall]
   ^-  (quip card state-2)
+  ~?  >>  hide-logs.state
+    "{<dap.bowl>}%sent-request-receipt: from {<path>}"
+  :: ensure the path actually exists
+  =/  path-row=path-row    (~(got by paths.state) path)
+  :: and that we are the %host of it
+  ?>  =(host.path-row our.bowl)
   :: put in incoming requests
   =|  request=ticket  
   =.  sent-at.request      sent-at
   =.  received-at.request  `now.bowl
-  =/  requests  (~(got by incoming-requests.tickets.state) path)
+  =/  requests  (~(gut by incoming-requests.tickets.state) path ~)
   =.  requests  (~(put by requests) src.bowl request)
   =.  incoming-requests.tickets.state
     (~(put by incoming-requests.tickets.state) path requests)
+  :: auto handle request
+  =/  =graylist  (~(got by graylists.tickets.state) path)
+  =/  auto-cards=(list card)
+    ?+  (auto-handle-request graylist src.bowl)  ~
+      [~ %&]  [%pass /dbpoke %agent [our.bowl %bedrock] %poke %db-action !>([%accept-request path src.bowl])]~
+      [~ %|]  [%pass /dbpoke %agent [our.bowl %bedrock] %poke %db-action !>([%reject-request path src.bowl])]~
+    ==
   =/  cards=(list card)
-    :: send received invite receipt to requester
+    %+  welp  auto-cards
+    :: send received request receipt to requester
     [%pass /dbpoke %agent [src.bowl %bedrock] %poke %db-action !>([%received-request-receipt path now.bowl])]~
   [cards state]
 ::
 ++  cancel-invite-receipt
   |=  [=path state=state-2 =bowl:gall]
   ^-  (quip card state-2)
+  ~?  >>  hide-logs.state
+    "{<dap.bowl>}%cancel-invite-receipt: from {<path>}"
   :: remove from incoming invites
   =.  incoming-invites.tickets.state
     (~(del by incoming-invites.tickets.state) [src.bowl path])
@@ -1160,7 +1203,12 @@
 ++  accept-invite-receipt
   |=  [[=path resolved-at=@da] state=state-2 =bowl:gall]
   ^-  (quip card state-2)
-  :: TODO: ADD src.bowl to peers
+  ~?  >>  hide-logs.state
+    "{<dap.bowl>}%accept-invite-receipt: from {<path>}"
+  :: ensure the path actually exists
+  =/  path-row=path-row    (~(got by paths.state) path)
+  :: and that we are the %host of it
+  ?>  =(host.path-row our.bowl)
   :: update in outgoing invites
   =/  invites  (~(got by outgoing-invites.tickets.state) path)
   =/  invite=ticket  (~(got by invites) src.bowl)
@@ -1169,11 +1217,20 @@
   =.  invites  (~(put by invites) src.bowl invite)
   =.  outgoing-invites.tickets.state
     (~(put by outgoing-invites.tickets.state) path invites)
-  [~ state]
+  =/  cards=(list card)
+    :: add ship to peers
+    [%pass /dbpoke %agent [our.bowl %bedrock] %poke %db-action !>([%add-peer path src.bowl %$])]~
+  [cards state]
 ::
 ++  reject-invite-receipt
   |=  [[=path resolved-at=@da] state=state-2 =bowl:gall]
   ^-  (quip card state-2)
+  ~?  >>  hide-logs.state
+    "{<dap.bowl>}%reject-invite-receipt: from {<path>}"
+  :: ensure the path actually exists
+  =/  path-row=path-row    (~(got by paths.state) path)
+  :: and that we are the %host of it
+  ?>  =(host.path-row our.bowl)
   :: update in outgoing invites
   =/  invites  (~(got by outgoing-invites.tickets.state) path)
   =/  invite=ticket  (~(got by invites) src.bowl)
@@ -1187,6 +1244,8 @@
 ++  cancel-request-receipt
   |=  [=path state=state-2 =bowl:gall]
   ^-  (quip card state-2)
+  ~?  >>  hide-logs.state
+    "{<dap.bowl>}%cancel-request-receipt: from {<path>}"
   :: remove from incoming requests
   =/  requests  (~(got by incoming-requests.tickets.state) path)
   =.  requests  (~(del by requests) src.bowl)
@@ -1197,32 +1256,36 @@
 ++  accept-request-receipt
   |=  [[=path resolved-at=@da] state=state-2 =bowl:gall]
   ^-  (quip card state-2)
-  :: update in incoming requests
-  =/  requests  (~(got by incoming-requests.tickets.state) path)
-  =/  request=ticket  (~(got by requests) src.bowl)
+  ~?  >>  hide-logs.state
+    "{<dap.bowl>}%accept-request-receipt: from {<path>}"
+  :: update in outgoing requests
+  =/  request=ticket
+    (~(got by outgoing-requests.tickets.state) [src.bowl path])
   =.  status.request       `&
   =.  resolved-at.request  `resolved-at
-  =.  requests  (~(put by requests) src.bowl request)
-  =.  incoming-requests.tickets.state
-    (~(put by incoming-requests.tickets.state) path requests)
+  =.  outgoing-requests.tickets.state
+    (~(put by outgoing-requests.tickets.state) [src.bowl path] request)
   [~ state]
 ::
 ++  reject-request-receipt
   |=  [[=path resolved-at=@da] state=state-2 =bowl:gall]
   ^-  (quip card state-2)
+  ~?  >>  hide-logs.state
+    "{<dap.bowl>}%reject-request-receipt: from {<path>}"
   :: update in incoming requests
-  =/  requests  (~(got by incoming-requests.tickets.state) path)
-  =/  request=ticket  (~(got by requests) src.bowl)
+  =/  request=ticket
+    (~(got by outgoing-requests.tickets.state) [src.bowl path])
   =.  status.request       `|
   =.  resolved-at.request  `resolved-at
-  =.  requests  (~(put by requests) src.bowl request)
-  =.  incoming-requests.tickets.state
-    (~(put by incoming-requests.tickets.state) path requests)
+  =.  outgoing-requests.tickets.state
+    (~(put by outgoing-requests.tickets.state) [src.bowl path] request)
   [~ state]
 ::
 ++  received-invite-receipt
   |=  [[=path received-at=@da] state=state-2 =bowl:gall]
   ^-  (quip card state-2)
+  ~?  >>  hide-logs.state
+    "{<dap.bowl>}%received-invite-receipt: from {<path>}"
   :: update in outgoing invites
   =/  invites  (~(got by outgoing-invites.tickets.state) path)
   =/  invite=ticket  (~(got by invites) src.bowl)
@@ -1235,14 +1298,56 @@
 ++  received-request-receipt
   |=  [[=path received-at=@da] state=state-2 =bowl:gall]
   ^-  (quip card state-2)
+  ~?  >>  hide-logs.state
+    "{<dap.bowl>}%received-request-receipt: from {<path>}"
   :: update in incoming requests
-  =/  requests  (~(got by incoming-requests.tickets.state) path)
-  =/  request=ticket  (~(got by requests) src.bowl)
+  =/  request=ticket
+    (~(got by outgoing-requests.tickets.state) [src.bowl path])
   =.  received-at.request  `received-at
-  =.  requests  (~(put by requests) src.bowl request)
-  =.  incoming-requests.tickets.state
-    (~(put by incoming-requests.tickets.state) path requests)
+  =.  outgoing-requests.tickets.state
+    (~(put by outgoing-requests.tickets.state) [src.bowl path] request)
   [~ state]
+::
+++  auto-handle-request
+    |=  [graylist requester=ship]
+    ^-  (unit ?)
+    ?^  auto=(~(get by ship) requester)  auto
+    ?^  auto=(~(get by rank) (clan:title requester))  auto
+    rest
+::
+++  update-graylist
+  |=  [[=path fields=(list graylist-field)] state=state-2 =bowl:gall]
+  ^-  (quip card state-2)
+  ~?  >>  hide-logs.state
+    "{<dap.bowl>}%update-graylist: for {<path>}"
+  :: ensure the path actually exists
+  =/  path-row=path-row    (~(got by paths.state) path)
+  :: and that we are the %host of it
+  ?>  =(host.path-row our.bowl)
+  :: update the graylist
+  =/  =graylist  (~(gut by graylists.tickets.state) path *graylist)
+  =.  graylist
+    |-
+    ?~  fields  graylist
+    ?-    -.i.fields
+      %graylist  graylist.i.fields
+      %rest      $(fields t.fields, rest.graylist p.i.fields)
+        %ship
+      ?-  -.p.i.fields
+        %&  $(fields t.fields, ship.graylist (~(put by ship.graylist) p.p.i.fields))
+        %|  $(fields t.fields, ship.graylist (~(del by ship.graylist) p.p.i.fields))
+      ==
+        %rank
+      ?-  -.p.i.fields
+        %&  $(fields t.fields, rank.graylist (~(put by rank.graylist) p.p.i.fields))
+        %|  $(fields t.fields, rank.graylist (~(del by rank.graylist) p.p.i.fields))
+      ==
+    ==
+  =.  graylists.tickets.state
+    (~(put by graylists.tickets.state) path graylist)
+  =/  cards=(list card)
+    ~
+  [cards state]
 ::
 ++  get-path
   |=  [[=path-row peers=ship-roles] state=state-2 =bowl:gall]
@@ -2437,13 +2542,14 @@
       |=  st=versioned-state
       ^-  json
       ?+  -.st  !!
-          %1
+          %2
         %-  pairs
         :~  ['state-version' (numb `@`-.st)]
             ['data-tables' (en-tables tables.st schemas.st)]
             ['schemas' (en-schemas schemas.st)]
             ['paths' (en-paths paths.st)]
             ['peers' (en-peers peers.st)]
+            ['tickets' (en-tickets tickets.st)]
             ['del-log' (en-del-log del-log.st)]
         ==
       ==
@@ -2712,6 +2818,86 @@
       ^-  json
       :-  %a
       (turn `(list peer)`(zing ~(val by peers)) en-peer)
+    ::
+    ++  en-tickets
+      |=  tickets
+      |^  ^-  json
+      %-  pairs
+      :~  ['incoming-invites' (peerside incoming-invites)]
+          ['outgoing-requests' (peerside outgoing-requests)]
+          ['outgoing-invites' (hostside outgoing-invites)]
+          ['incoming-requests' (hostside incoming-requests)]
+          ['graylists' (en-graylists graylists)]
+      ==
+      ++  en-ticket
+        |=  ticket
+        ^-  json
+        %-  pairs
+        :~  ['status' ?~(status ~ b+u.status)]
+            ['sent-at' (time sent-at)]
+            ['received-at' ?~(received-at ~ (time u.received-at))]
+            ['resolved-at' ?~(resolved-at ~ (time u.resolved-at))]
+        ==
+      ++  peerside
+        |=  =(map [@p ^path] ticket)
+        ^-  json
+        :-  %a
+        %+  turn  ~(tap by map)
+        |=  [[host=@p db-path=^path] =ticket]
+        %-  pairs
+        :~  ['host' s+(scot %p host)]
+            ['path' (path db-path)]
+            ['ticket' (en-ticket ticket)]
+        ==
+      ++  hostside
+        |=  =(map ^path (map @p ticket))
+        ^-  json
+        :-  %a
+        %+  turn  ~(tap by map)
+        |=  [db-path=^path =(^map @p ticket)]
+        %-  pairs
+        :~  ['path' (path db-path)]
+            :-  'tickets'
+            :-  %a
+            %+  turn  ~(tap by map)
+            |=  [ship=@p =ticket]
+            %-  pairs
+            :~  ['ship' s+(scot %p ship)]
+                ['ticket' (en-ticket ticket)]
+            ==
+        ==
+      ++  en-graylists
+        |=  =(map ^path graylist)
+        ^-  json
+        :-  %a
+        %+  turn  ~(tap by map)
+        |=  [db-path=^path =graylist]
+        ^-  json
+        %-  pairs
+        :~  ['path' (path db-path)]
+            ['graylist' (en-graylist graylist)]
+        ==
+      ++  en-graylist
+        |=  graylist
+        ^-  json
+        %-  pairs
+        :~  :-  'ship'  :-  %a
+            %+  turn  ~(tap by ship)
+            |=  [=@p b=?] 
+            %-  pairs
+            :~  ['ship' s+(scot %p p)]
+                ['allowed' b+b]
+            ==
+            :-  'rank'  :-  %a
+            %+  turn  ~(tap by rank)
+            |=  [=rank:title b=?] 
+            %-  pairs
+            :~  ['rank' s+rank]
+                ['allowed' b+b]
+            ==
+            ['rest' ?~(rest ~ b+u.rest)]
+        ==
+      --
     ::
     ++  en-schemas
       |=  =schemas
