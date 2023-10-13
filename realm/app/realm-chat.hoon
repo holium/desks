@@ -89,6 +89,8 @@
         (disable-push:lib state bowl)
       %enable-push
         (enable-push:lib state bowl)
+      %clear-devices
+        (clear-devices:lib state bowl)
       %remove-device
         (remove-device:lib +.act state bowl)
       %set-device
