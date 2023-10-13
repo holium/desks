@@ -881,10 +881,10 @@
         %msg     a+(turn message.chat-vent |=(m=msg-part:sur (messages-row [msg-id.m msg-part-id.m] m)))
         %path    (path-row path-row.chat-vent)
         %path-and-count
-      %-  pairs
-      :~  path+(path-row path-row.chat-vent)
-          msg-count+(numb msg-count.chat-vent)
-      ==
+      =/  prj=json  (path-row path-row.chat-vent)
+      ?>  ?=([%o *] prj)
+      :-  %o
+      (~(put by p.prj) %msg-count (numb msg-count.chat-vent))
       ==
     ::
     ++  time-bunt-null
