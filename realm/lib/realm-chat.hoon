@@ -632,6 +632,13 @@
   =.  push-enabled.state  %.y
   `state
 ::
+++  clear-devices
+::realm-chat &chat-action [%clear-devices ~]
+  |=  [state=state-1 =bowl:gall]
+  ^-  (quip card state-1)
+  ?>  =(src.bowl our.bowl)
+  `state(devices *devices)
+::
 ++  remove-device
   |=  [device-id=cord state=state-1 =bowl:gall]
   ^-  (quip card state-1)
