@@ -131,6 +131,10 @@
   |=  [our=ship =type:common data=columns:db]
   (create-req our type data [our *@da])
 ::
+++  create-many
+  |=  [our=ship args=(list [req-id input-row:db])]
+  [%pass /dbpoke %agent [our %bedrock] %poke %db-action !>([%create-many args])]
+::
 ++  edit-req
   |=  [our=ship =type:common =id:common data=columns:db =req-id]
   ^-  card
@@ -267,27 +271,36 @@
   |=  [contacts=(list [t=@da =contact:common]) state=state-0 =bowl:gall]
   ^-  (quip card state-0)
   ?<  =(src.bowl our.bowl)  :: assert we aren't receiving from ourself
-  =/  log1  (maybe-log hide-logs.state "%receive-contacts: {<contacts>}")
+  =/  log1  (maybe-log hide-logs.state "%receive-contacts: {<(lent contacts)>} contacts {<now.bowl>}")
 
   :: loop through the contacts they sent us
   =/  old=(list [id:common @da contact:common])  (our-contacts:scries bowl)
   =/  cards=(list card)  ~
+  =/  create-args=(list [req-id input-row:db])  ~
   |-
     ?:  =(0 (lent contacts))
-      [cards state]
+      =/  log2  (maybe-log hide-logs.state "%receive-contacts finished at {<now.bowl>} ")
+      ?:  =(0 (lent create-args))
+        [cards state]
+      ~&  >  "lent of create-args {<(lent create-args)>}"
+      ~&  >  "lent of cards {<(lent cards)>}"
+      :_  state
+      :-  (create-many our.bowl create-args)
+      cards
     =/  con=contact:common  (cleanup-contact contact:(snag 0 contacts))
     ?:  =(our.bowl ship.con)  :: don't create a contact record for ourselves
       $(contacts +.contacts)
     =/  index=(unit @)      (find-contact con old)
-    =/  new-card=(unit card)
-      ?~  index
-        (some (create our.bowl contact-type:common [%contact con]))
-      =/  old-con=[=id:common t=@da =contact:common]   (snag u.index old)
-      ?:  (gth t.old-con t:(snag 0 contacts))  ~  :: if our old record is newer than the one we are getting, ignore it
-      (some (edit our.bowl contact-type:common id.old-con [%contact con]))
+    ?~  index
+      %=  $
+        contacts      +.contacts
+        create-args   [[[our.bowl *@da] [/private contact-type:common [%contact con] ~]] create-args]
+      ==
+    =/  old-con=[=id:common t=@da =contact:common]   (snag u.index old)
+    ?:  (gth t.old-con t:(snag 0 contacts))  $(contacts +.contacts)  :: if our old record is newer than the one we are getting, ignore it
     %=  $
       contacts  +.contacts
-      cards     ?~(new-card cards [u.new-card cards])
+      cards     [(edit our.bowl contact-type:common id.old-con [%contact con]) cards]
     ==
 ::
 ++  request-contacts
