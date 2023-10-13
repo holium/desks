@@ -150,7 +150,7 @@
               (malt ['FILL_IN' (scot %p our.bowl)]~)
             ]
             [
-              (limo ~['ENTITY_ADD' 'ENTITY_REMOVE' 'KEY_ADD' 'KEY_REMOVE' 'NAME_RECORD_SET'])
+              (limo ~['ENTITY_ADD' 'ENTITY_REMOVE' 'KEY_ADD' 'KEY_REMOVE' 'NAME_RECORD_SET' 'SIGNED_KEY_ADD'])
               ''
             ]
             [(limo ['NAME_RECORD' ~]) '']
