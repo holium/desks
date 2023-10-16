@@ -247,9 +247,9 @@
 +$  passport-link
   $%  [%edge-add from-link-hash=@t to-link-hash=@t key=@t value=@t]
       [%edge-remove link-hash=@t]
-      [%entity-add public-key=@t public-key-type=@t name=@t]
+      [%entity-add address=@t address-type=@t name=@t]
       [%entity-remove name=@t]
-      [%key-add public-key=@t public-key-type=@t name=@t]
+      [%key-add address=@t address-type=@t name=@t]
       [%key-remove name=@t]
       [%post-add type=@t data=json]
       [%post-edit link-hash=@t type=@t data=json]
@@ -265,7 +265,7 @@
   ==
 +$  passport-data-link-metadata
   $:  from-entity=@t
-      signing-public-key=@t
+      signing-address=@t
       value=@ud
       link-id=@t
       epoch-block-number=@ud
@@ -278,10 +278,10 @@
   ==
 +$  pki-state
   $:  chain-owner-entities=(list @t)
-      entity-to-public-keys=(map @t (list @t))
-      public-key-to-nonce=(map @t @ud)
+      entity-to-addresses=(map @t (list @t))
+      address-to-nonce=(map @t @ud)
       entity-to-value=(map @t @ud)
-      public-key-to-entity=(map @t @t)
+      address-to-entity=(map @t @t)
   ==
 +$  passport-crypto
   $:  link-id=@t
