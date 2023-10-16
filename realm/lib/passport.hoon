@@ -792,6 +792,30 @@
   ?.  =((lent passports) 0)  `state
   :: TODO ask %pals for as many contacts to prepopulate as we can and
   :: TODO create a poke to auto-add friends from mutuals in %pals
+
+  :: if we already have a bunch of contacts, just re-create ourself,
+  :: don't do the whole big import
+  ?:  (gth (lent (our-contacts:scries bowl)) 2)
+    =/  our-contact-info=[%contact-info n=@t b=@t c=@ux a=(unit @t) v=(unit @t)]
+    .^([%contact-info @t @t @ux (unit @t) (unit @t)] %gx /(scot %p our.bowl)/friends/(scot %da now.bowl)/contact-hoon/(scot %p our.bowl)/noun)
+    =/  our-contact=contact:common
+    %-  cleanup-contact
+    [
+      our.bowl
+      ?~  a.our-contact-info  ~
+      (some [%image u.a.our-contact-info])
+      (some (hex-str:dejs s+(scot %ux c.our-contact-info)))
+      (some b.our-contact-info)
+      (some n.our-contact-info)
+    ]
+    =/  p=passport:common
+      [our-contact ~ %online %.y ~ ~ '' ~ ~ *passport-crypto:common]
+    =/  cards=(list card)
+    :~  (create our.bowl passport-type:common [%passport p])
+        (create our.bowl contact-type:common [%contact contact.p])
+    ==
+    [cards state]
+    
   =/  old-friends  .^(json %gx /(scot %p our.bowl)/friends/(scot %da now.bowl)/all/noun)
   =/  frens=(list friend:common)  (new-friends-from-old:dejs old-friends)
   =/  contacts=(list contact:common)
