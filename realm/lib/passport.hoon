@@ -426,8 +426,7 @@
   =.  status.friend.new-fren    ?:(accept %friend %rejected)
 
   =/  cards=(list card)
-    :~  (req src.bowl dap.bowl)
-        (edit our.bowl friend-type:common id.new-fren [%friend friend.new-fren])
+    :~  (edit our.bowl friend-type:common id.new-fren [%friend friend.new-fren])
     ==
   [cards state]
 ::
