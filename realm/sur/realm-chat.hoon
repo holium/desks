@@ -63,12 +63,14 @@
       [%edit-message =edit-message-action:db]
       [%delete-message =path =msg-id:db]
       [%delete-backlog =path]
+      [%room-action =path kind=?(%start %join %leave)] :: creates a %status message that we start/join/left a room
 
       :: internal %realm-chat state updaters
       [%enable-push ~]
       [%disable-push ~]
       [%set-device device-id=@t player-id=@t]
       [%remove-device device-id=@t]
+      [%clear-devices ~]
       [%mute-chat =path mute=?]  :: toggles the muted-state of the path
       [%pin-chat =path pin=?]    :: toggles the pinned-state of the path
       [%toggle-msg-preview-notif msg-preview-notif=?]

@@ -250,7 +250,7 @@
       [%entity-add address=@t address-type=@t name=@t]
       [%entity-remove name=@t]
       [%key-add address=@t address-type=@t name=@t]
-      [%key-remove name=@t]
+      [%key-remove address=@t]
       [%post-add type=@t data=json]
       [%post-edit link-hash=@t type=@t data=json]
       [%post-remove link-hash=@t]
@@ -258,6 +258,7 @@
       [%token-burn from-entity=@t amount=@rd]
       [%token-mint to-entity=@t amount=@rd]
       [%token-transfer to-entity=@t amount=@rd]
+      [%signed-key-add address=@t address-type=@t key-signature=@t name=@t nonce=@ud timestamp=@ud]
   ==
 +$  passport-data-link
   $:  mtd=passport-data-link-metadata

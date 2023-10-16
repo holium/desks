@@ -56,6 +56,10 @@
 
       %get     :: for getting someone else's passport via a threadpoke
         (get:passport +.act state bowl)
+      %get-as-row  :: for getting someone else's passport via a threadpoke
+        (get-as-row:passport +.act state bowl)
+      %get-contact  :: for getting someone else's contact via a threadpoke
+        (get-contact:passport +.act state bowl)
       %add-link
         (add-link:passport +.act state bowl)
       %change-contact
@@ -66,6 +70,8 @@
       %toggle-hide-logs
         (toggle-hide-logs:passport +.act state bowl)
 
+      %reset
+        (reset:passport state bowl)
       %init-our-passport
         (init-our-passport:passport state bowl)
     ==
@@ -90,6 +96,14 @@
     |=  =path
     ^-  (unit (unit cage))
     ?+    path  !!
+    ::
+      [%x %code ~]
+        ?>  =(src.bowl our.bowl)
+        =/  code=tape
+        %+  slag  1
+        %+  scow  %p
+        .^(@p %j /(scot %p our.bowl)/code/(scot %da now.bowl)/(scot %p our.bowl))
+        ``tape+!>(code)
     ::
       [%x %contacts ~]
         ``passport-contacts+!>((turn (our-contacts:scries bowl) |=(c=[=id:common @da =contact:common] contact.c)))
@@ -117,6 +131,49 @@
     ::
       [%x %passport-state ~]
         ``passport-state+!>(state)
+    ::
+      [%x %template %next-block %metadata-or-root ~]
+        =/  op=passport:common  (our-passport:scries bowl)
+        ?:  =(0 (lent chain.op))
+          =/  p=passport-crypto:common
+          [
+            'PASSPORT_ROOT'
+            0
+            0
+            now.bowl
+            '0x00000000000000000000000000000000'
+            [
+              [(scot %p our.bowl) ~]
+              (malt [(scot %p our.bowl) ['FILL_IN' ~]]~)
+              (malt ['FILL_IN' 0]~)
+              (malt [(scot %p our.bowl) 1.728]~)
+              (malt ['FILL_IN' (scot %p our.bowl)]~)
+            ]
+            [
+              (limo ~['ENTITY_ADD' 'ENTITY_REMOVE' 'KEY_ADD' 'KEY_REMOVE' 'NAME_RECORD_SET' 'SIGNED_KEY_ADD'])
+              ''
+            ]
+            [(limo ['NAME_RECORD' ~]) '']
+            [144 1.000 'FILL_IN' o+(malt ['NAME_RECORD' o+~]~)]
+          ]
+          ``passport-template-root+!>(p)
+        =/  m=passport-data-link-metadata:common
+        [
+          ?.  =((lent chain-owner-entities.pki-state.crypto.op) 1)
+            'FILL_IN'
+          (snag 0 chain-owner-entities.pki-state.crypto.op)
+          'FILL_IN'
+          1
+          'FILL_IN'
+          0
+          0
+          '0x00000000000000000000000000000000'
+          ?~(chain.op 0 (dec (lent chain.op)))
+          ?:((lth (lent chain.op) 2) '0x00000000000000000000000000000000' hash:(rear chain.op))
+          ?~(chain.op 0 (dec (lent chain.op)))
+          now.bowl
+        ]
+        ``passport-template+!>(m)
     ==
   ::
   ++  on-agent
@@ -170,16 +227,12 @@
             ?+  -.ch  ~
               %add-peer
             ?:  =(our.bowl ship.peer.ch)  ~ :: skip ourself, duh
-            ?.  ?|  (lte (how-many-peers-in-path:scries path.peer.ch bowl) 50)
-                    =(our.bowl (scry-bedrock-path-host:scries path.peer.ch bowl))
-                ==
-                ~&  >>>  "not sharing contacts for {<path.peer.ch>}, too many peers, and we aren't the host"
-                ~
-            ~&  >  "sharing contacts with {<ship.peer.ch>}"
-            :: send the new peer a `req`uest for his contacts
-            :~  (req:passport ship.peer.ch dap.bowl)
-            :: and give him all our contacts
-                [%pass /contacts %agent [ship.peer.ch dap.bowl] %poke %passport-action !>([%receive-contacts (current-contacts:passport bowl)])]
+            ~&  >  "sharing our contact with {<ship.peer.ch>}"
+            =/  pass=passport:common   (our-passport:scries bowl)
+            :: send the new peer a request for his contact
+            :~  [%pass /contacts %agent [ship.peer.ch dap.bowl] %poke %passport-action !>([%get-contact [our.bowl now.bowl]])]
+            :: and give him our contact
+                [%pass /contacts %agent [ship.peer.ch dap.bowl] %poke %passport-action !>([%receive-contacts [[now.bowl contact.pass] ~]])]
             ==
             ==
             [cards this]

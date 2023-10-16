@@ -8,6 +8,23 @@
 ::
 :: helpers
 ::
+++  is-common
+  |=  =type:common
+  ^-  ?
+  ?|  =(type vote-type:common)
+      =(type rating-type:common)
+      =(type comment-type:common)
+      =(type react-type:common)
+      =(type tag-type:common)
+      =(type link-type:common)
+      =(type relay-type:common)
+      =(type creds-type:common)
+      =(type friend-type:common)
+      =(type passport-type:common)
+      =(type contact-type:common)
+      =(type chat-type:common)
+      =(type message-type:common)
+  ==
 ++  living-peers
 :: filter for peers who ARE NOT `our` AND have an updated-at within the
 :: %keep-alive window (on a 2hr cadence)
@@ -661,7 +678,7 @@
   :: emit the change to self-subscriptions (our clients)
   =/  thechange  db-changes+!>([[%add-path path-row] (turn peerslist |=(p=peer [%add-peer p]))])
   =/  subscription-facts=(list card)  :~
-    [%give %fact [/db (weld /path path.path-row) ~] thechange]
+    [%give %fact [/db /db/common (weld /path path.path-row) ~] thechange]
   ==
 
   =/  cards  (weld peer-pokes subscription-facts)
@@ -747,7 +764,7 @@
   :: emit the change to self-subscriptions (our clients)
   =/  thechange  db-changes+!>([[%add-path path-row] (turn peers |=(p=peer [%add-peer p]))])
   =/  client-facts=(list card)  :~
-    [%give %fact [/db (weld /path path.path-row) ~] thechange]
+    [%give %fact [/db /db/common (weld /path path.path-row) ~] thechange]
   ==
 
   =/  cards  (weld peer-pokes client-facts)
@@ -800,7 +817,7 @@
   =/  thechange         db-path+!>(full)
 
   =/  cards=(list card)
-    :-  [%give %fact [/db (weld /path path.path-row) ~] thechange]
+    :-  [%give %fact [/db /db/common (weld /path path.path-row) ~] thechange]
     pokes
 
   [cards state]
@@ -823,7 +840,7 @@
 
   :: emit the change to clients
   =/  cards=(list card)
-    [%give %fact [/db (weld /path path.new) ~] db-changes+!>([%upd-path new]~)]~
+    [%give %fact [/db /db/common (weld /path path.new) ~] db-changes+!>([%upd-path new]~)]~
   [cards state]
 ::
 ++  remove-path
@@ -847,7 +864,7 @@
 
   :: emit the change to subscribers
   =/  sub-facts=(list card)
-    [%give %fact [/db (weld /path path) ~] db-changes+!>([%del-path path now.bowl]~)]~
+    [%give %fact [/db /db/common (weld /path path) ~] db-changes+!>([%del-path path now.bowl]~)]~
   =/  cards=(list card)  (weld del-pokes sub-facts)
 
   :: remove from paths table, and peers table
@@ -898,7 +915,7 @@
     :: poke `ship` with %get path
     :-  (get-path-card ship path-row (peers-to-ship-roles (~(got by peers.state) path)))
     :: tell clients about the new peer
-    :-  [%give %fact [/db (weld /path path) ~] db-changes+!>(thechange)]
+    :-  [%give %fact [/db /db/common (weld /path path) ~] db-changes+!>(thechange)]
     :: tell subs about the new peer
     %+  turn
       (living-peers original-peers now.bowl our.bowl)
@@ -935,7 +952,7 @@
     :: poke %delete-path to the ship we are kicking
     :-  [%pass /dbpoke %agent [ship %bedrock] %poke %db-action !>([%delete-path path])]
     :: tell clients about the new peer
-    :-  [%give %fact [/db (weld /path path) ~] db-changes+!>(thechange)]
+    :-  [%give %fact [/db /db/common (weld /path path) ~] db-changes+!>(thechange)]
     :: tell subs about the new peer
     %+  turn
       (living-peers newlist now.bowl our.bowl)
@@ -982,7 +999,7 @@
 
   :: emit the change to subscribers
   =/  sub-facts=(list card)
-    [%give %fact [/db (weld /path path.path-row) ~] db-changes+!>([%add-path path-row]~)]~
+    [%give %fact [/db /db/common (weld /path path.path-row) ~] db-changes+!>([%add-path path-row]~)]~
   :: subscribe to src.bowl on /next/updated-at.path-row/[path] for data-changes in this path
   =/  subs  :~
     [
@@ -1021,7 +1038,7 @@
 
   :: emit the change to subscribers
   =/  cards=(list card)
-    [%give %fact [/db (weld /path path) ~] db-changes+!>([%del-path path now.bowl]~)]~
+    [%give %fact [/db /db/common (weld /path path) ~] db-changes+!>([%del-path path now.bowl]~)]~
   [cards state]
 ::
 ++  refresh-path
@@ -1088,6 +1105,16 @@
   ?>  =(host.path-row src.bowl)  :: only accept changes from host for now
 
   =/  log1  (maybe-log hide-logs.state "{<dap.bowl>}%handle-changes: on {<path>} => {<changes>}")
+  =/  touches-common-type=?
+    %+  lien
+      changes
+    |=  c=db-change
+    ^-  ?
+    ?+  -.c  %.n
+      %add-row  (is-common type.row.c)
+      %upd-row  (is-common type.row.c)
+      %del-row  (is-common type.c)
+    ==
 
   =/  index=@ud           0
   =/  result-cards   *(list card)
@@ -1100,7 +1127,13 @@
       %+  weld
         result-cards
       ^-  (list card)
-      [%give %fact [/db (weld /path path) ~] db-changes+!>(changes)]~
+      =/  sub-paths=(list ^path)
+      %+  weld
+        `(list ^path)`[/db (weld /path path) ~]
+      ^-  (list ^path)
+      ?:  touches-common-type  [/db/common ~]
+      ~
+      [%give %fact sub-paths db-changes+!>(changes)]~
     :: main iterator
     =/  change   (snag index changes)
     :: dependent cards to emit for when %relay stuff happens
@@ -1267,12 +1300,18 @@
   :: emit the change to subscribers
   =/  thechange=db-changes    [%add-row row schema.input-row]~
   =/  peers=(list peer)       (~(got by peers.state) path.row)
+  =/  sub-paths=(list path)
+  %+  weld
+    `(list path)`[/db (weld /path path.row) ~]
+  ^-  (list path)
+  ?:  (is-common type.row)  [/db/common ~]
+  ~
   =/  cards=(list card)
     :: give vent response
     :-  [%give %fact ~[vent-path] db-vent+!>([%row row schema.input-row])]
     :-  kickcard
     :: tell clients about the new peer
-    :-  [%give %fact [/db (weld /path path.row) ~] db-changes+!>(thechange)]
+    :-  [%give %fact sub-paths db-changes+!>(thechange)]
     :: tell subs about the new peer
     %+  turn
       (living-peers peers now.bowl our.bowl)
@@ -1335,12 +1374,18 @@
   :: emit the change to subscribers
   =/  thechange=db-changes    [%upd-row row sch]~
   =/  peers=(list peer)       (~(got by peers.state) path.row)
+  =/  sub-paths=(list path)
+  %+  weld
+    `(list path)`[/db (weld /path path.row) ~]
+  ^-  (list path)
+  ?:  (is-common type.row)  [/db/common ~]
+  ~
   =/  cards=(list card)
     :: give vent response
     :-  [%give %fact ~[vent-path] db-vent+!>([%row row sch])]
     :-  kickcard
     :: tell clients about the new peer
-    :-  [%give %fact [/db (weld /path path.row) ~] db-changes+!>(thechange)]
+    :-  [%give %fact sub-paths db-changes+!>(thechange)]
     :: tell subs about the new peer
     %+  turn
       (living-peers peers now.bowl our.bowl)
@@ -1387,12 +1432,18 @@
   :: emit the change
   =/  thechange=db-changes    ~[log]
   =/  peers=(list peer)       (~(got by peers.state) path)
+  =/  sub-paths=(list ^path)
+  %+  weld
+    `(list ^path)`[/db (weld /path path) ~]
+  ^-  (list ^path)
+  ?:  (is-common type)  [/db/common ~]
+  ~
   =/  cards=(list card)
     :: give vent response
     :-  [%give %fact ~[vent-path] db-vent+!>([%del-row id type path])]
     :-  kickcard
     :: tell clients about the new peer
-    :-  [%give %fact [/db (weld /path path) ~] db-changes+!>(thechange)]
+    :-  [%give %fact sub-paths db-changes+!>(thechange)]
     :: tell subs about the new peer
     %+  turn
       (living-peers peers now.bowl our.bowl)
@@ -1446,12 +1497,18 @@
       =/  last  (snag (dec index) logs)
       :: emit the change
       =/  peers=(list peer)       (~(got by peers.state) path)
+      =/  sub-paths=(list ^path)
+      %+  weld
+        `(list ^path)`[/db (weld /path path) ~]
+      ^-  (list ^path)
+      ?:  (is-common type.last)  [/db/common ~]
+      ~
       =/  cards=(list card)
         :: give vent response
         :-  [%give %fact ~[vent-path] db-vent+!>([%del-row id.last type.last path.last])]
         :-  kickcard
         :: tell clients about the new peer
-        :-  [%give %fact [/db (weld /path path) ~] db-changes+!>(logs)]
+        :-  [%give %fact sub-paths db-changes+!>(logs)]
         :: tell subs about the new peer
         %+  turn
           (living-peers peers now.bowl our.bowl)
@@ -1516,11 +1573,16 @@
       =.  pt              (~(put by pt) path tbl)           :: update the pathed-table
       =.  tables.state    (~(put by tables.state) type pt)  :: update the tables.state
       :: TODO remove remote-scry paths for the row
-
+      =/  sub-paths=(list ^path)
+      %+  weld
+        `(list ^path)`[/db (weld /path path) foreign-ship-sub-wire ~]
+      ^-  (list ^path)
+      ?:  (is-common type)  [/db/common ~]
+      ~
       :: emit the change to subscribers
       =/  cards=(list card)  :~
         :: tell subs about the new row
-        [%give %fact [/db (weld /path path) foreign-ship-sub-wire ~] db-changes+!>(logs)]
+        [%give %fact sub-paths db-changes+!>(logs)]
         :: kick foreign ship subs to force them to re-sub for next update
         [%give %kick [foreign-ship-sub-wire ~] ~]
       ==

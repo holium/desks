@@ -10,7 +10,7 @@
 :: helpers
 ::
 ++  maybe-log
-  |=  [hide-debug=? msg=*]
+  |=  [hide-debug=? msg=tape]
   ?:  =(%.y hide-debug)  ~
   ~&  >>>  msg
   ~
@@ -38,9 +38,9 @@
   ==
 ::
 ++  scry-messages-for-path
-  |=  [=path =bowl:gall]
+  |=  [=path our=@p now=@da]
   ^-  (list [k=uniq-id:db v=msg-part:db])
-  =/  paths  (weld /(scot %p our.bowl)/chat-db/(scot %da now.bowl)/db/messages-for-path path)
+  =/  paths  (weld /(scot %p our)/chat-db/(scot %da now)/db/messages-for-path path)
   =/  tbls
     .^
       db-dump:db
@@ -51,6 +51,16 @@
   ?+  -.tbl  !!
     %messages
       (tap:msgon:db messages-table.tbl)
+  ==
+::
+++  scry-message-count-for-path
+  |=  [=path =bowl:gall]
+  ^-  @ud
+  =/  paths  (weld /(scot %p our.bowl)/chat-db/(scot %da now.bowl)/db/message-count-for-path path)
+  .^
+    @ud
+    %gx
+    (weld paths /noun)
   ==
 ::
 ++  scry-path-row
@@ -97,6 +107,31 @@
     %paths  ~(val by paths-table.tbl)
   ==
 ::
+++  notif-from-nickname-or-patp
+  |=  [patp=ship =bowl:gall]
+  ^-  @t
+  =/  cv=view:fr
+    .^  view:fr
+        %gx
+        /(scot %p our.bowl)/friends/(scot %da now.bowl)/contact-hoon/(scot %p patp)/noun
+    ==
+  =/  nickname=@t
+    ?+  -.cv  (scot %p patp) :: if the scry came back wonky, just fall back to patp
+      %contact-info
+        nickname.contact-info.cv
+    ==
+  ?:  =('' nickname)
+    (scot %p patp)
+  nickname
+::
+++  group-name-or-blank
+  |=  [=path-row:db]
+  ^-  @t
+  =/  title       (~(get by metadata.path-row) 'title')
+  ?:  =(type.path-row %dm)   '' :: always blank for DMs
+  ?~  title     'Group Chat'    :: if it's a group chat without a title, just say "group chat"
+  (need title)                  :: otherwise, return the title of the group
+::
 ++  into-backlog-msg-poke
   |=  [m=message:db =ship]
   [%pass /dbpoke %agent [ship %chat-db] %poke %chat-db-action !>([%insert-backlog m])]
@@ -135,7 +170,7 @@
 ++  create-path-db-poke
   |=  [=ship row=path-row:db peers=ship-roles:db]
   ^-  card
-  [%pass /dbpoke %agent [ship %chat-db] %poke %chat-db-action !>([%create-path row peers])]
+  [%pass /dbpoke %agent [ship %chat-db] %poke %chat-db-action !>([%create-path row peers 0 ~])]
 ::
 ++  create-path-bedrock-poke
   |=  [=ship row=path-row:db peers=ship-roles:db]
@@ -359,7 +394,7 @@
       :: enforces the rule that only hosts can actually edit the path-row
       [%pass /selfpoke %agent [patp.host-peer %realm-chat] %poke %chat-action !>([%edit-chat act])]~
 
-    :-  (edit-chat-bedrock-poke (scry-bedrock-path-host:db-scry path.act bowl) act bowl)
+    :::-  (edit-chat-bedrock-poke (scry-bedrock-path-host:db-scry path.act bowl) act bowl)
     :: we poke all peers/members' db with edit-path (including ourselves)
     %:  turn
       pathpeers
@@ -422,21 +457,33 @@
       (turn pathpeers |=(p=peer-row:db [patp.p role.p]))
     [ship.act %member]
 
-  =/  backlog-poke-cards
+  =/  expected-msg-count=@ud
+    ?.  peers-get-backlog.pathrow  0
+    (scry-message-count-for-path path.act bowl)
+  ~&  >  "expected: {<expected-msg-count>}"
+  =/  backlog-poke-cards=(list card)
     ?.  peers-get-backlog.pathrow  ~
-    (limo [(into-backlog-msg-poke (turn (scry-messages-for-path path.act bowl) |=([k=uniq-id:db v=msg-part:db] v)) ship.act) ~])
+    ?.  (gth expected-msg-count 200)
+      (limo [(into-backlog-msg-poke (turn (scry-messages-for-path path.act our.bowl now.bowl) |=([k=uniq-id:db v=msg-part:db] v)) ship.act) ~])
+    =/  msgs  (scag 200 (scry-messages-for-path path.act our.bowl now.bowl))
+    =/  tid   (cat 3 (spat path.act) ship.act)
+    =/  start-args  [~ `tid byk.bowl(r da+now.bowl) %send-backlog !>(`[path.act ship.act])]
+    :-  (into-backlog-msg-poke (turn msgs |=([k=uniq-id:db v=msg-part:db] v)) ship.act)
+    :-  [%pass /thread/(scot %da now.bowl) %agent [our.bowl %spider] %poke %spider-start !>(start-args)]
+    ~
 
+  :: order matters here, for performance
   =/  cards=(list card)
 ::    :-  (add-bedrock-peer-poke (scry-bedrock-path-host:db-scry path.act bowl) path.act ship.act)
     %+  weld
-      %+  snoc
-        :: we poke all original peers db with add-peer (including ourselves)
-        %+  turn
-          pathpeers
-        |=(p=peer-row:db [%pass /dbpoke %agent [patp.p %chat-db] %poke %chat-db-action !>([%add-peer t.act path.act ship.act])])
       ::  we poke the newly-added ship's db with a create-path,
       ::  since that will automatically handle them joining as a member
-      [%pass /dbpoke %agent [ship.act %chat-db] %poke %chat-db-action !>([%create-path pathrow all-peers])]
+      :-  [%pass /dbpoke %agent [ship.act %chat-db] %poke %chat-db-action !>([%create-path pathrow all-peers expected-msg-count `t.act])]
+      :: we poke all original peers db with add-peer (including ourselves)
+      %+  turn
+        pathpeers
+      |=(p=peer-row:db [%pass /dbpoke %agent [patp.p %chat-db] %poke %chat-db-action !>([%add-peer t.act path.act ship.act])])
+    :: then we send the backlog
     backlog-poke-cards
   [cards state]
 ::  allows self to remove self, or %host to kick others
@@ -537,7 +584,7 @@
   [cards state]
 ::
 ++  delete-backlog
-::  :realm-chat &action [%delete-backlog /realm-chat/path-id]
+::  :realm-chat &chat-action [%delete-backlog /realm-chat/path-id]
   |=  [act=[=path] state=state-1 =bowl:gall]
   ^-  (quip card state-1)
   ?>  =(src.bowl our.bowl)
@@ -555,6 +602,22 @@
   =.  cards  (snoc cards [%pass /selfpoke %agent [our.bowl %realm-chat] %poke %chat-action cleared-status-message])
   [cards state]
 ::
+++  room-action
+::  :realm-chat &chat-action [%room-action /realm-chat/path-id %start]
+  |=  [act=[=path kind=?(%start %leave %join)] state=state-1 =bowl:gall]
+  ^-  (quip card state-1)
+  ?>  =(src.bowl our.bowl)
+  =/  log1  (maybe-log hide-debug.state "{<dap.bowl>}%room-action: {<path.act>} {<kind.act>}")
+  =/  our-name      (notif-from-nickname-or-patp our.bowl bowl)
+  =/  verb=@t
+  ?-  kind.act
+    %start    ' started '
+    %leave    ' left '
+    %join     ' joined '
+  ==
+  =/  contents=@t  (crip [our-name verb 'a call with you' ~])
+  (send-message [path.act (limo [[[%status contents] ~ ~] ~]) *@dr] state bowl)
+::
 ++  disable-push
   |=  [state=state-1 =bowl:gall]
   ^-  (quip card state-1)
@@ -568,6 +631,13 @@
   ?>  =(src.bowl our.bowl)
   =.  push-enabled.state  %.y
   `state
+::
+++  clear-devices
+::realm-chat &chat-action [%clear-devices ~]
+  |=  [state=state-1 =bowl:gall]
+  ^-  (quip card state-1)
+  ?>  =(src.bowl our.bowl)
+  `state(devices *devices)
 ::
 ++  remove-device
   |=  [device-id=cord state=state-1 =bowl:gall]
@@ -732,6 +802,7 @@
           [%edit-message de-edit-info]
           [%delete-message path-and-msg-id]
           [%delete-backlog (ot ~[[%path pa]])]
+          [%room-action (ot ~[[%path pa] [%kind de-kind]])]
 
           [%enable-push ul]
           [%disable-push ul]
@@ -874,6 +945,20 @@
           [%path pa]
           [%msg-id de-msg-id]
           [%pin bo]
+      ==
+    ::
+    ++  de-kind
+      |=  jon=json
+      ^-  ?(%start %join %leave)
+      ?+  jon  !!
+        [%s *]
+          =/  tas=@tas  `@tas`p.jon
+          ?+  tas  !!
+            %start  %start
+            %join   %join
+            %leave  %leave
+          ==
+        ~       %start
       ==
     ::
     ++  dri   :: specify in integer milliseconds, returns a @dr
