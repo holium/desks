@@ -1,7 +1,7 @@
 ::  app/chat-db.hoon
 /-  *versioned-state, sur=chat-db
 /+  dbug, db-lib=chat-db
-=|  state-2
+=|  state-3
 =*  state  -
 :: ^-  agent:gall
 =<
@@ -12,8 +12,8 @@
   ::
   ++  on-init
     ^-  (quip card _this)
-    =/  default-state=state-2
-      [%2 *paths-table:sur *messages-table:sur *peers-table:sur *del-log:sur]
+    =/  default-state=state-3
+      [%3 *paths-table:sur *messages-table:sur *peers-table:sur *del-log:sur ~]
     :_  this(state default-state)
     [%pass /timer %arvo %b %wait next-expire-time:core]~
   ++  on-save   !>(state)
@@ -109,8 +109,11 @@
           peers
           *del-log:sur :: technically we don't NEED to wipe this in order to upgrade... but who cares about the delete log.
         ]
-        [default-cards this(state new-state)]
-      %2  [default-cards this(state old)]
+        (on-load !>(new-state))
+      %2
+    =/  new-state=state-3  [%3 paths-table.old messages-table.old peers-table.old del-log.old ~]
+    [default-cards this(state new-state)]
+      %3  [default-cards this(state old)]
     ==
   ::
   ++  on-poke
@@ -151,6 +154,17 @@
         (dump-to-bedrock:db-lib state bowl)
       %dump-to-bedrock-messages
         (dump-to-bedrock-messages:db-lib +.act state bowl)
+
+      %set-allowed-migrate-host
+        (set-allowed-migrate-host:db-lib +.act state bowl)
+      %remove-allowed-migrate-host
+        (remove-allowed-migrate-host:db-lib +.act state bowl)
+      %migrate-chat
+        (migrate-chat:db-lib +.act state bowl)
+      %migrated-host
+        (migrated-host:db-lib +.act state bowl)
+      %receive-migrated-chat
+        (receive-migrated-chat:db-lib +.act state bowl)
     ==
     [cards this]
   ::

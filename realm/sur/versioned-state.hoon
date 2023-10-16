@@ -6,6 +6,7 @@
   $%  state-0
       state-1
       state-2
+      state-3
   ==
 +$  state-0
   $:  %0
@@ -28,5 +29,13 @@
       =peers-table
       =del-log
   ==
-+$  state-and-changes   [s=state-2 ch=db-change]
++$  state-3
+  $:  %3
+      =paths-table
+      =messages-table
+      =peers-table
+      =del-log
+      allowed-migration-hosts=(set @p)
+  ==
++$  state-and-changes   [s=state-3 ch=db-change]
 --
