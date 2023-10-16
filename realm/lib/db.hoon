@@ -30,9 +30,11 @@
   |=  [k=@da v=db-del-change]
   ^-  ?
   ?-  -.v
-    %del-row   =(path.v path)
-    %del-peer  =(path.v path)
-    %del-path  =(path.v path)
+    %del-row      =(path.v path)
+    %del-peer     =(path.v path)
+    %del-path     =(path.v path)
+    %del-invite   =(path.v path)
+    %del-request  =(path.v path)
   ==
 ::
 ++  maybe-log
@@ -321,6 +323,30 @@
       =/  oldlist               (~(got by peers.state) path)
       =/  newlist               (skip oldlist |=(=peer =(ship.peer ship.ch)))
       =.  peers.state           (~(put by peers.state) path newlist)
+      state
+    %put-invite
+      =/  invites  (~(got by outgoing-invites.tickets.state) path.ch)
+      =.  invites  (~(put by invites) [ship ticket]:ch)
+      =.  outgoing-invites.tickets.state
+        (~(put by outgoing-invites.tickets.state) path.ch invites)
+      state
+    %put-request
+      =/  requests  (~(got by incoming-requests.tickets.state) path.ch)
+      =.  requests  (~(put by requests) [ship ticket]:ch)
+      =.  incoming-requests.tickets.state
+        (~(put by incoming-requests.tickets.state) path.ch requests)
+      state
+    %del-invite
+      =/  invites  (~(got by outgoing-invites.tickets.state) path.ch)
+      =.  invites  (~(del by invites) ship.ch)
+      =.  outgoing-invites.tickets.state
+        (~(put by outgoing-invites.tickets.state) path.ch invites)
+      state
+    %del-request
+      =/  requests  (~(got by incoming-requests.tickets.state) path.ch)
+      =.  requests  (~(del by requests) ship.ch)
+      =.  incoming-requests.tickets.state
+        (~(put by incoming-requests.tickets.state) path.ch requests)
       state
   ==
 ::
@@ -961,14 +987,25 @@
   ?:  &(!force (~(has by invites) ship))
     ~&(>>> "already invited!" !!)
   :: add to outgoing invites
-  =|  =ticket
-  =.  sent-at.ticket  now.bowl
-  =.  invites  (~(put by invites) ship ticket)
+  =|  invite=ticket
+  =.  sent-at.invite  now.bowl
+  =.  invites  (~(put by invites) ship invite)
   =.  outgoing-invites.tickets.state
     (~(put by outgoing-invites.tickets.state) path invites)
   =/  cards=(list card)
     :: send invite receipt to invitee
-    [%pass /dbpoke %agent [ship %bedrock] %poke %db-action !>([%sent-invite-receipt path now.bowl])]~
+    :-  [%pass /dbpoke %agent [ship %bedrock] %poke %db-action !>([%sent-invite-receipt path now.bowl])]
+    ::
+    =/  thechange=db-changes    [%put-invite path ship invite]~
+    :: tell clients
+    :-  [%give %fact [/db (weld /path path) ~] db-changes+!>(thechange)]
+    :: tell subs
+    %+  turn
+      (living-peers (~(got by peers.state) path) now.bowl our.bowl)
+    |=  p=peer
+    ^-  card
+    (handle-changes-card ship.p thechange path)
+
   [cards state]
 ::
 ++  cancel-invite
@@ -991,7 +1028,18 @@
     (~(put by outgoing-invites.tickets.state) path invites)
   =/  cards=(list card)
     :: send invite receipt to invitee
-    [%pass /dbpoke %agent [ship %bedrock] %poke %db-action !>([%cancel-invite-receipt path])]~
+    :-  [%pass /dbpoke %agent [ship %bedrock] %poke %db-action !>([%cancel-invite-receipt path])]
+    ::
+    =/  thechange=db-changes    [%del-invite path ship now.bowl]~
+    :: tell clients
+    :-  [%give %fact [/db (weld /path path) ~] db-changes+!>(thechange)]
+    :: tell subs
+    %+  turn
+      (living-peers (~(got by peers.state) path) now.bowl our.bowl)
+    |=  p=peer
+    ^-  card
+    (handle-changes-card ship.p thechange path)
+
   [cards state]
 ::
 ++  accept-request
@@ -1019,12 +1067,21 @@
   =.  incoming-requests.tickets.state
     (~(put by incoming-requests.tickets.state) path requests)
   =/  cards=(list card)
-    :~
-      :: send accept request receipt to requestee
-      [%pass /dbpoke %agent [ship %bedrock] %poke %db-action !>([%accept-request-receipt path now.bowl])]
-      :: add ship to peers
-      [%pass /dbpoke %agent [our.bowl %bedrock] %poke %db-action !>([%add-peer path ship %$])]
-    ==
+    :: send accept request receipt to requestee
+    :-  [%pass /dbpoke %agent [ship %bedrock] %poke %db-action !>([%accept-request-receipt path now.bowl])]
+    :: add ship to peers
+    :-  [%pass /dbpoke %agent [our.bowl %bedrock] %poke %db-action !>([%add-peer path ship %$])]
+    ::
+    =/  thechange=db-changes    [%put-request path ship request]~
+    :: tell clients
+    :-  [%give %fact [/db (weld /path path) ~] db-changes+!>(thechange)]
+    :: tell subs
+    %+  turn
+      (living-peers (~(got by peers.state) path) now.bowl our.bowl)
+    |=  p=peer
+    ^-  card
+    (handle-changes-card ship.p thechange path)
+
   [cards state]
 ::
 ++  reject-request
@@ -1053,7 +1110,18 @@
     (~(put by incoming-requests.tickets.state) path requests)
   =/  cards=(list card)
     :: send accept request receipt to requestee
-    [%pass /dbpoke %agent [ship %bedrock] %poke %db-action !>([%reject-request-receipt path now.bowl])]~
+    :-  [%pass /dbpoke %agent [ship %bedrock] %poke %db-action !>([%reject-request-receipt path now.bowl])]
+    ::
+    =/  thechange=db-changes    [%put-request path ship request]~
+    :: tell clients
+    :-  [%give %fact [/db (weld /path path) ~] db-changes+!>(thechange)]
+    :: tell subs
+    %+  turn
+      (living-peers (~(got by peers.state) path) now.bowl our.bowl)
+    |=  p=peer
+    ^-  card
+    (handle-changes-card ship.p thechange path)
+
   [cards state]
 ::
 ++  accept-invite
@@ -1187,7 +1255,18 @@
   =/  cards=(list card)
     %+  welp  auto-cards
     :: send received request receipt to requester
-    [%pass /dbpoke %agent [src.bowl %bedrock] %poke %db-action !>([%received-request-receipt path now.bowl])]~
+    :-  [%pass /dbpoke %agent [src.bowl %bedrock] %poke %db-action !>([%received-request-receipt path now.bowl])]
+    ::
+    =/  thechange=db-changes    [%put-request path src.bowl request]~
+    :: tell clients
+    :-  [%give %fact [/db (weld /path path) ~] db-changes+!>(thechange)]
+    :: tell subs
+    %+  turn
+      (living-peers (~(got by peers.state) path) now.bowl our.bowl)
+    |=  p=peer
+    ^-  card
+    (handle-changes-card ship.p thechange path)
+
   [cards state]
 ::
 ++  cancel-invite-receipt
@@ -1219,7 +1298,18 @@
     (~(put by outgoing-invites.tickets.state) path invites)
   =/  cards=(list card)
     :: add ship to peers
-    [%pass /dbpoke %agent [our.bowl %bedrock] %poke %db-action !>([%add-peer path src.bowl %$])]~
+    :-  [%pass /dbpoke %agent [our.bowl %bedrock] %poke %db-action !>([%add-peer path src.bowl %$])]
+    ::
+    =/  thechange=db-changes    [%put-invite path src.bowl invite]~
+    :: tell clients
+    :-  [%give %fact [/db (weld /path path) ~] db-changes+!>(thechange)]
+    :: tell subs
+    %+  turn
+      (living-peers (~(got by peers.state) path) now.bowl our.bowl)
+    |=  p=peer
+    ^-  card
+    (handle-changes-card ship.p thechange path)
+
   [cards state]
 ::
 ++  reject-invite-receipt
@@ -1239,7 +1329,18 @@
   =.  invites  (~(put by invites) src.bowl invite)
   =.  outgoing-invites.tickets.state
     (~(put by outgoing-invites.tickets.state) path invites)
-  [~ state]
+  =/  cards=(list card)
+    =/  thechange=db-changes    [%put-invite path src.bowl invite]~
+    :: tell clients
+    :-  [%give %fact [/db (weld /path path) ~] db-changes+!>(thechange)]
+    :: tell subs
+    %+  turn
+      (living-peers (~(got by peers.state) path) now.bowl our.bowl)
+    |=  p=peer
+    ^-  card
+    (handle-changes-card ship.p thechange path)
+
+  [cards state]
 ::
 ++  cancel-request-receipt
   |=  [=path state=state-2 =bowl:gall]
@@ -1251,7 +1352,19 @@
   =.  requests  (~(del by requests) src.bowl)
   =.  incoming-requests.tickets.state
     (~(del by incoming-requests.tickets.state) path)
-  [~ state]
+  =/  cards=(list card)
+    ::
+    =/  thechange=db-changes    [%del-request path src.bowl now.bowl]~
+    :: tell clients
+    :-  [%give %fact [/db (weld /path path) ~] db-changes+!>(thechange)]
+    :: tell subs
+    %+  turn
+      (living-peers (~(got by peers.state) path) now.bowl our.bowl)
+    |=  p=peer
+    ^-  card
+    (handle-changes-card ship.p thechange path)
+
+  [cards state]
 ::
 ++  accept-request-receipt
   |=  [[=path resolved-at=@da] state=state-2 =bowl:gall]
@@ -1293,7 +1406,18 @@
   =.  invites  (~(put by invites) src.bowl invite)
   =.  outgoing-invites.tickets.state
     (~(put by outgoing-invites.tickets.state) path invites)
-  [~ state]
+  =/  cards=(list card)
+    =/  thechange=db-changes    [%put-invite path src.bowl invite]~
+    :: tell clients
+    :-  [%give %fact [/db (weld /path path) ~] db-changes+!>(thechange)]
+    :: tell subs
+    %+  turn
+      (living-peers (~(got by peers.state) path) now.bowl our.bowl)
+    |=  p=peer
+    ^-  card
+    (handle-changes-card ship.p thechange path)
+
+  [cards state]
 ::
 ++  received-request-receipt
   |=  [[=path received-at=@da] state=state-2 =bowl:gall]
@@ -2536,6 +2660,26 @@
           :~  ['path' s+(spat path.ch)]
               ['timestamp' (time t.ch)]
            ==
+        %put-invite
+          :~  ['path' s+(spat path.ch)]
+              ['ship' s+(scot %p ship.ch)]
+              ['ticket' (en-ticket ticket.ch)]
+           ==
+        %put-request
+          :~  ['path' s+(spat path.ch)]
+              ['ship' s+(scot %p ship.ch)]
+              ['ticket' (en-ticket ticket.ch)]
+           ==
+        %del-invite
+          :~  ['path' s+(spat path.ch)]
+              ['ship' s+(scot %p ship.ch)]
+              ['timestamp' (time t.ch)]
+           ==
+        %del-request
+          :~  ['path' s+(spat path.ch)]
+              ['ship' s+(scot %p ship.ch)]
+              ['timestamp' (time t.ch)]
+           ==
       ==
     ::
     ++  state
@@ -2581,6 +2725,14 @@
               ['type' (en-db-type type.ch)]
               ['id' (row-id-to-json id.ch)]
           == 
+        %del-invite
+          :~  ['path' s+(spat path.ch)]
+              ['ship' s+(scot %p ship.ch)]
+           ==
+        %del-request
+          :~  ['path' s+(spat path.ch)]
+              ['ship' s+(scot %p ship.ch)]
+           ==
       ==
     ::
     ++  en-tables
@@ -2819,6 +2971,16 @@
       :-  %a
       (turn `(list peer)`(zing ~(val by peers)) en-peer)
     ::
+    ++  en-ticket
+      |=  ticket
+      ^-  json
+      %-  pairs
+      :~  ['status' ?~(status ~ b+u.status)]
+          ['sent-at' (time sent-at)]
+          ['received-at' ?~(received-at ~ (time u.received-at))]
+          ['resolved-at' ?~(resolved-at ~ (time u.resolved-at))]
+      ==
+    ::
     ++  en-tickets
       |=  tickets
       |^  ^-  json
@@ -2829,15 +2991,6 @@
           ['incoming-requests' (hostside incoming-requests)]
           ['graylists' (en-graylists graylists)]
       ==
-      ++  en-ticket
-        |=  ticket
-        ^-  json
-        %-  pairs
-        :~  ['status' ?~(status ~ b+u.status)]
-            ['sent-at' (time sent-at)]
-            ['received-at' ?~(received-at ~ (time u.received-at))]
-            ['resolved-at' ?~(resolved-at ~ (time u.resolved-at))]
-        ==
       ++  peerside
         |=  =(map [@p ^path] ticket)
         ^-  json

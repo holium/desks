@@ -178,10 +178,15 @@
 +$  db-row-del-change    [%del-row =path =type:common =id:common t=@da]
 +$  db-peer-del-change   [%del-peer =path =ship t=@da]
 +$  db-path-del-change   [%del-path =path t=@da]
++$  db-ticket-del-change
+  $%  [%del-invite =path =ship t=@da]
+      [%del-request =path =ship t=@da]
+  ==
 +$  db-del-change
   $%  db-row-del-change
       db-peer-del-change
       db-path-del-change
+      db-ticket-del-change
   ==
 +$  db-change
   $%  [%add-row =row =schema]
@@ -193,6 +198,9 @@
       [%add-peer =peer]
       [%upd-peer =peer]
       db-peer-del-change
+      [%put-invite =path =ship =ticket]
+      [%put-request =path =ship =ticket]
+      db-ticket-del-change
   ==
 +$  db-changes    (list db-change)
 +$  del-log  (map @da db-del-change)
