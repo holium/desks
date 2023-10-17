@@ -323,4 +323,10 @@
       `[%skip ~]
     `[%done ~]
   ==
+::
+++  get-tid
+  =/  m  (strand ,tid)
+  ^-  form:m
+  |=  tin=strand-input:strand
+  `[%done tid.bowl.tin]
 --
