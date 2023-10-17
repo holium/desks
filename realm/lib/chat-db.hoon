@@ -690,6 +690,7 @@
 ::chat-db &chat-db-action [%migrated-host ~bus /realm-chat/path-id]
   |=  [[=ship =path] state=state-3 =bowl:gall]
   ^-  (quip card state-3)
+  ?>  (~(has in allowed-migration-hosts.state) src.bowl)
   =/  pr=path-row:sur  (~(got by paths-table.state) path)
   =/  peers=(list peer-row:sur)  (~(got by peers-table.state) path)
   =/  original-host=peer-row:sur
