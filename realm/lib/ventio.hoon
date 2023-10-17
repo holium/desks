@@ -2,6 +2,7 @@
 /+  *strandio
 =,  tid=tid:rand
 |%
+++  vap      %venter :: venter app
 +$  vent-id  (trel @p tid @da)
 +$  request  (pair vent-id page)
 +$  package
@@ -131,14 +132,14 @@
   ;<  ~  bind:m  (watch vent-path dock vent-path)
   :: tally the vent-path
   ::
-  ;<  ~  bind:m  (poke [our.bowl %venter] tally-vent+!>([dock vid]))
+  ;<  ~  bind:m  (poke [our.bowl vap] tally-vent+!>([dock vid]))
   :: poke the agent on the destination ship with the vent id and page
   ::
   ;<  p=(unit tang)  bind:m  (poke-soft dock vent-request+!>([vid req]))
   ?^  p
     :: clear the vent-path
     ::
-    ;<  ~  bind:m  (poke [our.bowl %venter] clear-vent+!>([dock vid]))
+    ;<  ~  bind:m  (poke [our.bowl vap] clear-vent+!>([dock vid]))
     (pure:m %| [%vent-request-poke-fail u.p])
   :: take vent update on vent-path
   ::
@@ -146,7 +147,7 @@
   ;<  ~         bind:m  (take-kick vent-path)
   :: clear the vent-path
   ::
-  ;<  ~  bind:m  (poke [our.bowl %venter] clear-vent+!>([dock vid]))
+  ;<  ~  bind:m  (poke [our.bowl vap] clear-vent+!>([dock vid]))
   ::
   :: return vent result or error
   ::
@@ -261,7 +262,7 @@
   =/  m  (strand ,(each mold goof))
   ^-  form:m
   ;<  our=@p  bind:m  get-our
-  ;<  =thread-result  bind:m  (vent-soft [our %venter] scry+path)
+  ;<  =thread-result  bind:m  (vent-soft [our vap] scry+path)
   ?-  -.thread-result
     %|  (pure:m %| p.thread-result)
     %&  (pure:m %& ;;(mold p.thread-result))
