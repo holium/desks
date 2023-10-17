@@ -122,6 +122,7 @@
       [%set-allowed-migrate-host =ship]
       [%remove-allowed-migrate-host =ship]
       [%migrate-chat new-host=ship =path]
+      [%migrating-host new-host=ship =path]
       [%migrated-host new-host=ship =path]
       [%receive-migrated-chat =path-row peers=(list peer-row) =message]
   ==

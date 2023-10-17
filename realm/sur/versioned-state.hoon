@@ -36,6 +36,7 @@
       =peers-table
       =del-log
       allowed-migration-hosts=(set @p)
+      ongoing-migrations=(set [=ship =path])
   ==
 +$  state-and-changes   [s=state-3 ch=db-change]
 --

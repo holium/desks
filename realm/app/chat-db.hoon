@@ -13,7 +13,7 @@
   ++  on-init
     ^-  (quip card _this)
     =/  default-state=state-3
-      [%3 *paths-table:sur *messages-table:sur *peers-table:sur *del-log:sur ~]
+      [%3 *paths-table:sur *messages-table:sur *peers-table:sur *del-log:sur ~ ~]
     :_  this(state default-state)
     [%pass /timer %arvo %b %wait next-expire-time:core]~
   ++  on-save   !>(state)
@@ -111,7 +111,7 @@
         ]
         (on-load !>(new-state))
       %2
-    =/  new-state=state-3  [%3 paths-table.old messages-table.old peers-table.old del-log.old ~]
+    =/  new-state=state-3  [%3 paths-table.old messages-table.old peers-table.old del-log.old ~ ~]
     [default-cards this(state new-state)]
       %3  [default-cards this(state old)]
     ==
@@ -161,6 +161,8 @@
         (remove-allowed-migrate-host:db-lib +.act state bowl)
       %migrate-chat
         (migrate-chat:db-lib +.act state bowl)
+      %migrating-host
+        (migrating-host:db-lib +.act state bowl)
       %migrated-host
         (migrated-host:db-lib +.act state bowl)
       %receive-migrated-chat

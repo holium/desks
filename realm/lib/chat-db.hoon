@@ -670,35 +670,56 @@
   |=([k=* v=msg-part:sur] v)
   ::  get all messages on path
   =/  cards=(list card)
-  :-  [
-      %pass
-      /migrate-response
-      %agent
-      [our.bowl dap.bowl]
-      %poke
-      %chat-db-action
-      !>([%receive-migrated-chat pr peers msg])
-    ]
-  %+  turn  peers
-  |=  p=peer-row:sur
-  ^-  card
-  [%pass /dbpoke %agent [patp.p dap.bowl] %poke chat-db-action+!>([%migrated-host ship path])]
+  %+  snoc
+    %+  turn  peers
+    |=  p=peer-row:sur
+    ^-  card
+    [%pass /dbpoke %agent [patp.p dap.bowl] %poke chat-db-action+!>([%migrating-host ship path])]
+  [
+    %pass
+    /migrate-response
+    %agent
+    [ship dap.bowl]
+    %poke
+    %chat-db-action
+    !>([%receive-migrated-chat pr peers msg])
+  ]
   [cards state]
 ::
-++  migrated-host
-:: signal from a former host to a normal peer that we have a new host
-::chat-db &chat-db-action [%migrated-host ~bus /realm-chat/path-id]
+++  migrating-host
+:: signal from a former host to a normal peer that they want to migrate
+:: we just mark down that they wanted to do this, and wait for
+:: confrimation from the new host
+::chat-db &chat-db-action [%migrating-host ~bus /realm-chat/path-id]
   |=  [[=ship =path] state=state-3 =bowl:gall]
   ^-  (quip card state-3)
-  ?>  (~(has in allowed-migration-hosts.state) src.bowl)
+  ~&  "%migrating-host {<ship>} {<path>}"
   =/  pr=path-row:sur  (~(got by paths-table.state) path)
   =/  peers=(list peer-row:sur)  (~(got by peers-table.state) path)
   =/  original-host=peer-row:sur
   %+  snag  0
   (skim peers |=(p=peer-row:sur =(%host role.p)))
   ?>  =(src.bowl patp.original-host)
-  =.  peers
-  %+  turn  peers
+  ~&  "%migrating-host passed security checks"
+  =.  ongoing-migrations.state
+  (~(put in ongoing-migrations.state) [ship path])
+  [~ state]
+::
+++  migrated-host
+:: signal from a new host to a normal peer that they have accepted the migration
+::chat-db &chat-db-action [%migrated-host ~bus /realm-chat/path-id]
+  |=  [[=ship =path] state=state-3 =bowl:gall]
+  ^-  (quip card state-3)
+  ~&  "%migrated-host {<ship>} {<path>}"
+  :: we require that we heard from the original host that we was
+  :: migrating to `ship`
+  ?>  (~(has in ongoing-migrations.state) [ship path])
+  :: and that `ship` is the one who sent this confirmation of migration
+  ?>  =(src.bowl ship)
+  ~&  "%migrated-host passed security checks"
+  =/  pr=path-row:sur  (~(got by paths-table.state) path)
+  =/  peers=(list peer-row:sur)  
+  %+  turn  (~(got by peers-table.state) path)
   |=  p=peer-row:sur
   ^-  peer-row:sur
   =.  role.p
@@ -710,6 +731,8 @@
   %+  snag  0
   (skim peers |=(p=peer-row:sur =(%host role.p)))
   =.  peers-table.state  (~(put by peers-table.state) path peers)
+  =.  ongoing-migrations.state
+  (~(del in ongoing-migrations.state) [ship path])
   =/  cards=(list card)  :~
     [%give %fact [/db (weld /db/path path) ~] chat-db-change+!>(~[[%add-row [%peers new-host]]])]
   ==
@@ -719,7 +742,9 @@
 ::chat-db &chat-db-action [%receive-migrated-chat path-row peers message]
   |=  [[=path-row:sur peers=(list peer-row:sur) msgs=message:sur] state=state-3 =bowl:gall]
   ^-  (quip card state-3)
+  ~&  "%receive-migrated-chat {<path-row>}"
   ?>  (~(has in allowed-migration-hosts.state) src.bowl)
+  ~&  >  "%receive-migrated-chat passed security checks"
   =.  paths-table.state  (~(put by paths-table.state) path.path-row path-row)
   =.  peers-table.state  (~(put by peers-table.state) path.path-row peers)
   =.  messages-table.state
@@ -731,7 +756,13 @@
   ^-  [k=uniq-id:sur v=msg-part:sur]
   [[msg-id.msg-part msg-part-id.msg-part] msg-part]
 
-  [~ state]
+  =/  cards=(list card)
+  %+  turn  peers
+  |=  p=peer-row:sur
+  ^-  card
+  [%pass /dbpoke %agent [patp.p dap.bowl] %poke chat-db-action+!>([%migrated-host our.bowl path.path-row])]
+
+  [cards state]
 ::
 ::
 ::  mini helper lib
