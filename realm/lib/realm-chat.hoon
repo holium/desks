@@ -333,8 +333,8 @@
 ::  poke actions
 ::
 ++  create-chat
-::realm-chat &chat-action [%create-chat ~ %dm ~[~bus] %host *@dr]
-::realm-chat &chat-action [%create-chat ~ %chat ~[~bus ~dev] %host *@dr]
+::realm-chat &chat-action [%create-chat ~ %dm ~[~bus] %host *@dr %.y]
+::realm-chat &chat-action [%create-chat ~ %chat ~[~bus ~dev] %host *@dr %.y]
   |=  [act=create-chat-data state=state-1 =bowl:gall]
   ^-  (quip card state-1)
   (vented-create-chat [now.bowl act] state bowl)
@@ -344,7 +344,7 @@
   ^-  (quip card state-1)
   ?>  =(src.bowl our.bowl)
   =/  chat-path  /realm-chat/(scot %uv (sham [our.bowl t.act]))
-  =/  pathrow=path-row:db  [chat-path metadata.c.act type.c.act t.act t.act ~ invites.c.act %.n max-expires-at-duration.c.act now.bowl]
+  =/  pathrow=path-row:db  [chat-path metadata.c.act type.c.act t.act t.act ~ invites.c.act peers-get-backlog.c.act max-expires-at-duration.c.act now.bowl]
   =/  all-ships
     ?:  (~(has in (silt peers.c.act)) our.bowl)  peers.c.act
     [our.bowl peers.c.act]
@@ -378,7 +378,7 @@
   [cards state]
 ::
 ++  edit-chat
-::  :realm-chat &action [%edit-chat /realm-chat/path-id ~ %.n %host *@dr]
+::realm-chat &chat-action [%edit-chat /realm-chat/path-id ~ %.y %host *@dr]
   |=  [act=[=path metadata=(map cord cord) peers-get-backlog=? invites=@tas max-expires-at-duration=@dr] state=state-1 =bowl:gall]
   ^-  (quip card state-1)
 
@@ -698,7 +698,7 @@
   =/  selfpaths=(list path-row:db)  (skim (scry-paths bowl) |=(p=path-row:db =(type.p %self)))
   ?.  =(0 (lent selfpaths))
     `state
-  (create-chat [(notes-to-self bowl) %self ~ %host *@dr] state bowl)
+  (create-chat [(notes-to-self bowl) %self ~ %host *@dr %.n] state bowl)
 ::
 ++  notes-to-self  |=(=bowl:gall (malt ~[['title' 'Notes to Self'] ['reactions' 'true'] ['creator' (scot %p our.bowl)] ['description' '']]))
 ::
@@ -819,6 +819,7 @@
           [%peers (ar de-ship)]
           [%invites (se %tas)]
           [%max-expires-at-duration null-or-dri]  :: specify in integer milliseconds, or null for "not set"
+          [%peers-get-backlog null-or-bool]
       ==
     ::
     ++  edit-chat
@@ -966,6 +967,14 @@
     ::
     ++  null-or-dri   :: specify in integer milliseconds, returns a @dr
       (cu |=(t=@ud ^-(@dr (div (mul ~s1 t) 1.000))) null-or-ni)
+    ::
+    ++  null-or-bool  :: accepts either a null or a b+%.y, and converts nulls to false
+      |=  jon=json
+      ^-  ?
+      ?+  jon  !!
+        [%b *]  p.jon
+        ~       %.n
+      ==
     ::
     ++  null-or-ni  :: accepts either a null or a n+'123', and converts nulls to 0, non-null to the appropriate number
       |=  jon=json
