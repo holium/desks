@@ -733,6 +733,8 @@
         (cold bio (jest '{og-description}'))
         (cold url (jest '{og-url}'))
         (cold opengraph-image (jest '{og-image}'))
+        (cold (scot %p our.bowl) (jest '{og-ship}'))
+        (cold (crip (weld prefix (spud /[host]))) (jest '{og-ship-url}'))
         next
       ==
     ?~(rus ~ (some (as-octs:mimes:html (rap 3 u.rus)))) :: `(rap 3 u.rus))
