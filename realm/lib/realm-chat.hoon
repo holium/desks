@@ -813,14 +813,19 @@
       ==
     ::
     ++  create-chat
-      %-  ot
-      :~  [%metadata (om so)]
-          [%type (se %tas)]
-          [%peers (ar de-ship)]
-          [%invites (se %tas)]
-          [%max-expires-at-duration null-or-dri]  :: specify in integer milliseconds, or null for "not set"
-          [%peers-get-backlog null-or-bool]
-      ==
+      |=  jon=json
+      ^-  create-chat-data
+      ?>  ?=([%o *] jon)
+      =/  gt  ~(got by p.jon)
+      =/  ubackl    (~(get by p.jon) 'peers-get-backlog')
+      [
+        ((om so) (gt 'metadata'))
+        ((se %tas) (gt 'type'))
+        ((ar de-ship) (gt 'peers'))
+        ((se %tas) (gt 'invites'))
+        (null-or-dri (gt 'max-expires-at-duration')):: specify in integer milliseconds, or null for "not set"
+        ?~(ubackl %.n (null-or-bool u.ubackl))
+      ]
     ::
     ++  edit-chat
       %-  ot
