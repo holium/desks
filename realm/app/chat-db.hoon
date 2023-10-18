@@ -104,16 +104,16 @@
               created-at.v.kv :: set received-at to be the created-at, since we don't actually know when it was recieved
             ]
           ]
-        =/  new-state  [
+        =/  new-state=state-2  [
           %2
           paths
           msgs
           peers
-          *del-log:sur :: technically we don't NEED to wipe this in order to upgrade... but who cares about the delete log.
+          *del-log-2:sur :: technically we don't NEED to wipe this in order to upgrade... but who cares about the delete log.
         ]
         (on-load !>(new-state))
       %2
-    =/  new-state=state-3  [%3 paths-table.old messages-table.old peers-table.old del-log.old ~ ~]
+    =/  new-state=state-3  [%3 paths-table-2.old messages-table.old peers-table.old del-log-2.old ~ ~]
     (on-load !>(new-state))
       %3
     =/  paths

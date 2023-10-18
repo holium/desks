@@ -553,7 +553,7 @@
           ', '
           (ud-to-t timestamp.data.parsed-link)
       ==  
-      ?>  (verify-message msg new-sig new-key)
+      ?>  (verify-message:crypto-helper msg new-sig new-key)
       ::  add new key to the pki-state for the new-entity
       =/  keys=(list @t)  (~(got by entity-to-addresses.pki-state.crypto.p) new-entity)
       =.  entity-to-addresses.pki-state.crypto.p  (~(put by entity-to-addresses.pki-state.crypto.p) new-entity (snoc keys new-key))
@@ -567,8 +567,8 @@
       =/  sig=crypto-signature:common  [data.ln hash.ln hash-signature.ln t-pk]
       =/  new-pk=@t
       %-  crip
-      %-  num-to-hex:eth
-      (recover-pub-key msg new-sig new-key)
+      %-  num-to-hex:crypto-helper
+      (recover-pub-key:crypto-helper msg new-sig new-key)
       =.  addresses.p  (snoc addresses.p [new-key-type new-key new-pk sig])
       p
       ==
