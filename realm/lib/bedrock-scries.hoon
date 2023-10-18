@@ -226,6 +226,24 @@
     %contact  [id.r updated-at.r +.data.r]
   ==
 ::
+++  contact-info
+  |=  [=ship =bowl:gall]
+  ^-  (unit contact:common)
+  ?.  (test-bedrock-table-existence contact-type:common bowl)  ~
+  =/  rows=(list row:bedrock)
+  %+  skim
+    (all-rows-by-path-type contact-type:common /private bowl)
+  |=  r=row:bedrock  ^-  ?
+  ?+  -.data.r  !!
+    %contact  =(ship ship.data.r)
+  ==
+  ?:  =(0 (lent rows))  ~
+  =/  r  (snag 0 rows)
+  %-  some
+  ?+  -.data.r  !!
+    %contact  +.data.r
+  ==
+::
 ++  is-friend
   |=  [=ship =bowl:gall]
   ^-  ?
