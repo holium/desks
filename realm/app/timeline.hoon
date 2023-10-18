@@ -25,7 +25,6 @@
   ^-  (quip card _this)
   :_  this
   :~  [%pass /eyre/connect %arvo %e %connect `/apps/timeline dap.bowl]
-      [%pass / %agent [our dap]:bowl %poke timeline-action+!>([%add-forerunners-bedrock &])]
       [%pass / %agent [our dap]:bowl %poke timeline-action+!>([%create-personal-timeline ~])]
   ==
 ::
@@ -37,9 +36,7 @@
   =/  old=state-0  !<(state-0 ole)
   =.  state  old
   :_  this
-  :~  [%pass / %agent [our dap]:bowl %poke timeline-action+!>([%add-forerunners-bedrock |])]
-      [%pass / %agent [our dap]:bowl %poke timeline-action+!>([%create-personal-timeline ~])]
-  ==
+  [%pass / %agent [our dap]:bowl %poke timeline-action+!>([%create-personal-timeline ~])]~
 ::
 ++  on-poke
   |=  [=mark =vase]
