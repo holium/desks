@@ -109,8 +109,8 @@
       %leave-timeline
     ?>  =(src our):gowl
     =+  ;;([%timeline host=@ta name=@ta ~] path.axn)
-    =/  =cage  db-action+!>([%handle-leave-request name])
-    ;<  ~  bind:m  (poke [(slav %p host) %bedrock] cage)
+    =/  =cage  timeline-action+!>([%handle-leave-request name])
+    ;<  ~  bind:m  (poke [(slav %p host) %timeline] cage)
     (pure:m !>(`~))
     ::
       %handle-leave-request
