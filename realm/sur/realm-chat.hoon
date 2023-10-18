@@ -72,6 +72,7 @@
       [%disable-push ~]
       [%set-device device-id=@t player-id=@t]
       [%remove-device device-id=@t]
+      [%clear-devices ~]
       [%mute-chat =path mute=?]  :: toggles the muted-state of the path
       [%pin-chat =path pin=?]    :: toggles the pinned-state of the path
       [%toggle-msg-preview-notif msg-preview-notif=?]
@@ -85,6 +86,7 @@
       peers=(list ship)
       invites=@tas
       max-expires-at-duration=@dr
+      peers-get-backlog=?
       nft=(unit [contract=@t chain=@t standard=@t])
   ==
 --

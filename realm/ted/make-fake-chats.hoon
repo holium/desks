@@ -14,7 +14,7 @@
 ;<  now=@da  bind:m  get-time
 =/  =wire  /chat-vent/(scot %da now)
 ;<  ~   bind:m  (watch wire [our %chat-db] wire)
-;<  ~   bind:m  (poke [our %realm-chat] chat-action+!>([%vented-create-chat now ~ %chat ~[~bud ~dev] %host *@dr]))
+;<  ~   bind:m  (poke [our %realm-chat] chat-action+!>([%vented-create-chat now ~ %chat ~[~bud ~dev] %host *@dr %.y]))
 ;<  cage=(unit cage)  bind:m  (take-fact-or-kick wire)
 ?~  cage  (pure:m !>([%ack ~]))
 =/  ven=chat-vent:chat-db    !<(chat-vent:chat-db q.u.cage)

@@ -7,6 +7,7 @@
       state-1
       state-2
       state-3
+      state-4
   ==
 +$  state-0
   $:  %0
@@ -31,10 +32,21 @@
   ==
 +$  state-3
   $:  %3
+      =paths-table-2
+      =messages-table
+      =peers-table
+      =del-log-2
+      allowed-migration-hosts=(set @p)
+      ongoing-migrations=(set [=ship =path])
+  ==
++$  state-4
+  $:  %4
       =paths-table
       =messages-table
       =peers-table
       =del-log
+      allowed-migration-hosts=(set @p)
+      ongoing-migrations=(set [=ship =path])
   ==
-+$  state-and-changes   [s=state-3 ch=db-change]
++$  state-and-changes   [s=state-4 ch=db-change]
 --

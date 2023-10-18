@@ -1,7 +1,7 @@
 ::  app/chat-db.hoon
 /-  *versioned-state, sur=chat-db
 /+  dbug, db-lib=chat-db
-=|  state-3
+=|  state-4
 =*  state  -
 :: ^-  agent:gall
 =<
@@ -12,8 +12,8 @@
   ::
   ++  on-init
     ^-  (quip card _this)
-    =/  default-state=state-3
-      [%3 *paths-table:sur *messages-table:sur *peers-table:sur *del-log:sur]
+    =/  default-state=state-4
+      [%4 *paths-table:sur *messages-table:sur *peers-table:sur *del-log:sur ~ ~]
     :_  this(state default-state)
     :~  [%pass /timer %arvo %b %wait next-expire-time:core]
         [%pass /selfpoke %agent [our.bowl dap.bowl] %poke %chat-db-action !>([%dump-to-bedrock ~])]
@@ -113,38 +113,43 @@
         ]
         (on-load !>(new-state))
       %2
-        =/  paths
-          %-  ~(gas by *paths-table:sur)
-          %+  turn
-            ~(tap by paths-table-2.old)
-          |=  kv=[k=path v=path-row-2:sur]
-          ^-  [k=path:sur v=path-row:sur]
-          [
-            k.kv
-            [
-              path.v.kv
-              metadata.v.kv
-              type.v.kv
-              created-at.v.kv
-              updated-at.v.kv
-              pins.v.kv
-              invites.v.kv
-              peers-get-backlog.v.kv
-              max-expires-at-duration.v.kv
-              received-at.v.kv
-              ~
-            ]
-          ]
-
-        =/  new-state  [
-          %3
-          paths
-          messages-table.old
-          peers-table.old
-          *del-log:sur :: technically we don't NEED to wipe this in order to upgrade... but who cares about the delete log.
+    =/  new-state=state-3  [%3 paths-table.old messages-table.old peers-table.old del-log.old ~ ~]
+    (on-load !>(new-state))
+      %3
+    =/  paths
+      %-  ~(gas by *paths-table:sur)
+      %+  turn
+        ~(tap by paths-table-2.old)
+      |=  kv=[k=path v=path-row-2:sur]
+      ^-  [k=path:sur v=path-row:sur]
+      [
+        k.kv
+        [
+          path.v.kv
+          metadata.v.kv
+          type.v.kv
+          created-at.v.kv
+          updated-at.v.kv
+          pins.v.kv
+          invites.v.kv
+          peers-get-backlog.v.kv
+          max-expires-at-duration.v.kv
+          received-at.v.kv
+          ~
         ]
-        [default-cards this(state new-state)]
-      %3  [default-cards this(state old)]
+      ]
+
+    =/  new-state  [
+      %4
+      paths
+      messages-table.old
+      peers-table.old
+      *del-log:sur :: technically we don't NEED to wipe this in order to upgrade... but who cares about the delete log.
+      ~
+      ~
+    ]
+    [default-cards this(state new-state)]
+      %4  [default-cards this(state old)]
     ==
   ::
   ++  on-poke
@@ -185,6 +190,19 @@
         (dump-to-bedrock:db-lib state bowl)
       %dump-to-bedrock-messages
         (dump-to-bedrock-messages:db-lib +.act state bowl)
+
+      %set-allowed-migrate-host
+        (set-allowed-migrate-host:db-lib +.act state bowl)
+      %remove-allowed-migrate-host
+        (remove-allowed-migrate-host:db-lib +.act state bowl)
+      %migrate-chat
+        (migrate-chat:db-lib +.act state bowl)
+      %migrating-host
+        (migrating-host:db-lib +.act state bowl)
+      %migrated-host
+        (migrated-host:db-lib +.act state bowl)
+      %receive-migrated-chat
+        (receive-migrated-chat:db-lib +.act state bowl)
     ==
     [cards this]
   ::
