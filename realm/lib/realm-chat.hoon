@@ -438,6 +438,7 @@
 ::realm-chat &chat-action [%add-ship-to-chat now /realm-chat/path-id ~bus ~]
   |=  [act=[t=@da =path =ship host=(unit ship)] state=state-1 =bowl:gall]
   ^-  (quip card state-1)
+  =/  log1  (maybe-log hide-debug.state "{<dap.bowl>}%add-ship-to-chat: {<path.act>} {<ship.act>} {<host.act>}")
   ?:  &(=(src.bowl our.bowl) =(our.bowl ship.act))  :: if we are trying to add ourselves, then actually we just need to forward this poke to the host
     ?~  host.act  !!  :: have to pass the host if we are adding ourselves
     :_  state
@@ -488,6 +489,7 @@
   |=  [act=[=path =ship] state=state-1 =bowl:gall]
   ^-  (quip card state-1)
   ?>  =(src.bowl our.bowl)
+  =/  log1  (maybe-log hide-debug.state "{<dap.bowl>}%remove-ship-from-chat: {<path.act>} {<ship.act>}")
 
   =/  pathpeers  (scry-peers path.act bowl)
   =/  members  (skim pathpeers |=(p=peer-row:db ?!(=(role.p %host)))) :: everyone who's NOT the host
