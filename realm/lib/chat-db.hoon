@@ -502,7 +502,20 @@
   ?.  (~(has by paths-table.state) path.act)
     `state  :: do nothing if we get a kick-peer on a path we have already left
 
+  =/  original-pr   (~(got by paths-table.state) path.act)
   =/  original-peers-list   (~(got by peers-table.state) path.act)
+
+  :: handle someone leaving a %dm by leaving it ourselves as well
+  =/  ship-set=(set @p)
+  %-  silt
+  %+  turn  original-peers-list
+  |=(p=peer-row:sur patp.p)
+  =/  from-member=?  (~(has in ship-set) src.bowl)
+  ?:  &(=(type.original-pr %dm) from-member)
+    =/  bol  bowl
+    =.  src.bol  our.bowl :: permissions-tinkering to make the leave-path call work
+    (leave-path path.act state bol)
+
   :: kick-peer pokes are only valid from the ship which is the
   :: %host of the path, OR from the ship being kicked (kicking yourself)
   =/  host-peer-row         (snag 0 (skim original-peers-list |=(p=peer-row:sur =(role.p %host))))
