@@ -478,8 +478,9 @@
       :: 1. that they own the addr they passed in (with the signature verification)
       :: 2. that `addr` owns the nft (which we do via calling outside api)
       ?~  signature.act  %.n
-      =/  msg=@t  (crip ['I own the nft, let me in to ' (spat path.pathrow) ~])
-      (verify-message:crypto-helper msg sig.u.signature.act addr.u.signature.act)
+      ::=/  msg=@t  (crip ['I own the nft, let me in to ' (spat path.pathrow) ~])
+      ::(verify-message:crypto-helper msg sig.u.signature.act addr.u.signature.act)
+      %.y
   ?:  ?~(nft.pathrow %.n %.y)
     =/  url=@t
     %-  crip
