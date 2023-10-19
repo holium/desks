@@ -3,7 +3,7 @@
 ::  Chat message lib within Realm. Mostly handles [de]serialization
 ::    to/from json from types stored in realm-chat sur.
 ::
-/-  *realm-chat, db=chat-db, fr=friends, bedrock=db, common
+/-  *realm-chat, db=chat-db, bedrock=db, common
 /+  chat-db, db-scry=bedrock-scries
 |%
 ::
@@ -18,14 +18,14 @@
 ++  scry-avatar-for-patp
   |=  [patp=ship =bowl:gall]
   ^-  (unit @t)
-  =/  cv=view:fr
-    .^  view:fr
-        %gx
-        /(scot %p our.bowl)/friends/(scot %da now.bowl)/contact-hoon/(scot %p patp)/noun
-    ==
-  ?+  -.cv  !! :: if the scry came back wonky, crash
-    %contact-info
-      avatar.contact-info.cv
+  =/  uc=(unit contact:common)
+  (contact-info:db-scry patp bowl)
+  ?~  uc  ~
+  ?~  avatar.u.uc  ~
+  %-  some
+  ?-  -.u.avatar.u.uc
+    %image  img.u.avatar.u.uc
+    %nft    nft.u.avatar.u.uc
   ==
 ::
 ++  scry-message
@@ -110,16 +110,12 @@
 ++  notif-from-nickname-or-patp
   |=  [patp=ship =bowl:gall]
   ^-  @t
-  =/  cv=view:fr
-    .^  view:fr
-        %gx
-        /(scot %p our.bowl)/friends/(scot %da now.bowl)/contact-hoon/(scot %p patp)/noun
-    ==
+  =/  uc=(unit contact:common)
+  (contact-info:db-scry patp bowl)
   =/  nickname=@t
-    ?+  -.cv  (scot %p patp) :: if the scry came back wonky, just fall back to patp
-      %contact-info
-        nickname.contact-info.cv
-    ==
+  ?~  uc  ''
+  ?~  display-name.u.uc  ''
+  u.display-name.u.uc
   ?:  =('' nickname)
     (scot %p patp)
   nickname

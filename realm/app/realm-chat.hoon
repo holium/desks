@@ -350,7 +350,7 @@
 ++  this  .
 ++  core  .
 ++  maybe-log
-  |=  [hide-debug=? msg=*]
+  |=  [hide-debug=? msg=tape]
   ?:  =(%.y hide-debug)  ~
   ~&  >>>  msg
   ~
