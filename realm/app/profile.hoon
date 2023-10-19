@@ -715,8 +715,9 @@
     |=  [host=(unit @t) htm=@t =passport:common]
     ^-  (unit octs)
     =/  host  ?~  host  ~&  >>>  "host is null"  !!  u.host
+    ~&  >>  "{<host>}"
     =/  prefix
-    ?.  ?|  =(~ (rush 'localhost' (jest host)))
+    ?:  ?&  =(~ (rush 'localhost' (jest host)))
             =(~ (rush '127.0.0.1' (jest host)))
             =(~ (rush '0.0.0.0' (jest host)))
         ==  "https:/"  "http:/"
@@ -724,6 +725,7 @@
     =/  display-name  ?~(display-name.contact.passport '' (need display-name.contact.passport))
     =/  bio  ?~(bio.contact.passport '' (need bio.contact.passport))
     =/  opengraph-image  ?~(opengraph-image '' (need opengraph-image.state))
+    =/  script  (crip "<script>window.ship = '{<our.bowl>}'; window.shipUrl = {<(crip (weld prefix (spud /[host])))>};</script></head>")
     =/  rus
       %+  rush  htm
       %-  star
@@ -733,8 +735,7 @@
         (cold bio (jest '{og-description}'))
         (cold url (jest '{og-url}'))
         (cold opengraph-image (jest '{og-image}'))
-        (cold (scot %p our.bowl) (jest '{og-ship}'))
-        (cold (crip (weld prefix (spud /[host]))) (jest '{og-ship-url}'))
+        (cold script (jest '</head>'))
         next
       ==
     ?~(rus ~ (some (as-octs:mimes:html (rap 3 u.rus)))) :: `(rap 3 u.rus))
