@@ -25,6 +25,7 @@
   $:  =path
       metadata=(map cord cord)
       type=@tas     :: not officially specified, up to user to interpret for maybe %dm vs %group or %chat vs %board or whatever
+                    :: if %nft-gated, the `nft` logic comes into play
       created-at=time
       updated-at=time  :: updated when %edit-path-medatata is hit
       =pins
@@ -32,6 +33,7 @@
       peers-get-backlog=?
       max-expires-at-duration=@dr  :: optional chat-wide enforced expires-at on messages. 0 or *@dr means "not set"
       received-at=time
+      nft=(unit [contract=@t chain=@t standard=@t]) :: contract is the 0x789... address, chain is "eth-mainnet" or whatever, standard is "ERC-721"
   ==
 ::
 +$  paths-table  (map path path-row)
@@ -114,7 +116,7 @@
       [%edit =edit-message-action]
       [%delete =msg-id]
       [%delete-backlog =path before=time]
-      [%add-peer t=@da =path patp=ship]
+      [%add-peer t=@da =path patp=ship signature=(unit [sig=@t addr=@t])]
       [%kick-peer =path patp=ship]
       [%dump-to-bedrock ~]
       [%dump-to-bedrock-messages our-paths=(list path-row)]
@@ -240,4 +242,33 @@
       updated-at=time
   ==
 +$  peers-table-1  (map path (list peer-row-1))
+::
++$  path-row-2
+  $:  =path
+      metadata=(map cord cord)
+      type=@tas
+      created-at=time
+      updated-at=time
+      =pins
+      invites=@tas
+      peers-get-backlog=?
+      max-expires-at-duration=@dr
+      received-at=time
+  ==
++$  paths-table-2  (map path path-row-2)
++$  db-change-type-2
+  $%
+    [%add-row =db-row-2]
+    [%upd-messages =msg-id =message]
+    [%upd-paths-row =path-row-2 old=path-row-2]
+    [%del-paths-row =path timestamp=@da]
+    [%del-peers-row =path =ship timestamp=@da]
+    [%del-messages-row =path =uniq-id timestamp=@da]
+  ==
++$  db-row-2
+  $%  [%paths =path-row-2]
+      [%messages =msg-part]
+      [%peers =peer-row]
+  ==
++$  del-log-2  ((mop time db-change-type-2) gth)
 --
