@@ -36,7 +36,7 @@
 ::
 ++  on-init
   ^-  (quip card _this)
-  ~&  >>  "on-init"
+  :: ~&  >>  "on-init"
   %-  (slog leaf+"getting realm hash..." ~)
   =/  hash  .^(@uv %cz [(scot %p our.bowl) %realm (scot %da now.bowl) ~])
   =/  hood-path  /(scot %p our.bowl)/hood/(scot %da now.bowl)
@@ -327,7 +327,7 @@
     (on-watch:def path)
   ::
       [%http-response *]
-        ~&  >>  "{<team:title>}, {<[our src]:bowl>}"
+        :: ~&  >>  "{<team:title>}, {<[our src]:bowl>}"
         :: ?>  (team:title [our src]:bowl)
         %-  (slog leaf+"Eyre subscribed to {(spud path)}." ~)
         `this
@@ -455,7 +455,7 @@
 ++  handle-http-request
   |=  [eyre-id=@ta req=inbound-request:eyre]
   ^-  (quip card _state)
-  ~&  >>  "authenticated: {<authenticated.req>}, url: {<url.request.req>}"
+  :: ~&  >>  "authenticated: {<authenticated.req>}, url: {<url.request.req>}"
 
   :: =.  authenticated.req  %.y
   ::
@@ -465,18 +465,23 @@
     %+  weld  caz
     (give-simple-payload:app eyre-id payload)
     :: (give-simple-payload:app eyre-id payload)
-
-  ::
-  ::NOTE  we don't use +require-authorization-simple here because we want
-  ::      to short-circuit all the below logic for the unauthenticated case.
-  ?.  authenticated.req
-    :_  [~ state]
-    =-  [[307 ['location' -]~] ~]
-    (cat 3 '/~/login?redirect=' url.request.req)
   ::
   =*  headers   header-list.request.req
   =/  dict      `(map @t @t)`(malt header-list.request.req)
   =/  req-line  (parse-request-line url.request.req)
+
+  ::
+  ::NOTE  we don't use +require-authorization-simple here because we want
+  ::      to short-circuit all the below logic for the unauthenticated case.
+  :: ?:  ?&  =([site ext]:req-line [[%passport %edit ~] ?(~ [~ %html])])
+  ::         =(authenticated.req %.n)
+  ::     ==
+  ::       ~&  >>  "i am here"
+  ::     :: must have a valid token for this session
+  ::     :: ?.  authenticated.req
+  ::       :_  [~ state]
+  ::       =-  [[307 ['location' -]~] ~]
+  ::       (cat 3 '/~/login?redirect=' url.request.req)
 
   :: ~&  >>  dict
   ::
@@ -487,7 +492,7 @@
   ::
   ++  handle-get-request
     ^-  simple-payload:http
-    :: ~&  >>  req-line
+    :: ~&  >  [site ext]:req-line
     ?+  [site ext]:req-line  (redirect:gen '/apps/grid/')
         [[%session ~] [~ %js]]
       %-  inline-js-response
@@ -511,7 +516,21 @@
       =/  host  (~(get by dict) 'host')
       [response-header.content (replace-html host c.bod passport)]
     ::
+        [[%passport %profile ~] ?(~ [~ %html])]
+      =/  =passport:common  .^(passport:common %gx /(scot %p our.bowl)/passport/(scot %da now.bowl)/'our-passport'/noun)
+      =/  content  %+  payload-from-glob
+        %passport
+      [[ext=[~ ~.html] ['passport']~] args=~]
+      ?~  data.content  content
+      =/  bod=[t=@ud c=@t]  ^-([@ud @t] u.data.content)
+      =/  host  (~(get by dict) 'host')
+      [response-header.content (replace-html host c.bod passport)]
+    ::
         [[%passport %edit ~] ?(~ [~ %html])]
+      ?.  authenticated.req
+        :: :_  [~ state]
+        =-  [[307 ['location' -]~] ~]
+        (cat 3 '/~/login?redirect=' url.request.req)
       =/  =passport:common  .^(passport:common %gx /(scot %p our.bowl)/passport/(scot %da now.bowl)/'our-passport'/noun)
       =/  content  %+  payload-from-glob
         %passport
@@ -637,7 +656,7 @@
       [~(tap in card-set) state(toc glob)]
     ::
     ?~  parts=(de-request:multipart [header-list body]:request.req)
-      ~&  headers=header-list.request.req
+      :: ~&  headers=header-list.request.req
       [*glob 'failed to parse submitted data' ~]
     ::
     %+  roll  u.parts
@@ -699,9 +718,11 @@
     ?:  =(suffix /desk/js)
       %-  inline-js-response
       (rap 3 'window.desk = "' q.byk.bowl '";' ~)
-    =/  requested
-      ?:  (~(has by toc) suffix)  suffix
-      /passport/html
+    ?.  (~(has by toc) suffix)  not-found:gen
+    :: =/  requested
+    ::   ?:  (~(has by toc) suffix)  suffix
+    ::   not-found:gen
+    =/  requested  suffix
     =/  data=mime
       (~(got by toc) requested)
     =/  mime-type=@t  (rsh 3 (crip <p.data>))
@@ -715,7 +736,7 @@
     |=  [host=(unit @t) htm=@t =passport:common]
     ^-  (unit octs)
     =/  host  ?~  host  ~&  >>>  "host is null"  !!  u.host
-    ~&  >>  "{<host>}"
+    :: ~&  >>  "{<host>}"
     =/  prefix
     ?:  ?&  =(~ (rush 'localhost' (jest host)))
             =(~ (rush '127.0.0.1' (jest host)))
