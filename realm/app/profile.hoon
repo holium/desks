@@ -88,8 +88,8 @@
     ::
         %handle-http-request
       =+  !<([id=@ta req=inbound-request:eyre] vase)
-      =.  authenticated.req  %.y
-      ~&  authenticated.req
+      :: =.  authenticated.req  %.y
+      :: ~&  authenticated.req
       (handle-http-request:ext id req)
 
         %profile-interaction
@@ -455,7 +455,7 @@
 ++  handle-http-request
   |=  [eyre-id=@ta req=inbound-request:eyre]
   ^-  (quip card _state)
-  ~&  >>  "{<url.request.req>}"
+  ~&  >>  "authenticated: {<authenticated.req>}, url: {<url.request.req>}"
 
   :: =.  authenticated.req  %.y
   ::
