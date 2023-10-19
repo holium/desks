@@ -512,7 +512,10 @@
     ?:  =(ship.act patp.host)
       (~(del in pins.state) path.act)
     pins.state
-  =/  cards
+  =/  pr=path-row:db  (scry-path-row path.act bowl)
+  =/  cards=(list card)
+    ?:  =(type.pr %dm)
+      (into-all-peers-kick-pokes ship.act pathpeers)
     ?:  =(ship.act patp.host)
       :: if src.bowl is %host, we have to leave-path for the host
       :: and then send kick-peer of themselves to all members
