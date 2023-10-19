@@ -163,15 +163,15 @@
           ::     %poke
           ::     profile-interaction+!>([%update-file path mime])
           :: ==
-          =/  updates
-          %+  snoc  updates
-          :*  %pass
-              /crux/end-download
-              %agent
-              [src.bowl %profile]
-              %poke
-              profile-interaction+!>([%end-download ~])
-          ==
+          :: =/  updates
+          :: %+  snoc  updates
+          :: :*  %pass
+          ::     /crux/end-download
+          ::     %agent
+          ::     [src.bowl %profile]
+          ::     %poke
+          ::     profile-interaction+!>([%end-download ~])
+          :: ==
           [updates state]
       ::
         %update-files
@@ -457,7 +457,7 @@
   ^-  (quip card _state)
   ~&  >>  "{<url.request.req>}"
 
-  =.  authenticated.req  %.y
+  :: =.  authenticated.req  %.y
   ::
   =;  [payload=simple-payload:http caz=(list card) =_state]
     :: ~&  >  ?~(data.payload ~ (html-response:gen u.data.payload))
@@ -469,10 +469,10 @@
   ::
   ::NOTE  we don't use +require-authorization-simple here because we want
   ::      to short-circuit all the below logic for the unauthenticated case.
-  :: ?.  authenticated
-  ::   :_  [~ state]
-  ::   =-  [[307 ['location' -]~] ~]
-  ::   (cat 3 '/~/login?redirect=' url.request)
+  ?.  authenticated.req
+    :_  [~ state]
+    =-  [[307 ['location' -]~] ~]
+    (cat 3 '/~/login?redirect=' url.request.req)
   ::
   =*  headers   header-list.request.req
   =/  dict      `(map @t @t)`(malt header-list.request.req)
