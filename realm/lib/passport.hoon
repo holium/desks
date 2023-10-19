@@ -26,15 +26,6 @@
   ?~  (find [key]~ keys)  %.n  ::invalid signing key
   %.y
 ::
-++  ud-to-t
-  |=  a=@u
-  ^-  @t
-  ?:  =(0 a)  '0'
-  %-  crip
-  %-  flop
-  |-  ^-  ^tape
-  ?:(=(0 a) ~ [(add '0' (mod a 10)) $(a (div a 10))])
-::
 ++  parse-signing-key
   |=  ln=passport-link-container:common
   ^-  @t
@@ -516,7 +507,6 @@
       =/  key=@t        signing-address.mtd.parsed-link
       ?+  -.data.parsed-link  !!
         %key-add
-      =/  new-key-type=@t   address-type.data.parsed-link
       =/  new-key=@t        address.data.parsed-link
       =/  new-entity=@t     name.data.parsed-link
       ::  add new key to the pki-state for the new-entity
@@ -530,7 +520,7 @@
       =.  address-to-nonce.pki-state.crypto.p    (~(put by address-to-nonce.pki-state.crypto.p) new-key 0)
       :: update known addresses
       =/  sig=crypto-signature:common  [data.ln hash.ln hash-signature.ln t-pk]
-      =.  addresses.p  (snoc addresses.p [new-key-type new-key '' sig])
+      =.  addresses.p  (snoc addresses.p [address-type.data.parsed-link new-key '' sig])
       p
       ==
     ?:  =('SIGNED_KEY_ADD' link-type.ln)
@@ -539,20 +529,15 @@
       ?+  -.data.parsed-link  !!
         %signed-key-add
       =/  new-sig=@t        key-signature.data.parsed-link
-      =/  new-key-type=@t   address-type.data.parsed-link
       =/  new-key=@t        address.data.parsed-link
       =/  new-entity=@t     name.data.parsed-link
       =/  msg=@t
-      %-  crip
-      ^-  tape
-      :~  new-entity
-          ' owns '
+        %:  signed-key-add-msg:crypto-helper
+          new-entity
           new-key
-          ', '
-          (ud-to-t nonce.data.parsed-link)
-          ', '
-          (ud-to-t timestamp.data.parsed-link)
-      ==  
+          nonce.data.parsed-link
+          timestamp.data.parsed-link
+        ==
       ?>  (verify-message:crypto-helper msg new-sig new-key)
       ::  add new key to the pki-state for the new-entity
       =/  keys=(list @t)  (~(got by entity-to-addresses.pki-state.crypto.p) new-entity)
@@ -569,7 +554,7 @@
       %-  crip
       %-  num-to-hex:crypto-helper
       (recover-pub-key:crypto-helper msg new-sig new-key)
-      =.  addresses.p  (snoc addresses.p [new-key-type new-key new-pk sig])
+      =.  addresses.p  (snoc addresses.p [address-type.data.parsed-link new-key new-pk sig])
       p
       ==
     ?:  =('KEY_REMOVE' link-type.ln)

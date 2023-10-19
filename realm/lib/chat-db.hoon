@@ -467,8 +467,9 @@
 ::
 ++  add-peer
 ::chat-db &chat-db-action [%add-peer now /example ~fed (some ['' '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'])]
-  |=  [act=[t=@da =path patp=ship signature=(unit [sig=@t addr=@t])] state=state-4 =bowl:gall]
+  |=  [act=[t=@da =path patp=ship =nft-sig:sur] state=state-4 =bowl:gall]
   ^-  (quip card state-4)
+  ~&  "{<dap.bowl>}%add-peer {<act>}"
 
   =/  original-peers-list   (~(got by peers-table.state) path.act)
   =/  pathrow               (~(got by paths-table.state) path.act)
@@ -477,29 +478,25 @@
       :: we need to verify
       :: 1. that they own the addr they passed in (with the signature verification)
       :: 2. that `addr` owns the nft (which we do via calling outside api)
-      ?~  signature.act  %.n
-      ::=/  msg=@t  (crip ['I own the nft, let me in to ' (spat path.pathrow) ~])
-      ::(verify-message:crypto-helper msg sig.u.signature.act addr.u.signature.act)
-      %.y
+      ?~  nft-sig.act  %.n
+      =/  msg=@t
+      %:  signed-key-add-msg:crypto-helper
+        name.u.nft-sig.act
+        addr.u.nft-sig.act
+        nonce.u.nft-sig.act
+        t.u.nft-sig.act
+      ==
+      ~&  >>>  msg
+      (verify-message:crypto-helper msg sig.u.nft-sig.act addr.u.nft-sig.act)
   ?:  ?~(nft.pathrow %.n %.y)
-    =/  url=@t
-    %-  crip
-    :~  'https://realm-server-test.plymouth.network/alchemy/nfts/'
-      chain:(need nft.pathrow)
-      '/'
-      addr:(need signature.act)
-    ==
-    =/  =request:http  [%'GET' url ~ ~]
-    =/  return-wire
-    %+  weld
-      /nft-verify/(scot %p patp.act)/(scot %da t.act)
-    path.act
-    ~&  "sending {<url>}"
     :_  state
-    :_  ~
-    ^-  card
-    [%pass return-wire %arvo %i %request request *outbound-config:iris]
+    (check-alchemy:crypto-helper path.act patp.act t.act chain:(need nft.pathrow) (need nft-sig.act))
+  (finish-add-peer act state bowl)
 
+++  finish-add-peer
+  |=  [act=[t=@da =path patp=ship =nft-sig:sur] state=state-4 =bowl:gall]
+  ^-  (quip card state-4)
+  =/  original-peers-list   (~(got by peers-table.state) path.act)
   :: don't double-add a peer
   =/  ships=(set @p)  %-  silt
   %+  turn  original-peers-list

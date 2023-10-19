@@ -105,6 +105,7 @@
 ::  agent details
 ::
 +$  ship-roles  (list [s=@p role=@tas])
++$  nft-sig    (unit [sig=@t addr=@t name=@t nonce=@ud t=@ud])
 +$  action
   $%  
       [%create-path =path-row peers=ship-roles expected-msg-count=@ud t=(unit @da)]
@@ -116,7 +117,7 @@
       [%edit =edit-message-action]
       [%delete =msg-id]
       [%delete-backlog =path before=time]
-      [%add-peer t=@da =path patp=ship signature=(unit [sig=@t addr=@t])]
+      [%add-peer t=@da =path patp=ship =nft-sig]
       [%kick-peer =path patp=ship]
       [%dump-to-bedrock ~]
       [%dump-to-bedrock-messages our-paths=(list path-row)]
