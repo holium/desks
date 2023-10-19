@@ -499,6 +499,12 @@
     ^-  card
     [%pass return-wire %arvo %i %request request *outbound-config:iris]
 
+  :: don't double-add a peer
+  =/  ships=(set @p)  %-  silt
+  %+  turn  original-peers-list
+  |=(p=peer-row:sur patp.p)
+  ?:  (~(has in ships) patp.act)  `state
+
   =/  row=peer-row:sur   [
     path.act
     patp.act
