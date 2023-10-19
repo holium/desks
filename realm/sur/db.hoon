@@ -4,6 +4,7 @@
 +$  versioned-state
   $%  state-0
       state-1
+      state-2
   ==
 +$  state-0
   $:  %0
@@ -16,6 +17,15 @@
   ==
 +$  state-1
   $:  %1
+      =tables-1
+      =schemas
+      =paths
+      =peers
+      =del-log
+      hide-logs=?  :: default hidden %.y
+  ==
++$  state-2
+  $:  %2
       =tables
       =schemas
       =paths
@@ -26,6 +36,7 @@
 +$  minimal-state
   $%  [%0 * * paths=paths-0 =peers *]
       [%1 * * =paths =peers *]
+      [%2 * * =paths =peers *]
   ==
 
 +$  schemas   (map type:common schema)
@@ -167,7 +178,7 @@
       [%create-from-space =path space-path=[=ship space=cord] sr=role:membership]  :: create a new peers list based on space members, automatically keeps peers list in sync, sends %get-path to all peers
       [%edit-path =input-path-row]            :: edit a path's metadata
       [%remove-path =path]                    :: remove a peers list and all attached objects in tables, sends %delete-path to all peers
-      [%add-peer =path =ship =role]           :: add a peer to an existing peers list, sends %get-path to that peer
+      [%add-peer =path =ship =role sig=(unit [sig=@t addr=@t])]    :: add a peer to an existing peers list, sends %get-path to that peer
       [%kick-peer =path =ship]                :: remove a peer from an existing peers list, sends %delete-path to that peer
       :: only from host foreign ship
       [%get-path =path-row peers=ship-roles]  :: when we are being informed that we were added to a peers list. we don't know the list, only the host (which is who sent it to us)
@@ -269,4 +280,34 @@
       db-path-del-change
   ==
 +$  del-log-0  (map @da db-del-change-0)
+
++$  tables-1          (map type:common pathed-table-1)
++$  pathed-table-1    (map path table-1)
++$  table-1     (map id:common row-1)
++$  row-1
+  $:  =path
+      =id:common
+      =type:common
+      data=columns-1
+      created-at=@da
+      updated-at=@da
+      received-at=@da
+  ==
++$  columns-1
+  $%  [%general cols=(list @)]
+      [%vote vote:common]
+      [%rating rating:common]
+      [%comment comment:common]
+      [%tag tag:common]
+      [%link link:common]
+      [%follow follow:common]
+      [%relay relay:common]
+      [%react react:common]
+      [%creds creds:common]
+      [%chat chat-0:common]
+      [%message message:common]
+      [%passport passport:common]
+      [%friend friend:common]
+      [%contact contact:common]
+  ==
 --

@@ -297,12 +297,22 @@
 +$  chat
   $:  metadata=(map cord cord)
       type=@tas     :: not officially specified, up to user to interpret for maybe %dm vs %group or %chat vs %board or whatever
+                    :: if %nft-gated, the `nft` logic comes into play
+      pins=(set id)
+      invites=@tas  :: must either match `peer-role` type or be keyword %anyone, or else no one will be able to invite
+      peers-get-backlog=?
+      max-expires-at-duration=@dr  :: optional chat-wide enforced expires-at on messages. 0 or *@dr means "not set"
+      nft=(unit [contract=@t chain=@t standard=@t]) :: contract is the 0x789... address, chain is "eth-mainnet" or whatever, standard is "ERC-721"
+  ==
+++  chat-type  `type`[name=%chat hash=0v0]
++$  chat-0
+  $:  metadata=(map cord cord)
+      type=@tas     :: not officially specified, up to user to interpret for maybe %dm vs %group or %chat vs %board or whatever
       pins=(set id)
       invites=@tas  :: must either match `peer-role` type or be keyword %anyone, or else no one will be able to invite
       peers-get-backlog=?
       max-expires-at-duration=@dr  :: optional chat-wide enforced expires-at on messages. 0 or *@dr means "not set"
   ==
-++  chat-type  `type`[name=%chat hash=0v0]
 +$  message
   $:  chat-id=id
       reply-to=u-path-id
