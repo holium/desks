@@ -208,7 +208,7 @@
 ::
 :: MUST EXPLICITLY INCLUDE SELF, this function will not add self into peers list
 ++  create-path
-::chat-db &chat-db-action [%create-path [/example ~ %nft-gated *@da *@da ~ %host %.y *@dr *@da (some ['0x000386E3F7559d9B6a2F5c46B4aD1A9587D59Dc3' 'eth-mainnet' 'ERC721'])] ~[[~zod %host] [~bus %member]] 100 ~]
+::chat-db &chat-db-action [%create-path [/example ~ %group *@da *@da ~ %host %.y *@dr *@da (some ['0x000386E3F7559d9B6a2F5c46B4aD1A9587D59Dc3' 'eth-mainnet' 'ERC721'])] ~[[~zod %host] [~bus %member]] 100 ~]
   |=  [[row=path-row:sur peers=ship-roles:sur expected-msg-count=@ud t=(unit @da)] state=state-4 =bowl:gall]
   ^-  (quip card state-4)
 
@@ -473,15 +473,14 @@
   =/  original-peers-list   (~(got by peers-table.state) path.act)
   =/  pathrow               (~(got by paths-table.state) path.act)
   ?>  (is-valid-inviter pathrow original-peers-list src.bowl patp.act)
-  ?>  ?.  =(type.pathrow %nft-gated)  %.y
+  ?>  ?~  nft.pathrow  %.y
       :: we need to verify
       :: 1. that they own the addr they passed in (with the signature verification)
       :: 2. that `addr` owns the nft (which we do via calling outside api)
       ?~  signature.act  %.n
-      ?~  nft.pathrow  %.n
       =/  msg=@t  (crip ['I own the nft, let me in to ' (spat path.pathrow) ~])
       (verify-message:crypto-helper msg sig.u.signature.act addr.u.signature.act)
-  ?:  =(type.pathrow %nft-gated)
+  ?:  ?~(nft.pathrow %.n %.y)
     =/  url=@t
     %-  crip
     :~  'https://realm-server-test.plymouth.network/alchemy/nfts/'

@@ -331,7 +331,7 @@
 ::
 ++  create-chat
 ::realm-chat &chat-action [%create-chat ~ %dm ~[~bus] %host *@dr %.y ~]
-::realm-chat &chat-action [%create-chat ~ %nft-gated ~[~bus ~dev] %host *@dr %.y (some ['0x000386E3F7559d9B6a2F5c46B4aD1A9587D59Dc3' 'eth-mainnet' 'ERC721'])]
+::realm-chat &chat-action [%create-chat ~ %group ~[~bus ~dev] %host *@dr %.y (some ['0x000386E3F7559d9B6a2F5c46B4aD1A9587D59Dc3' 'eth-mainnet' 'ERC721'])]
   |=  [act=create-chat-data state=state-1 =bowl:gall]
   ^-  (quip card state-1)
   (vented-create-chat [now.bowl act] state bowl)
@@ -355,10 +355,6 @@
     now.bowl
     nft.c.act
   ]
-  :: they MUST pass nft info in create, if the type is nft-gated
-  ?>  ?|  ?!(=(type.c.act %nft-gated))
-          ?!(=(nft.c.act ~))
-      ==
   =/  all-ships
     ?:  (~(has in (silt peers.c.act)) our.bowl)  peers.c.act
     [our.bowl peers.c.act]
