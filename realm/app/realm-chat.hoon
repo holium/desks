@@ -360,13 +360,14 @@
       ?>  ?=(%finished -.+.i)
       =/  payload  full-file.client-response.i
       ?~  payload  `this
+      =/  cleaned-contract=@t  (crip (cass (trip contract:(need nft.pathrow))))
       =/  contracts=(list @t)
         (parse-alchemy-json (need (de:json:html q.data.u.payload)))
       ?>  |-
         ?:  =((lent contracts) 0)
           ~&  >>>  "failed to find matching contract {<nft.pathrow>}"
           %.n
-        ?:  =(contract:(need nft.pathrow) (snag 0 contracts))
+        ?:  =(cleaned-contract (snag 0 contracts))
           ~&  >  "found matching contract {<nft.pathrow>} {<(snag 0 contracts)>}"
           %.y
         $(contracts +.contracts)
@@ -528,5 +529,5 @@
   ^-  @t
   ?>  ?=([%o *] jn)
   =/  address=json  (~(got by p.jn) 'address')
-  (so:dejs:format address)
+  (crip (cass (trip (so:dejs:format address))))
 --
