@@ -208,8 +208,8 @@
 ::
 :: MUST EXPLICITLY INCLUDE SELF, this function will not add self into peers list
 ++  create-path
-::chat-db &chat-db-action [%create-path [/example ~ %group *@da *@da ~ %host %.y *@dr *@da (some ['0x000386E3F7559d9B6a2F5c46B4aD1A9587D59Dc3' 'eth-mainnet' 'ERC721'])] ~[[~zod %host] [~bus %member]] 100 ~]
-  |=  [[row=path-row:sur peers=ship-roles:sur expected-msg-count=@ud t=(unit @da)] state=state-4 =bowl:gall]
+::chat-db &chat-db-action [%create-path [/example ~ %group *@da *@da ~ %host %.y *@dr *@da (some ['0x000386E3F7559d9B6a2F5c46B4aD1A9587D59Dc3' 'eth-mainnet' 'ERC721'])] ~[[~zod %host] [~bus %member]] %.n ~ ~]
+  |=  [[row=path-row:sur peers=ship-roles:sur pnm=? =message:sur t=(unit @da)] state=state-4 =bowl:gall]
   ^-  (quip card state-4)
 
   ?>  ?!((~(has by paths-table.state) path.row))  :: ensure the path doesn't already exist!!!
@@ -226,10 +226,13 @@
   =/  vent-path=path
     ?~  t  /chat-vent/(scot %da created-at.row)
     /chat-vent/(scot %da u.t)
+  =/  response
+    ?.  pnm  !>([%path row])
+    !>([%path-and-messages row message])
   =/  gives  :~
     [%give %fact [/db (weld /db/path path.row) ~] thechange]
     :: give vent response
-    [%give %fact ~[vent-path] chat-vent+!>([%path-and-count row expected-msg-count])]
+    [%give %fact ~[vent-path] chat-vent+response]
     [%give %kick ~[vent-path] ~]
   ==
   [gives state]
@@ -1062,11 +1065,14 @@
         %ack     s/%ack
         %msg     a+(turn message.chat-vent |=(m=msg-part:sur (messages-row [msg-id.m msg-part-id.m] m)))
         %path    (path-row path-row.chat-vent)
-        %path-and-count
-      =/  prj=json  (path-row path-row.chat-vent)
-      ?>  ?=([%o *] prj)
-      :-  %o
-      (~(put by p.prj) %msg-count (numb msg-count.chat-vent))
+        %path-and-messages
+      %-  pairs
+      :~  path+(path-row path-row.chat-vent)
+          :-  %messages
+          :-  %a
+          %+  turn  message.chat-vent
+          |=(m=msg-part:sur (messages-row [[msg-id.m msg-part-id.m] m]))
+      ==
       ==
     ::
     ++  time-bunt-null
