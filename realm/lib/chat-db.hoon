@@ -678,6 +678,30 @@
     ]
 
   [cards state]
+++  de-dup-peers
+::  :chat-db &chat-db-action [%de-dup-peers ~]
+  |=  [state=state-4 =bowl:gall]
+  ^-  (quip card state-4)
+  =.  peers-table.state
+  %-  ~(run by peers-table.state)
+  |=  peers=(list peer-row)
+  ^-  (list peer-row)
+  =/  semi-peers=(set [=path patp=@p role=@tas])
+    %-  silt
+    %+  turn  peers
+    |=  p=peer-row
+    [path.p patp.p role.p]
+  %+  turn
+    ~(tap in semi-peers)
+  |=  sp=[=path patp=@p role=@tas]
+  ^-  peer-row
+  %+  snag  0
+  %+  skim  peers
+  |=  p=peer-row
+  ^-  ?
+  &(=(path.sp path.p) =(patp.sp patp.p) =(role.sp role.p))
+
+  `state
 ::
 ++  set-allowed-migrate-host
 ::chat-db &chat-db-action [%set-allowed-migrate-host ~zod]

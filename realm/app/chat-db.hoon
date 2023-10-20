@@ -16,7 +16,7 @@
       [%4 *paths-table:sur *messages-table:sur *peers-table:sur *del-log:sur ~ ~]
     :_  this(state default-state)
     :~  [%pass /timer %arvo %b %wait next-expire-time:core]
-        [%pass /selfpoke %agent [our.bowl dap.bowl] %poke %chat-db-action !>([%dump-to-bedrock ~])]
+    ::    [%pass /selfpoke %agent [our.bowl dap.bowl] %poke %chat-db-action !>([%dump-to-bedrock ~])]
     ==
   ++  on-save   !>(state)
   ++  on-load
@@ -29,6 +29,7 @@
     =/  default-cards
       :~  [%pass /timer %arvo %b %rest next-expire-time:core]
           [%pass /timer %arvo %b %wait next-expire-time:core]
+          [%pass /selfpoke %agent [our.bowl dap.bowl] %poke %chat-db-action !>([%de-dup-peers ~])]
       ==
     ?-  -.old
       %0  
@@ -190,6 +191,8 @@
         (dump-to-bedrock:db-lib state bowl)
       %dump-to-bedrock-messages
         (dump-to-bedrock-messages:db-lib +.act state bowl)
+      %de-dup-peers
+        (de-dup-peers:db-lib state bowl)
 
       %set-allowed-migrate-host
         (set-allowed-migrate-host:db-lib +.act state bowl)

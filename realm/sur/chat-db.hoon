@@ -121,6 +121,7 @@
       [%kick-peer =path patp=ship]
       [%dump-to-bedrock ~]
       [%dump-to-bedrock-messages our-paths=(list path-row)]
+      [%de-dup-peers ~]
 
       [%set-allowed-migrate-host =ship]
       [%remove-allowed-migrate-host =ship]
