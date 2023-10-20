@@ -48,7 +48,7 @@
       =message:db
   ==
 ::
-+$  nft-sig    (unit [sig=@t addr=@t])
++$  nft-sig    nft-sig:db
 ::
 +$  action
   $%

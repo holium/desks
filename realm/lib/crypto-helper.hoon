@@ -70,4 +70,50 @@
       $(ready +.ready)
     `@ux`(slav %ux (crip ['0' 'x' ready]))
 ::
+++  signed-key-add-msg
+  |=  [new-entity=@t new-key=@t nonce=@ud timestamp=@ud]
+  ^-  @t
+  %-  crip
+  ^-  tape
+  :~  new-entity
+      ' owns '
+      new-key
+      ', '
+      (ud-to-t nonce)
+      ', '
+      (ud-to-t timestamp)
+  ==
+::
+++  ud-to-t
+  |=  a=@u
+  ^-  @t
+  ?:  =(0 a)  '0'
+  %-  crip
+  %-  flop
+  |-  ^-  tape
+  ?:(=(0 a) ~ [(add '0' (mod a 10)) $(a (div a 10))])
+::
+++  check-alchemy
+  |=  [=path patp=@p t=@da chain=@t nft-sig=[sig=@t addr=@t name=@t nonce=@ud t=@ud]]
+  ^-  (list card:agent:gall)
+  =/  url=@t
+  %-  crip
+  :~  'https://realm-server-test.plymouth.network/alchemy/nfts/'
+    chain
+    '/'
+    addr.nft-sig
+  ==
+  =/  =request:http  [%'GET' url ~ ~]
+  ~&  >  "sending {<url>}"
+  :_  ~
+  :*  %pass
+      %+  weld
+        /nft-verify/(scot %p patp)/(scot %da t)/[sig.nft-sig]/[addr.nft-sig]/[name.nft-sig]/(scot %ud nonce.nft-sig)/(scot %ud t.nft-sig)
+      path
+      %arvo
+      %i
+      %request
+      request
+      *outbound-config:iris
+  ==
 --

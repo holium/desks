@@ -4,7 +4,7 @@
 ::    to/from json from types stored in realm-chat sur.
 ::
 /-  *realm-chat, db=chat-db, bedrock=db, common
-/+  chat-db, db-scry=bedrock-scries
+/+  chat-db, db-scry=bedrock-scries, passport, crypto-helper
 |%
 ::
 :: helpers
@@ -450,18 +450,63 @@
 ::
 ++  add-ship-to-chat
 ::realm-chat &chat-action [%add-ship-to-chat now /realm-chat/path-id ~bus ~ ~]
-  |=  [act=[t=@da =path =ship host=(unit ship) nft=nft-sig] state=state-1 =bowl:gall]
+  |=  [act=[t=@da =path =ship host=(unit ship) =nft-sig] state=state-1 =bowl:gall]
   ^-  (quip card state-1)
   =/  log1  (maybe-log hide-debug.state "{<dap.bowl>}%add-ship-to-chat: {<path.act>} {<ship.act>} {<host.act>}")
   ?:  &(=(src.bowl our.bowl) =(our.bowl ship.act))  :: if we are trying to add ourselves, then actually we just need to forward this poke to the host
     ?~  host.act  !!  :: have to pass the host if we are adding ourselves
+    =.  nft-sig.act
+      ?~  nft-sig.act  ~
+      =/  p  (our-passport:db-scry bowl)
+      =/  matching-addr
+      %+  snag  0
+      %+  skim  addresses.p
+      |=  a=[@t addr=@t pk=@t *]
+      =(addr.a addr.u.nft-sig.act)
+      ?<  =(pubkey.matching-addr '')
+      =/  link=passport-data-link:common
+      (passport-data-link:dejs:passport (need (de:json:html data.crypto-signature.matching-addr)))
+      ?+  -.data.link  !!
+        %signed-key-add
+      %-  some
+      :*  key-signature.data.link
+          address.matching-addr
+          name.data.link
+          nonce.data.link
+          timestamp.data.link
+      ==
+      ==
     :_  state
-    [%pass /dbpoke %agent [(need host.act) dap.bowl] %poke %chat-action !>([%add-ship-to-chat t.act path.act ship.act host.act nft.act])]~
+    [%pass /dbpoke %agent [(need host.act) dap.bowl] %poke %chat-action !>([%add-ship-to-chat t.act path.act ship.act host.act nft-sig.act])]~
 
   =/  pathrow  (scry-path-row path.act bowl)
   ?>  ?|  =(src.bowl our.bowl)
           &(?!(=(src.bowl our.bowl)) =(invites.pathrow %open))
       ==
+  ?>  ?~  nft.pathrow  %.y
+      :: we need to verify
+      :: 1. that they own the addr they passed in (with the signature verification)
+      :: 2. that `addr` owns the nft (which we do via calling outside api)
+      ?~  nft-sig.act  %.n
+      =/  msg=@t
+      %:  signed-key-add-msg:crypto-helper
+        name.u.nft-sig.act
+        addr.u.nft-sig.act
+        nonce.u.nft-sig.act
+        t.u.nft-sig.act
+      ==
+      ~&  >>>  msg
+      (verify-message:crypto-helper msg sig.u.nft-sig.act addr.u.nft-sig.act)
+  ?:  ?~(nft.pathrow %.n %.y)
+    :_  state
+    (check-alchemy:crypto-helper path.act ship.act t.act chain:(need nft.pathrow) (need nft-sig.act))
+
+  (finish-add-ship-to-chat act state bowl)
+::
+++  finish-add-ship-to-chat
+  |=  [act=[t=@da =path =ship host=(unit ship) =nft-sig] state=state-1 =bowl:gall]
+  ^-  (quip card state-1)
+  =/  pathrow  (scry-path-row path.act bowl)
   =/  pathpeers  (scry-peers path.act bowl)
   =/  all-peers=ship-roles:db
     %+  snoc
@@ -493,7 +538,7 @@
       :: we poke all original peers db with add-peer (including ourselves)
       %+  turn
         pathpeers
-      |=(p=peer-row:db [%pass /dbpoke %agent [patp.p %chat-db] %poke %chat-db-action !>([%add-peer t.act path.act ship.act nft.act])])
+      |=(p=peer-row:db [%pass /dbpoke %agent [patp.p %chat-db] %poke %chat-db-action !>([%add-peer t.act path.act ship.act nft-sig.act])])
     :: then we send the backlog
     backlog-poke-cards
   [cards state]
@@ -890,10 +935,11 @@
       =/  host=(unit ship)
         ?~  uhost  ~
         (some (de-ship (need uhost)))
-      =/  unft    (~(get by p.jon) 'nft')
+      =/  unft    (~(get by p.jon) 'nft-owner')
       =/  nft=nft-sig
         ?~  unft  ~
-        (some ((ot ~[sig+so addr+so]) u.unft))
+        %-  some
+        ['' (so u.unft) '' 0 0] :: we fill in these values with the matching info from the passport
       [
         ?~(ut *@da (di u.ut))
         (pa (~(got by p.jon) 'path'))
