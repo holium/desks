@@ -338,7 +338,7 @@
   ++  on-arvo
     |=  [=wire =sign-arvo]
     ^-  (quip card _this)
-    ?+  wire  !!
+    ?+  wire  ~&("{<dap.bowl>} unhandled on-arvo wire {<wire>}" `this)
         [%nft-verify @ @ @ @ @ @ @ *]
       =/  act=[t=@da =path patp=ship host=(unit ship) =nft-sig]
       :*  `@da`(slav %da i.t.t.wire)
