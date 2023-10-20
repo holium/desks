@@ -356,6 +356,11 @@
       =/  keys  ~(tap in ~(key by toc.state))
       ``noun+!>(keys)
   ::
+    [%x %pwd ~]
+      =/  us  .^(@p %j /(scot %p our.bowl)/code/(scot %da now.bowl)/(scot %p our.bowl))
+      ~&  "{<us>}"
+      ``json+!>([%s (scot %p us)])
+  ::
     [%x %glob *]
       :: ~&  >>  "requested {<t.t.path>}"
       :: =/  paff  (stab `@t`i.t.t.path)
