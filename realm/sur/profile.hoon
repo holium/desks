@@ -2,6 +2,7 @@
 +$  action
   $%
       [%save-opengraph-image =req-id img=@t]
+      [%set-key =req-id device-id=@t key=@t]
   ==
 +$  interaction
   $%

@@ -11,6 +11,7 @@
 +$  card  card:agent:gall
 +$  versioned-state
     $%  state-0
+        state-1
     ==
 +$  state-0
   $:  %0
@@ -22,11 +23,17 @@
       ::  passport profile open graph image. used in <meta> tag of served passport page
       opengraph-image=(unit @t)
   ==
++$  state-1
+  $:  %1
+      state-0
+      ::  device id to key
+      keystore=(map @t @t)
+  ==
 --
 %-  agent:dbug
 ^-  agent:gall
 %+  verb  |
-=|  state-0
+=|  state-1
 =*  state  -
 =<
 |_  =bowl:gall
@@ -68,8 +75,15 @@
   ^-  (quip card _this)
   %-  (slog leaf+"reloading %profile agent" ~)
   =^  cards  this  on-init
+
   =/  old  !<(versioned-state old-state)
-  [cards this(state old)]
+  ?-  -.old
+    %1  `this(state old)
+    %0  `this(state 1+[0+[toc.old registry.old opengraph-image.old] ~])
+  ==
+
+  :: =/  old  !<(versioned-state old-state)
+  :: [cards this(state old)]
   :: %-  (slog leaf+"nuking old %profile state" ~) ::  temporarily doing this for making development easier
   :: =^  cards  this  on-init
   :: :_  this
@@ -249,6 +263,17 @@
           =.  opengraph-image.state  (some img.action)
           [cards state]
 
+        %set-key
+          ?>  =(our.bowl src.bowl)
+          =/  vent-path=path  /vent/(scot %p src.req-id.action)/(scot %da now.req-id.action)
+          =/  kickcard=card  [%give %kick ~[vent-path] ~]
+          =/  cards=(list card)
+          :~  [%give %fact ~[vent-path] profile-vent+!>([%ack ~])]
+              kickcard
+          ==
+          =.  keystore.state  (~(put by keystore.state) device-id.action key.action)
+          [cards state]
+
       ::
       ::   %register
       :: %-  (slog leaf+"{<dap.bowl>}: registering {<src.bowl>}..." ~)
@@ -356,10 +381,13 @@
       =/  keys  ~(tap in ~(key by toc.state))
       ``noun+!>(keys)
   ::
-    [%x %pwd ~]
-      =/  us  .^(@p %j /(scot %p our.bowl)/code/(scot %da now.bowl)/(scot %p our.bowl))
-      ~&  "{<us>}"
-      ``json+!>([%s (scot %p us)])
+    [%x %get-key @ ~]
+      :: =/  us  .^(@p %j /(scot %p our.bowl)/code/(scot %da now.bowl)/(scot %p our.bowl))
+      :: ~&  "{<us>}"
+      =/  device-id  `@t`i.t.t.path
+      ~&  >>  device-id
+      =/  key  (~(get by keystore.state) device-id)
+      ``json+!>(?~(key ~ [%s u.key]))
   ::
     [%x %glob *]
       :: ~&  >>  "requested {<t.t.path>}"

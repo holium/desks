@@ -12,12 +12,9 @@
 ^-  form:m
 =/  axn=(unit action:store)  !<((unit action:store) arg)
 ?~  axn  (strand-fail %no-arg ~)
-?.  =(%save-opengraph-image -.u.axn)
-:: ?.  ?|  =(%update-crux -.u.axn)
-::         =(%save-opengraph-image -.u.axn)
-::         =(%register -.u.axn)
-::         =(%update-available -.u.axn)
-::     ==
+?.  ?|  =(%save-opengraph-image -.u.axn)
+        =(%set-key -.u.axn)
+    ==
     (strand-fail %bad-action ~)
 ;<  our=@p   bind:m  get-our
 ;<  now=@da  bind:m  get-time
@@ -27,6 +24,14 @@
   %save-opengraph-image
     ;<  ~  bind:m  (watch wire [our %profile] wire)
     ;<  ~  bind:m  (poke [our %profile] profile-action+!>([%save-opengraph-image [our now] +>.u.axn]))
+    ;<  cage=(unit cage)  bind:m  (take-fact-or-kick wire)
+    ?^  cage
+      (pure:m q.u.cage)
+    (pure:m !>([%ack ~]))
+
+  %set-key
+    ;<  ~  bind:m  (watch wire [our %profile] wire)
+    ;<  ~  bind:m  (poke [our %profile] profile-action+!>([%set-key [our now] +>.u.axn]))
     ;<  cage=(unit cage)  bind:m  (take-fact-or-kick wire)
     ?^  cage
       (pure:m q.u.cage)

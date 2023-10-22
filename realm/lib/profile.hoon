@@ -14,37 +14,29 @@
     ++  decode
       %-  of
       :~
-          :: [%register reg]
-          :: [%update-available de-avail]
-          :: [%update-crux de-init]
           [%save-opengraph-image save-opengraph-image]
+          [%set-key set-key]
       ==
-    :: ::
-    :: ++  reg
-    ::   ^-  [req-id @p]
-    :: [[~zod ~2000.1.1] (su ;~(pfix sig fed:ag))]
-    :: ::
-    :: ++  de-avail
-    ::   |=  jon=json
-    ::   ^-  [req-id (unit @p)]
-    ::   :: [[~zod ~2000.1.1] ?~(jon ~ (some (su ;~(pfix sig fed:ag))))]
-    ::   [[~zod ~2000.1.1] ~]
-    :: ::
-    :: ++  de-init
-    ::   |=  jon=json
-    ::   ^-  [req-id (unit @t)]
-    ::   [[~zod ~2000.1.1] ?~(jon ~ (some (so jon)))]
     ::
     ++  save-opengraph-image
       |=  jon=json
-      :: ^-  [req-id (unit @t)]
       ?>  ?=([%o *] jon)
-      :: =/  wallet=(unit json)  (~(get by p.jon) '')
       [[~zod ~2000.1.1] (deog jon)]
+    ::
+    ++  set-key
+      |=  jon=json
+      ?>  ?=([%o *] jon)
+      [[~zod ~2000.1.1] (dek jon)]
     ::
     ++  deog
       %-  ot
       :~  [%img so]
+      ==
+    ::
+    ++  dek
+      %-  ot
+      :~  [%device-id so]
+          [%key so]
       ==
     --
   --
