@@ -1,5 +1,5 @@
 /-  *passport, common, db
-/+  scries=bedrock-scries, eth=ethereum
+/+  scries=bedrock-scries, crypto-helper
 |%
 ::
 :: helpers
@@ -25,82 +25,6 @@
   =/  keys=(list @t)  (~(got by entity-to-addresses.pki-state.crypto.p) entity)
   ?~  (find [key]~ keys)  %.n  ::invalid signing key
   %.y
-::
-++  ud-to-t
-  |=  a=@u
-  ^-  @t
-  ?:  =(0 a)  '0'
-  %-  crip
-  %-  flop
-  |-  ^-  ^tape
-  ?:(=(0 a) ~ [(add '0' (mod a 10)) $(a (div a 10))])
-++  split-sig
-  |=  sig=@
-  ^-  [v=@ r=@ s=@]
-  |^
-    =^  v  sig  (take 3)
-    =^  s  sig  (take 3 32)
-    =^  r  sig  (take 3 32)
-    =?  v  (gte v 27)  (sub v 27)
-    [v r s]
-  ::
-  ++  take
-    |=  =bite
-    [(end bite sig) (rsh bite sig)]
-  --
-::
-++  recover-pub-key
-  |=  [msg=@t sig=@t addr=@t]  ^-  @ux
-  =/  hashed-msg=@ux
-    %-  keccak-256:keccak:crypto
-    %-  as-octs:mimes:html
-    %-  crip
-    ^-  tape
-    %+  weld
-    (trip '\19Ethereum Signed Message:\0a')
-    %+  weld
-    %-  trip
-    (en:json:html (numb:enjs:format (lent (trip msg))))
-    (trip msg)
-    ::export function hashMessage(message: Bytes | string): string {
-    ::    if (typeof(message) === "string") { message = toUtf8Bytes(message); }
-    ::    return keccak256(concat([
-    ::        toUtf8Bytes(messagePrefix),
-    ::        toUtf8Bytes(String(message.length)),
-    ::        message]));
-  =/  ux-sig=@ux  (hex-to-num:eth sig)
-  =/  vrs         (split-sig ux-sig)
-  ::SigningKey.recoverPublicKey(digest, signature)
-  %-  serialize-point:secp256k1:secp:crypto
-  (ecdsa-raw-recover:secp256k1:secp:crypto hashed-msg vrs)
-::
-++  verify-message
-  |=  [msg=@t sig=@t addr=@t]  ^-  ?
-  =/  pubkey=@ux  (recover-pub-key msg sig addr)
-  :: if the passed in address equals the address for the the recovered public key of the sig, then it is verified
-  =((hex-to-num:eth addr) (address-from-pub:key:eth pubkey))
-::
-++  ether-hash-to-ux
-  |=  str=@t
-  ^-  @ux
-  =/  ta=tape  (cass (slag 2 (trip str)))
-  =/  reordered=tape  ""
-  =/  i=@ud  0
-  =/  ready=tape
-    |-
-      ?:  =(0 (lent ta))
-        +.reordered
-      =/  b1=@t  (snag 0 ta)
-      =/  b2=@t  (snag 1 ta)
-      ?:  =(1 (mod i 2))
-        $(reordered ['.' b1 b2 reordered], ta +.+.ta, i +(i))
-      $(reordered [b1 b2 reordered], ta +.+.ta, i +(i))
-  |- :: handle the urbit bullshit %ux parsing rules
-    ?:  =('0' (snag 0 ready))
-      $(ready +.ready)
-    ?:  =('.' (snag 0 ready))
-      $(ready +.ready)
-    `@ux`(slav %ux (crip ['0' 'x' ready]))
 ::
 ++  parse-signing-key
   |=  ln=passport-link-container:common
@@ -554,16 +478,16 @@
   =/  old-contact=contact:common  contact.p
   :: verify the link is valid, then save it to bedrock
   :: validate the hash of data is what the payload claims it is
-  ?>  =((shax data.ln) (ether-hash-to-ux hash.ln))
+  ?>  =((shax data.ln) (ether-hash-to-ux:crypto-helper hash.ln))
 
   :: parse the signer address
   =/  addr=@t  (parse-signing-key ln)
   :: and verify that the signing key matches the signature and the message
-  ?>  (verify-message hash.ln hash-signature.ln addr)
+  ?>  (verify-message:crypto-helper hash.ln hash-signature.ln addr)
   =/  t-pk=@t
   %-  crip
-  %-  num-to-hex:eth
-  (recover-pub-key hash.ln hash-signature.ln addr)
+  %-  num-to-hex:crypto-helper
+  (recover-pub-key:crypto-helper hash.ln hash-signature.ln addr)
 
   =.  p
     ?:  =('PASSPORT_ROOT' link-type.ln)
@@ -583,7 +507,6 @@
       =/  key=@t        signing-address.mtd.parsed-link
       ?+  -.data.parsed-link  !!
         %key-add
-      =/  new-key-type=@t   address-type.data.parsed-link
       =/  new-key=@t        address.data.parsed-link
       =/  new-entity=@t     name.data.parsed-link
       ::  add new key to the pki-state for the new-entity
@@ -597,7 +520,7 @@
       =.  address-to-nonce.pki-state.crypto.p    (~(put by address-to-nonce.pki-state.crypto.p) new-key 0)
       :: update known addresses
       =/  sig=crypto-signature:common  [data.ln hash.ln hash-signature.ln t-pk]
-      =.  addresses.p  (snoc addresses.p [new-key-type new-key '' sig])
+      =.  addresses.p  (snoc addresses.p [address-type.data.parsed-link new-key '' sig])
       p
       ==
     ?:  =('SIGNED_KEY_ADD' link-type.ln)
@@ -606,21 +529,16 @@
       ?+  -.data.parsed-link  !!
         %signed-key-add
       =/  new-sig=@t        key-signature.data.parsed-link
-      =/  new-key-type=@t   address-type.data.parsed-link
       =/  new-key=@t        address.data.parsed-link
       =/  new-entity=@t     name.data.parsed-link
       =/  msg=@t
-      %-  crip
-      ^-  tape
-      :~  new-entity
-          ' owns '
+        %:  signed-key-add-msg:crypto-helper
+          new-entity
           new-key
-          ', '
-          (ud-to-t nonce.data.parsed-link)
-          ', '
-          (ud-to-t timestamp.data.parsed-link)
-      ==  
-      ?>  (verify-message msg new-sig new-key)
+          nonce.data.parsed-link
+          timestamp.data.parsed-link
+        ==
+      ?>  (verify-message:crypto-helper msg new-sig new-key)
       ::  add new key to the pki-state for the new-entity
       =/  keys=(list @t)  (~(got by entity-to-addresses.pki-state.crypto.p) new-entity)
       =.  entity-to-addresses.pki-state.crypto.p  (~(put by entity-to-addresses.pki-state.crypto.p) new-entity (snoc keys new-key))
@@ -634,9 +552,9 @@
       =/  sig=crypto-signature:common  [data.ln hash.ln hash-signature.ln t-pk]
       =/  new-pk=@t
       %-  crip
-      %-  num-to-hex:eth
-      (recover-pub-key msg new-sig new-key)
-      =.  addresses.p  (snoc addresses.p [new-key-type new-key new-pk sig])
+      %-  num-to-hex:crypto-helper
+      (recover-pub-key:crypto-helper msg new-sig new-key)
+      =.  addresses.p  (snoc addresses.p [address-type.data.parsed-link new-key new-pk sig])
       p
       ==
     ?:  =('KEY_REMOVE' link-type.ln)

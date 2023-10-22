@@ -4,7 +4,7 @@
 ::    to/from json from types stored in realm-chat sur.
 ::
 /-  *realm-chat, db=chat-db, bedrock=db, common
-/+  chat-db, db-scry=bedrock-scries
+/+  chat-db, db-scry=bedrock-scries, passport, crypto-helper
 |%
 ::
 :: helpers
@@ -174,15 +174,16 @@
   [%pass /dbpoke %agent [ship %bedrock] %poke %db-action !>([%create-path path.row %host ~ ~ ~ peers])]
 ::
 ++  create-chat-bedrock-poke
-  |=  [=ship row=path-row:db peers=ship-roles:db]
+  |=  [=ship row=path-row:db peers=ship-roles:db nft=(unit [contract=@t chain=@t standard=@t])]
   ^-  card
-  =/  chat  [
+  =/  chat=chat:common  [
     metadata.row
     type.row
     (silt (turn ~(tap in pins.row) swap-id-parts))
     invites.row
     peers-get-backlog.row
     max-expires-at-duration.row
+    nft
   ]
   [%pass /dbpoke %agent [ship %bedrock] %poke %db-action !>([%create [ship *@da] path.row chat-type:common [%chat chat] ~])]
 ::
@@ -262,9 +263,9 @@
   ]
 ::
 ++  add-bedrock-peer-poke
-  |=  [host=ship =path newship=ship]
+  |=  [host=ship =path newship=ship sig=nft-sig]
   ^-  card
-  [%pass /dbpoke %agent [host %bedrock] %poke %db-action !>([%add-peer path newship %member])]
+  [%pass /dbpoke %agent [host %bedrock] %poke %db-action !>([%add-peer path newship %member sig])]
 ::
 ++  remove-before-bedrock-poke
   |=  [host=ship =path t=@da]
@@ -329,8 +330,8 @@
 ::  poke actions
 ::
 ++  create-chat
-::realm-chat &chat-action [%create-chat ~ %dm ~[~bus] %host *@dr %.y]
-::realm-chat &chat-action [%create-chat ~ %chat ~[~bus ~dev] %host *@dr %.y]
+::realm-chat &chat-action [%create-chat ~ %dm ~[~bus] %host *@dr %.y ~]
+::realm-chat &chat-action [%create-chat ~ %group ~[~bus ~dev] %host *@dr %.y (some ['0x000386E3F7559d9B6a2F5c46B4aD1A9587D59Dc3' 'eth-mainnet' 'ERC721'])]
   |=  [act=create-chat-data state=state-1 =bowl:gall]
   ^-  (quip card state-1)
   (vented-create-chat [now.bowl act] state bowl)
@@ -340,7 +341,20 @@
   ^-  (quip card state-1)
   ?>  =(src.bowl our.bowl)
   =/  chat-path  /realm-chat/(scot %uv (sham [our.bowl t.act]))
-  =/  pathrow=path-row:db  [chat-path metadata.c.act type.c.act t.act t.act ~ invites.c.act peers-get-backlog.c.act max-expires-at-duration.c.act now.bowl]
+  =/  pathrow=path-row:db
+  [
+    chat-path
+    metadata.c.act
+    type.c.act
+    t.act
+    t.act
+    ~
+    invites.c.act
+    peers-get-backlog.c.act
+    max-expires-at-duration.c.act
+    now.bowl
+    nft.c.act
+  ]
   =/  all-ships
     ?:  (~(has in (silt peers.c.act)) our.bowl)  peers.c.act
     [our.bowl peers.c.act]
@@ -365,7 +379,7 @@
         |=  [s=ship role=@tas]
         (create-path-db-poke s pathrow all-peers)
       (create-path-bedrock-poke our.bowl pathrow all-peers)
-    (create-chat-bedrock-poke our.bowl pathrow all-peers)
+    (create-chat-bedrock-poke our.bowl pathrow all-peers nft.c.act)
   =/  send-status-message
     ?:  =(2 (lent all-ships)) :: if it's just two ships (and therefore a "dm")
       !>([%send-message chat-path ~[[[%status (crip "{(scow %p our.bowl)} created the chat")] ~ ~]] *@dr])
@@ -435,18 +449,64 @@
   [cards state]
 ::
 ++  add-ship-to-chat
-::realm-chat &chat-action [%add-ship-to-chat now /realm-chat/path-id ~bus ~]
-  |=  [act=[t=@da =path =ship host=(unit ship)] state=state-1 =bowl:gall]
+::realm-chat &chat-action [%add-ship-to-chat now /realm-chat/path-id ~bus ~ ~]
+  |=  [act=[t=@da =path =ship host=(unit ship) =nft-sig] state=state-1 =bowl:gall]
   ^-  (quip card state-1)
+  =/  log1  (maybe-log hide-debug.state "{<dap.bowl>}%add-ship-to-chat: {<path.act>} {<ship.act>} {<host.act>}")
   ?:  &(=(src.bowl our.bowl) =(our.bowl ship.act))  :: if we are trying to add ourselves, then actually we just need to forward this poke to the host
     ?~  host.act  !!  :: have to pass the host if we are adding ourselves
+    =.  nft-sig.act
+      ?~  nft-sig.act  ~
+      =/  p  (our-passport:db-scry bowl)
+      =/  matching-addr
+      %+  snag  0
+      %+  skim  addresses.p
+      |=  a=[@t addr=@t pk=@t *]
+      =(addr.a addr.u.nft-sig.act)
+      ?<  =(pubkey.matching-addr '')
+      =/  link=passport-data-link:common
+      (passport-data-link:dejs:passport (need (de:json:html data.crypto-signature.matching-addr)))
+      ?+  -.data.link  !!
+        %signed-key-add
+      %-  some
+      :*  key-signature.data.link
+          address.matching-addr
+          name.data.link
+          nonce.data.link
+          timestamp.data.link
+      ==
+      ==
     :_  state
-    [%pass /dbpoke %agent [(need host.act) dap.bowl] %poke %chat-action !>([%add-ship-to-chat t.act path.act ship.act ~])]~
+    [%pass /dbpoke %agent [(need host.act) dap.bowl] %poke %chat-action !>([%add-ship-to-chat t.act path.act ship.act host.act nft-sig.act])]~
 
   =/  pathrow  (scry-path-row path.act bowl)
   ?>  ?|  =(src.bowl our.bowl)
           &(?!(=(src.bowl our.bowl)) =(invites.pathrow %open))
       ==
+  ?>  ?~  nft.pathrow  %.y
+      :: we need to verify
+      :: 1. that they own the addr they passed in (with the signature verification)
+      :: 2. that `addr` owns the nft (which we do via calling outside api)
+      ?~  nft-sig.act  %.n
+      =/  msg=@t
+      %:  signed-key-add-msg:crypto-helper
+        name.u.nft-sig.act
+        addr.u.nft-sig.act
+        nonce.u.nft-sig.act
+        t.u.nft-sig.act
+      ==
+      ~&  >>>  msg
+      (verify-message:crypto-helper msg sig.u.nft-sig.act addr.u.nft-sig.act)
+  ?:  ?~(nft.pathrow %.n %.y)
+    :_  state
+    (check-alchemy:crypto-helper path.act ship.act t.act chain:(need nft.pathrow) (need nft-sig.act))
+
+  (finish-add-ship-to-chat act state bowl)
+::
+++  finish-add-ship-to-chat
+  |=  [act=[t=@da =path =ship host=(unit ship) =nft-sig] state=state-1 =bowl:gall]
+  ^-  (quip card state-1)
+  =/  pathrow  (scry-path-row path.act bowl)
   =/  pathpeers  (scry-peers path.act bowl)
   =/  all-peers=ship-roles:db
     %+  snoc
@@ -470,7 +530,7 @@
 
   :: order matters here, for performance
   =/  cards=(list card)
-::    :-  (add-bedrock-peer-poke (scry-bedrock-path-host:db-scry path.act bowl) path.act ship.act)
+::    :-  (add-bedrock-peer-poke (scry-bedrock-path-host:db-scry path.act bowl) path.act ship.act nft.act)
     %+  weld
       ::  we poke the newly-added ship's db with a create-path,
       ::  since that will automatically handle them joining as a member
@@ -478,7 +538,7 @@
       :: we poke all original peers db with add-peer (including ourselves)
       %+  turn
         pathpeers
-      |=(p=peer-row:db [%pass /dbpoke %agent [patp.p %chat-db] %poke %chat-db-action !>([%add-peer t.act path.act ship.act])])
+      |=(p=peer-row:db [%pass /dbpoke %agent [patp.p %chat-db] %poke %chat-db-action !>([%add-peer t.act path.act ship.act nft-sig.act])])
     :: then we send the backlog
     backlog-poke-cards
   [cards state]
@@ -488,6 +548,7 @@
   |=  [act=[=path =ship] state=state-1 =bowl:gall]
   ^-  (quip card state-1)
   ?>  =(src.bowl our.bowl)
+  =/  log1  (maybe-log hide-debug.state "{<dap.bowl>}%remove-ship-from-chat: {<path.act>} {<ship.act>}")
 
   =/  pathpeers  (scry-peers path.act bowl)
   =/  members  (skim pathpeers |=(p=peer-row:db ?!(=(role.p %host)))) :: everyone who's NOT the host
@@ -496,7 +557,10 @@
     ?:  =(ship.act patp.host)
       (~(del in pins.state) path.act)
     pins.state
-  =/  cards
+  =/  pr=path-row:db  (scry-path-row path.act bowl)
+  =/  cards=(list card)
+    ?:  =(type.pr %dm)
+      (into-all-peers-kick-pokes ship.act pathpeers)
     ?:  =(ship.act patp.host)
       :: if src.bowl is %host, we have to leave-path for the host
       :: and then send kick-peer of themselves to all members
@@ -694,7 +758,7 @@
   =/  selfpaths=(list path-row:db)  (skim (scry-paths bowl) |=(p=path-row:db =(type.p %self)))
   ?.  =(0 (lent selfpaths))
     `state
-  (create-chat [(notes-to-self bowl) %self ~ %host *@dr %.n] state bowl)
+  (create-chat [(notes-to-self bowl) %self ~ %host *@dr %.n ~] state bowl)
 ::
 ++  notes-to-self  |=(=bowl:gall (malt ~[['title' 'Notes to Self'] ['reactions' 'true'] ['creator' (scot %p our.bowl)] ['description' '']]))
 ::
@@ -813,6 +877,10 @@
       ^-  create-chat-data
       ?>  ?=([%o *] jon)
       =/  gt  ~(got by p.jon)
+      =/  unft    (~(get by p.jon) 'nft')
+      =/  nft=(unit [contract=@t chain=@t standard=@t])
+        ?~  unft  ~
+        (some ((ot ~[contract+so chain+so standard+so]) u.unft))
       =/  ubackl    (~(get by p.jon) 'peers-get-backlog')
       [
         ((om so) (gt 'metadata'))
@@ -821,6 +889,7 @@
         ((se %tas) (gt 'invites'))
         (null-or-dri (gt 'max-expires-at-duration')):: specify in integer milliseconds, or null for "not set"
         ?~(ubackl %.n (null-or-bool u.ubackl))
+        nft
       ]
     ::
     ++  edit-chat
@@ -859,18 +928,24 @@
     ::
     ++  path-and-ship-and-unit-host
       |=  jon=json
-      ^-  [@da path ship (unit ship)]
+      ^-  [@da path ship (unit ship) nft-sig]
       ?>  ?=([%o *] jon)
       =/  ut    (~(get by p.jon) 't')
       =/  uhost    (~(get by p.jon) 'host')
       =/  host=(unit ship)
         ?~  uhost  ~
         (some (de-ship (need uhost)))
+      =/  unft    (~(get by p.jon) 'nft-owner')
+      =/  nft=nft-sig
+        ?~  unft  ~
+        %-  some
+        ['' (so u.unft) '' 0 0] :: we fill in these values with the matching info from the passport
       [
         ?~(ut *@da (di u.ut))
         (pa (~(got by p.jon) 'path'))
         (de-ship (~(got by p.jon) 'ship'))
         host
+        nft
       ]
     ::
     ++  path-and-ship
