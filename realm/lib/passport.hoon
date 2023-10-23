@@ -977,8 +977,8 @@
   ::
   ++  de-chain-id
     |=  jon=json
-    ^-  ?(%eth-mainnet %eth-testnet)
-    ?+  ((se %tas) jon)  !!
+    ^-  ?(@tas %eth-mainnet %eth-testnet)
+    ?+  ((se %tas) jon)  ((se %tas) jon)
       %eth-mainnet    %eth-mainnet
       %eth-testnet    %eth-testnet
     ==

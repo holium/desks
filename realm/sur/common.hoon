@@ -216,7 +216,7 @@
   ==
 ::
 +$  linked-nft
-  $:  chain-id=?(%eth-mainnet %eth-testnet)
+  $:  chain-id=?(@tas %eth-mainnet %eth-testnet)
       token-id=@t         :: i.e. 8739
       contract-address=@t :: i.e. 0x789e...fee7
       name=@t             :: i.e. "Pixelady #599"
