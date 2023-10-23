@@ -166,7 +166,7 @@
 ++  create-path-db-poke
   |=  [=ship row=path-row:db peers=ship-roles:db]
   ^-  card
-  [%pass /dbpoke %agent [ship %chat-db] %poke %chat-db-action !>([%create-path row peers 0 ~])]
+  [%pass /dbpoke %agent [ship %chat-db] %poke %chat-db-action !>([%create-path row peers %.n ~ ~])]
 ::
 ++  create-path-bedrock-poke
   |=  [=ship row=path-row:db peers=ship-roles:db]
@@ -513,20 +513,20 @@
       (turn pathpeers |=(p=peer-row:db [patp.p role.p]))
     [ship.act %member]
 
-  =/  expected-msg-count=@ud
-    ?.  peers-get-backlog.pathrow  0
-    (scry-message-count-for-path path.act bowl)
-  ~&  >  "expected: {<expected-msg-count>}"
+  =/  initial-messages=message:db
+    ?.  peers-get-backlog.pathrow  ~
+    %+  turn
+      (scag 50 (scry-messages-for-path path.act our.bowl now.bowl))
+    |=([k=* v=msg-part:db] v)
+    
   =/  backlog-poke-cards=(list card)
     ?.  peers-get-backlog.pathrow  ~
-    ?.  (gth expected-msg-count 200)
-      (limo [(into-backlog-msg-poke (turn (scry-messages-for-path path.act our.bowl now.bowl) |=([k=uniq-id:db v=msg-part:db] v)) ship.act) ~])
-    =/  msgs  (scag 200 (scry-messages-for-path path.act our.bowl now.bowl))
+    :-  (into-backlog-msg-poke initial-messages ship.act)
+    ?:  (lte (scry-message-count-for-path path.act bowl) 50)  ~
     =/  tid   (cat 3 (spat path.act) ship.act)
     =/  start-args  [~ `tid byk.bowl(r da+now.bowl) %send-backlog !>(`[path.act ship.act])]
-    :-  (into-backlog-msg-poke (turn msgs |=([k=uniq-id:db v=msg-part:db] v)) ship.act)
-    :-  [%pass /thread/(scot %da now.bowl) %agent [our.bowl %spider] %poke %spider-start !>(start-args)]
-    ~
+    :_  ~
+    [%pass /thread/(scot %da now.bowl) %agent [our.bowl %spider] %poke %spider-start !>(start-args)]
 
   :: order matters here, for performance
   =/  cards=(list card)
@@ -534,7 +534,7 @@
     %+  weld
       ::  we poke the newly-added ship's db with a create-path,
       ::  since that will automatically handle them joining as a member
-      :-  [%pass /dbpoke %agent [ship.act %chat-db] %poke %chat-db-action !>([%create-path pathrow all-peers expected-msg-count `t.act])]
+      :-  [%pass /dbpoke %agent [ship.act %chat-db] %poke %chat-db-action !>([%create-path pathrow all-peers %.y initial-messages `t.act])]
       :: we poke all original peers db with add-peer (including ourselves)
       %+  turn
         pathpeers
