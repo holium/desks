@@ -229,10 +229,11 @@
             ?:  =(our.bowl ship.peer.ch)  ~ :: skip ourself, duh
             ~&  >  "sharing our contact with {<ship.peer.ch>}"
             =/  pass=passport:common   (our-passport:scries bowl)
+            =/  pass-time=@da  updated-at:(our-passport-row:scries bowl)
             :: send the new peer a request for his contact
             :~  [%pass /contacts %agent [ship.peer.ch dap.bowl] %poke %passport-action !>([%get-contact [our.bowl now.bowl]])]
             :: and give him our contact
-                [%pass /contacts %agent [ship.peer.ch dap.bowl] %poke %passport-action !>([%receive-contacts [[now.bowl contact.pass] ~]])]
+                [%pass /contacts %agent [ship.peer.ch dap.bowl] %poke %passport-action !>([%receive-contacts [[pass-time contact.pass] ~]])]
             ==
             ==
             [cards this]
