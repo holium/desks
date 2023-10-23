@@ -160,7 +160,7 @@
   ^-  contact:common
   =.  display-name.contact
     ?~  display-name.contact  ~
-    (some (remove-newlines u.display-name.contact))
+    (some (trim-whitespace (remove-newlines u.display-name.contact)))
   =.  avatar.contact
     ?~  avatar.contact  ~
     ?-  -.u.avatar.contact
@@ -211,7 +211,8 @@
       :-  (create-many our.bowl create-args)
       cards
     =/  con=contact:common  (cleanup-contact contact:(snag 0 contacts))
-    ?:  =(our.bowl ship.con)  :: don't create a contact record for ourselves
+    =/  is-sender-contact  =(src.bowl ship.con)
+    ?:  |(=(our.bowl ship.con) ?!(is-sender-contact))  :: don't create a contact record for ourselves, or for others who aren't the sender
       $(contacts +.contacts)
     =/  index=(unit @)      (find-contact con old)
     ?~  index
