@@ -192,7 +192,7 @@
       %dump-to-bedrock-messages
         (dump-to-bedrock-messages:db-lib +.act state bowl)
       %de-dup-peers
-        (de-dup-peers:db-lib state bowl)
+        (de-dup-peers-and-leave-empty-dms:db-lib state bowl)
 
       %set-allowed-migrate-host
         (set-allowed-migrate-host:db-lib +.act state bowl)
