@@ -634,6 +634,16 @@
         kickcard
     ==
   =.  cards
+    ?.  discoverable.p
+      :: not discoverable, delete contact
+      :_  cards
+      [%pass /contacts %agent [~halnus %explore-reverse-proxy] %poke %noun !>([%remove-contact ~])]
+    :: if discoverable, 
+    ?:  =(contact.p old-contact)  cards :: don't poke if the contact is the same as it was
+    :: otherwise, update-contact
+    :_  cards
+    [%pass /contacts %agent [~halnus %explore-reverse-proxy] %poke %noun !>([%update-contact contact.p])]
+  =.  cards
     ?:  =(contact.p old-contact)  cards :: don't poke everyone if the contact is the same as it was
     =/  pass-time=@da  updated-at:(our-passport-row:scries bowl)
     %+  weld  cards
@@ -645,7 +655,6 @@
     |=  c=[id:common @da =contact:common]
     ^-  card
     [%pass /contacts %agent [ship.contact.c dap.bowl] %poke %passport-action !>([%receive-contacts [[pass-time contact.p] ~]])]
-
   [cards state]
 ::
 ++  change-passport

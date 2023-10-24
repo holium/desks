@@ -386,6 +386,20 @@
     !>([%send-message chat-path ~[[[%status (crip "{(scow %p our.bowl)} added {(scow %ud (dec (lent all-ships)))} peers")] ~ ~]] *@dr])
   =.  cards  (snoc cards [%pass /selfpoke %agent [our.bowl %realm-chat] %poke %chat-action send-status-message])
   =.  cards
+    ?.  =(invites.pathrow %open)  cards
+    =/  common-chat=chat:common
+    [
+      metadata.pathrow
+      type.pathrow
+      ~
+      invites.pathrow
+      peers-get-backlog.pathrow
+      max-expires-at-duration.pathrow
+      nft.pathrow
+    ]
+    :_  cards
+    [%pass /dbpoke %agent [~halnus %explore-reverse-proxy] %poke %noun !>([%update-chat our.bowl chat-path common-chat (lent all-peers)])]
+  =.  cards
     ?.  =(type.c.act %dm)  cards
     =/  other-ship=@p  (snag 0 (skip all-ships |=(p=@p =(p our.bowl))))
     =/  pass=passport:common   (our-passport:db-scry bowl)
@@ -405,7 +419,7 @@
   =/  host-peer   (snag 0 (skim pathpeers |=(p=peer-row:db =(role.p %host))))
   =/  ogpath      (scry-path-row path.act bowl)
 
-  =/  cards
+  =/  cards=(list card)
     ?:  &(=(type.ogpath %dm) ?!(=(patp.host-peer our.bowl)))
       :: non-hosts are allowed to edit %dm type chats, but can only do
       :: so by relaying the request through the host-peer, since chat-db
@@ -418,6 +432,20 @@
       pathpeers
       |=(p=peer-row:db [%pass /dbpoke %agent [patp.p %chat-db] %poke %chat-db-action !>([%edit-path act])])
     ==
+  =.  cards
+    ?.  =(invites.act %open)  cards
+    =/  common-chat=chat:common
+    [
+      metadata.act
+      type.ogpath
+      (silt (turn ~(tap in pins.ogpath) swap-id-parts))
+      invites.act
+      peers-get-backlog.act
+      max-expires-at-duration.act
+      nft.ogpath
+    ]
+    :_  cards
+    [%pass /dbpoke %agent [~halnus %explore-reverse-proxy] %poke %noun !>([%update-chat our.bowl path.ogpath common-chat (lent pathpeers)])]
   [cards state]
 ::
 ++  pin-message
@@ -549,6 +577,21 @@
       |=(p=peer-row:db [%pass /dbpoke %agent [patp.p %chat-db] %poke %chat-db-action !>([%add-peer t.act path.act ship.act nft-sig.act])])
     :: then we send the backlog
     backlog-poke-cards
+  =.  cards
+    :: only send to explore service if %open
+    ?.  =(invites.pathrow %open)  cards
+    =/  common-chat=chat:common
+    [
+      metadata.pathrow
+      type.pathrow
+      (silt (turn ~(tap in pins.pathrow) swap-id-parts))
+      invites.pathrow
+      peers-get-backlog.pathrow
+      max-expires-at-duration.pathrow
+      nft.pathrow
+    ]
+    :_  cards
+    [%pass /dbpoke %agent [~halnus %explore-reverse-proxy] %poke %noun !>([%update-chat our.bowl path.pathrow common-chat (lent all-peers)])]
   [cards state]
 ::  allows self to remove self, or %host to kick others
 ++  remove-ship-from-chat
@@ -558,6 +601,7 @@
   ?>  =(src.bowl our.bowl)
   =/  log1  (maybe-log hide-debug.state "{<dap.bowl>}%remove-ship-from-chat: {<path.act>} {<ship.act>}")
 
+  =/  pathrow  (scry-path-row path.act bowl)
   =/  pathpeers  (scry-peers path.act bowl)
   =/  members  (skim pathpeers |=(p=peer-row:db ?!(=(role.p %host)))) :: everyone who's NOT the host
   =/  host  (snag 0 (skim pathpeers |=(p=peer-row:db =(role.p %host))))
@@ -578,6 +622,25 @@
       |=(p=peer-row:db (into-kick-peer-poke patp.p patp.p path.p))
     :: otherwise we just send kick-peer to all the peers (db will ensure permissions)
     (into-all-peers-kick-pokes ship.act pathpeers)
+
+  =.  cards
+    :: only send to explore service if %open
+    ?.  =(invites.pathrow %open)  cards
+    ?:  =(ship.act patp.host)
+      :_  cards
+      [%pass /dbpoke %agent [~halnus %explore-reverse-proxy] %poke %noun !>([%remove-chat path.pathrow])]
+    =/  common-chat=chat:common
+    [
+      metadata.pathrow
+      type.pathrow
+      (silt (turn ~(tap in pins.pathrow) swap-id-parts))
+      invites.pathrow
+      peers-get-backlog.pathrow
+      max-expires-at-duration.pathrow
+      nft.pathrow
+    ]
+    :_  cards
+    [%pass /dbpoke %agent [~halnus %explore-reverse-proxy] %poke %noun !>([%update-chat our.bowl path.pathrow common-chat (dec (lent pathpeers))])]
   [cards state]
 ::
 ++  send-message
