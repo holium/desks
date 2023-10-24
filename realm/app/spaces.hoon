@@ -441,8 +441,11 @@
       ++  host-handle-join
         |=  [path=space-path:store =ship]
         ^-  (quip card _state)
+        =/  space-members   (~(got by membership.state) path)
+        ?.  =(~ (~(get by space-members) ship))
+          ~&  >>>  "{<ship>} tried to join {<path>} that he's already in, ignoring %join poke"
+          `state
         =.  membership.state
-          =/  space-members   (~(got by membership.state) path)
           =/  space  (~(got by spaces.state) path)
           =/  member
             ?:  =(%public access.space)

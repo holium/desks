@@ -678,30 +678,45 @@
     ]
 
   [cards state]
-++  de-dup-peers
+::
+++  de-dup-peers-and-leave-empty-dms
 ::  :chat-db &chat-db-action [%de-dup-peers ~]
   |=  [state=state-4 =bowl:gall]
   ^-  (quip card state-4)
   =.  peers-table.state
   %-  ~(run by peers-table.state)
-  |=  peers=(list peer-row)
-  ^-  (list peer-row)
+  |=  peers=(list peer-row:sur)
+  ^-  (list peer-row:sur)
   =/  semi-peers=(set [=path patp=@p role=@tas])
     %-  silt
     %+  turn  peers
-    |=  p=peer-row
+    |=  p=peer-row:sur
     [path.p patp.p role.p]
   %+  turn
     ~(tap in semi-peers)
   |=  sp=[=path patp=@p role=@tas]
-  ^-  peer-row
+  ^-  peer-row:sur
   %+  snag  0
   %+  skim  peers
-  |=  p=peer-row
+  |=  p=peer-row:sur
   ^-  ?
   &(=(path.sp path.p) =(patp.sp patp.p) =(role.sp role.p))
 
-  `state
+  =/  empty-dms=(list path-row:sur)
+  %+  skim  ~(val by paths-table.state)
+  |=  p=path-row:sur
+  :: find all the paths that are %dm and only have 1 peer
+  ?&  =(type.p %dm)
+      =(1 (lent (~(got by peers-table.state) path.p)))
+  ==
+
+  =/  cards=(list card)  ~
+  |-
+    ?:  =((lent empty-dms) 0)
+      [cards state]
+    =/  empty-dm=path-row:sur  (snag 0 empty-dms)
+    =/  cs  (leave-path path.empty-dm state bowl)
+    $(empty-dms +.empty-dms, cards (weld -.cs cards), state +.cs)
 ::
 ++  set-allowed-migrate-host
 ::chat-db &chat-db-action [%set-allowed-migrate-host ~zod]
