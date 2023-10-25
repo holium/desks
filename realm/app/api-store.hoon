@@ -119,8 +119,8 @@
   =/  storage=store-results  ;;([@t @t @t @t] .^(* %gx /(scot %p our.bowl)/storage/(scot %da now.bowl)/credentials/noun))
   =/  s3-conf=store-conf
     ?:  .^(? %gu /(scot %p our.bowl)/s3-store/(scot %da now.bowl)/$)
-      ;;(store-conf .^(* %gx /(scot %p our.bowl)/s3-store/(scot %da now.bowl)/configuration/noun))
-    [%configuration ~ '' '']
+      ;;(store-conf [.^(* %gx /(scot %p our.bowl)/s3-store/(scot %da now.bowl)/configuration/noun) ~])
+    [%configuration ~ '' '' ~]
   =/  stoconf=store-conf  ;;(store-conf .^(* %gx /(scot %p our.bowl)/storage/(scot %da now.bowl)/configuration/noun))
   =/  merged=[%creds @t @t @t (set @t) @t @t]
       [
