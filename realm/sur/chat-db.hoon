@@ -108,7 +108,7 @@
 +$  nft-sig    (unit [sig=@t addr=@t name=@t nonce=@ud t=@ud])
 +$  action
   $%  
-      [%create-path =path-row peers=ship-roles expected-msg-count=@ud t=(unit @da)]
+      [%create-path =path-row peers=ship-roles expected-msg-count=@ud t=(unit @da) join-silently=?]
       [%edit-path =path metadata=(map cord cord) peers-get-backlog=? invites=@tas max-expires-at-duration=@dr]
       [%edit-path-pins =path =pins]
       [%leave-path =path]
@@ -138,23 +138,27 @@
   $%  
       [%tables =tables]
   ==
++$  db-del-type
+  $%
+    [%del-paths-row =path timestamp=@da]
+    [%del-peers-row =path =ship timestamp=@da]
+    [%del-messages-row =path =uniq-id timestamp=@da]
+  ==
 +$  db-change-type
   $%
     [%add-row =db-row]
     [%upd-messages =msg-id =message]
     [%upd-paths-row =path-row old=path-row]
-    [%del-paths-row =path timestamp=@da]
-    [%del-peers-row =path =ship timestamp=@da]
-    [%del-messages-row =path =uniq-id timestamp=@da]
+    db-del-type
   ==
 +$  db-row
-  $%  [%paths =path-row]
+  $%  [%paths =path-row join-silently=?]
       [%messages =msg-part]
       [%peers =peer-row]
   ==
 +$  db-change  (list db-change-type)
-+$  del-log  ((mop time db-change-type) gth)
-++  delon  ((on time db-change-type) gth)
++$  del-log  ((mop time db-del-type) gth)
+++  delon  ((on time db-del-type) gth)
 ::
 +$  chat-vent
   $%  [%msg =message]
@@ -273,4 +277,18 @@
       [%peers =peer-row]
   ==
 +$  del-log-2  ((mop time db-change-type-2) gth)
++$  del-log-3  ((mop time db-change-type-3) gth)
+++  delon-3  ((on time db-change-type-3) gth)
++$  db-change-type-3
+  $%
+    [%add-row db-row=db-row-3]
+    [%upd-messages =msg-id =message]
+    [%upd-paths-row =path-row old=path-row]
+    db-del-type
+  ==
++$  db-row-3
+  $%  [%paths =path-row]
+      [%messages =msg-part]
+      [%peers =peer-row]
+  ==
 --

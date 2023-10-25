@@ -1,7 +1,7 @@
 ::  app/chat-db.hoon
 /-  *versioned-state, sur=chat-db
 /+  dbug, db-lib=chat-db
-=|  state-4
+=|  state-5
 =*  state  -
 :: ^-  agent:gall
 =<
@@ -12,8 +12,8 @@
   ::
   ++  on-init
     ^-  (quip card _this)
-    =/  default-state=state-4
-      [%4 *paths-table:sur *messages-table:sur *peers-table:sur *del-log:sur ~ ~]
+    =/  default-state=state-5
+      [%5 *paths-table:sur *messages-table:sur *peers-table:sur *del-log:sur ~ ~]
     :_  this(state default-state)
     :~  [%pass /timer %arvo %b %wait next-expire-time:core]
     ::    [%pass /selfpoke %agent [our.bowl dap.bowl] %poke %chat-db-action !>([%dump-to-bedrock ~])]
@@ -145,12 +145,41 @@
       paths
       messages-table.old
       peers-table.old
-      *del-log:sur :: technically we don't NEED to wipe this in order to upgrade... but who cares about the delete log.
+      *del-log-3:sur :: technically we don't NEED to wipe this in order to upgrade... but who cares about the delete log.
       ~
       ~
     ]
+    (on-load !>(new-state))
+      %4
+    =/  dl=del-log:sur
+    %-  ~(gas by *del-log:sur)
+    ^-  (list [k=time v=db-del-type:sur])
+    %+  turn
+      %+  skim  (tap:delon-3:sur del-log.old)
+      |=  [k=time v=db-change-type-3]
+      ?+  -.v  %.n
+        %del-paths-row  %.y
+        %del-peers-row  %.y
+        %del-messages-row  %.y
+      ==
+    |=  [k=time v=db-change-type-3]
+    ^-  [time db-del-type]
+    ?+  -.v  !!
+      %del-paths-row  [k v]
+      %del-peers-row  [k v]
+      %del-messages-row  [k v]
+    ==
+    =/  new-state  [
+      %5
+      paths-table.old
+      messages-table.old
+      peers-table.old
+      dl
+      allowed-migration-hosts.old
+      ongoing-migrations.old
+    ]
     [default-cards this(state new-state)]
-      %4  [default-cards this(state old)]
+      %5  [default-cards this(state old)]
     ==
   ::
   ++  on-poke
