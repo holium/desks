@@ -160,7 +160,7 @@
   ^-  contact:common
   =.  display-name.contact
     ?~  display-name.contact  ~
-    (some (remove-newlines u.display-name.contact))
+    (some (trim-whitespace (remove-newlines u.display-name.contact)))
   =.  avatar.contact
     ?~  avatar.contact  ~
     ?-  -.u.avatar.contact
@@ -205,13 +205,12 @@
     ?:  =(0 (lent contacts))
       ?:  =(0 (lent create-args))
         [cards state]
-      ~&  >  "lent of create-args {<(lent create-args)>}"
-      ~&  >  "lent of cards {<(lent cards)>}"
       :_  state
       :-  (create-many our.bowl create-args)
       cards
     =/  con=contact:common  (cleanup-contact contact:(snag 0 contacts))
-    ?:  =(our.bowl ship.con)  :: don't create a contact record for ourselves
+    =/  is-sender-contact  =(src.bowl ship.con)
+    ?:  |(=(our.bowl ship.con) ?!(is-sender-contact))  :: don't create a contact record for ourselves, or for others who aren't the sender
       $(contacts +.contacts)
     =/  index=(unit @)      (find-contact con old)
     ?~  index
@@ -246,6 +245,7 @@
 
   =/  new-fren=friend:common      [ship %pending-outgoing %.n mtd]
   =/  pass=passport:common   (our-passport:scries bowl)
+  =/  pass-time=@da  updated-at:(our-passport-row:scries bowl)
 
   :: check that we don't already have a friendship with this ship
   =/  frs=(list friend:common)    (get-friends:scries bowl)
@@ -254,7 +254,7 @@
     ?~  (find [ship ~] ships)
       :~  (create-req our.bowl friend-type:common [%friend new-fren] req-id)
           [%pass /selfpoke %agent [ship dap.bowl] %poke %passport-action !>([%get-friend mtd])]
-          [%pass /contacts %agent [ship dap.bowl] %poke %passport-action !>([%receive-contacts [[now.bowl contact.pass] ~]])]
+          [%pass /contacts %agent [ship dap.bowl] %poke %passport-action !>([%receive-contacts [[pass-time contact.pass] ~]])]
       ==
     ~
   [cards state]
@@ -267,9 +267,10 @@
 
   =/  new-fren=friend:common  [src.bowl %pending-incoming %.n mtd]
   =/  pass=passport:common   (our-passport:scries bowl)
+  =/  pass-time=@da  updated-at:(our-passport-row:scries bowl)
 
   =/  cards=(list card)
-    :~  [%pass /contacts %agent [src.bowl dap.bowl] %poke %passport-action !>([%receive-contacts [[now.bowl contact.pass] ~]])]
+    :~  [%pass /contacts %agent [src.bowl dap.bowl] %poke %passport-action !>([%receive-contacts [[pass-time contact.pass] ~]])]
         (create our.bowl friend-type:common [%friend new-fren])
     ==
   [cards state]
@@ -365,6 +366,7 @@
   =/  kickcard=card  [%give %kick ~[vent-path] ~]
 
   =/  pass=passport:common   (our-passport:scries bowl)
+  =/  pass-time=@da  updated-at:(our-passport-row:scries bowl)
   =/  src-fren=?  (is-friend:scries src.bowl bowl)
   :: only actually give out the passport if we are discoverable
   :: OR we are friends with the requester
@@ -373,7 +375,7 @@
   =/  cards=(list card)
     :-  [%give %fact ~[vent-path] passport-vent+!>([%passport pass])]
     :-  kickcard
-    :-  [%pass /contacts %agent [src.bowl dap.bowl] %poke %passport-action !>([%receive-contacts [[now.bowl contact.pass] ~]])]
+    :-  [%pass /contacts %agent [src.bowl dap.bowl] %poke %passport-action !>([%receive-contacts [[pass-time contact.pass] ~]])]
     ~
   [cards state]
 ::
@@ -400,7 +402,7 @@
   =/  cards=(list card)
     :-  [%give %fact ~[vent-path] db-vent+!>([%row r ~])]
     :-  kickcard
-    :-  [%pass /contacts %agent [src.bowl dap.bowl] %poke %passport-action !>([%receive-contacts [[now.bowl contact.pass] ~]])]
+    :-  [%pass /contacts %agent [src.bowl dap.bowl] %poke %passport-action !>([%receive-contacts [[updated-at.r contact.pass] ~]])]
     ~
   [cards state]
 ::
@@ -419,11 +421,12 @@
   :: only actually give out the passport if we are discoverable
   :: OR we are friends with the requester
   ?>  |(discoverable.pass src-fren)
+  =/  pass-time=@da  updated-at:(our-passport-row:scries bowl)
 
   =/  cards=(list card)
     :-  [%give %fact ~[vent-path] passport-vent+!>([%contact contact.pass])]
     :-  kickcard
-    :-  [%pass /contacts %agent [src.bowl dap.bowl] %poke %passport-action !>([%receive-contacts [[now.bowl contact.pass] ~]])]
+    :-  [%pass /contacts %agent [src.bowl dap.bowl] %poke %passport-action !>([%receive-contacts [[pass-time contact.pass] ~]])]
     ~
   [cards state]
 ::
@@ -440,6 +443,7 @@
   =/  kickcard=card  [%give %kick ~[vent-path] ~]
 
   =/  p=passport:common  (our-passport:scries bowl)
+  =/  pass-time=@da  updated-at:(our-passport-row:scries bowl)
   =/  old-contact=contact:common  contact.p
   =.  contact.p  (cleanup-contact c)
 
@@ -459,7 +463,7 @@
       =(our.bowl ship.contact.c)
     |=  c=[id:common @da =contact:common]
     ^-  card
-    [%pass /contacts %agent [ship.contact.c dap.bowl] %poke %passport-action !>([%receive-contacts [[now.bowl contact.p] ~]])]
+    [%pass /contacts %agent [ship.contact.c dap.bowl] %poke %passport-action !>([%receive-contacts [[pass-time contact.p] ~]])]
 
   [cards state]
 ::
@@ -631,6 +635,7 @@
     ==
   =.  cards
     ?:  =(contact.p old-contact)  cards :: don't poke everyone if the contact is the same as it was
+    =/  pass-time=@da  updated-at:(our-passport-row:scries bowl)
     %+  weld  cards
     %+  turn
       %+  skip  (our-contacts:scries bowl)
@@ -639,7 +644,7 @@
       =(our.bowl ship.contact.c)
     |=  c=[id:common @da =contact:common]
     ^-  card
-    [%pass /contacts %agent [ship.contact.c dap.bowl] %poke %passport-action !>([%receive-contacts [[now.bowl contact.p] ~]])]
+    [%pass /contacts %agent [ship.contact.c dap.bowl] %poke %passport-action !>([%receive-contacts [[pass-time contact.p] ~]])]
 
   [cards state]
 ::

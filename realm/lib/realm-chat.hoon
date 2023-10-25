@@ -385,6 +385,14 @@
       !>([%send-message chat-path ~[[[%status (crip "{(scow %p our.bowl)} created the chat")] ~ ~]] *@dr])
     !>([%send-message chat-path ~[[[%status (crip "{(scow %p our.bowl)} added {(scow %ud (dec (lent all-ships)))} peers")] ~ ~]] *@dr])
   =.  cards  (snoc cards [%pass /selfpoke %agent [our.bowl %realm-chat] %poke %chat-action send-status-message])
+  =.  cards
+    ?.  =(type.c.act %dm)  cards
+    =/  other-ship=@p  (snag 0 (skip all-ships |=(p=@p =(p our.bowl))))
+    =/  pass=passport:common   (our-passport:db-scry bowl)
+    =/  pass-time=@da  updated-at:(our-passport-row:db-scry bowl)
+    :-  [%pass /contacts %agent [other-ship %passport] %poke %passport-action !>([%receive-contacts [[pass-time contact.pass] ~]])]
+    :-  [%pass /contacts %agent [other-ship %passport] %poke %passport-action !>([%get-contact [our.bowl now.bowl]])]
+    cards
   [cards state]
 ::
 ++  edit-chat
