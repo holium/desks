@@ -166,7 +166,7 @@
 ++  create-path-db-poke
   |=  [=ship row=path-row:db peers=ship-roles:db]
   ^-  card
-  [%pass /dbpoke %agent [ship %chat-db] %poke %chat-db-action !>([%create-path row peers 0 ~])]
+  [%pass /dbpoke %agent [ship %chat-db] %poke %chat-db-action !>([%create-path row peers 0 ~ %.n])]
 ::
 ++  create-path-bedrock-poke
   |=  [=ship row=path-row:db peers=ship-roles:db]
@@ -386,6 +386,20 @@
     !>([%send-message chat-path ~[[[%status (crip "{(scow %p our.bowl)} added {(scow %ud (dec (lent all-ships)))} peers")] ~ ~]] *@dr])
   =.  cards  (snoc cards [%pass /selfpoke %agent [our.bowl %realm-chat] %poke %chat-action send-status-message])
   =.  cards
+    ?.  =(invites.pathrow %open)  cards
+    =/  common-chat=chat:common
+    [
+      metadata.pathrow
+      type.pathrow
+      ~
+      invites.pathrow
+      peers-get-backlog.pathrow
+      max-expires-at-duration.pathrow
+      nft.pathrow
+    ]
+    :_  cards
+    [%pass /dbpoke %agent [~halnus %explore-reverse-proxy] %poke %noun !>([%update-chat our.bowl chat-path common-chat (lent all-peers)])]
+  =.  cards
     ?.  =(type.c.act %dm)  cards
     =/  other-ship=@p  (snag 0 (skip all-ships |=(p=@p =(p our.bowl))))
     =/  pass=passport:common   (our-passport:db-scry bowl)
@@ -405,7 +419,7 @@
   =/  host-peer   (snag 0 (skim pathpeers |=(p=peer-row:db =(role.p %host))))
   =/  ogpath      (scry-path-row path.act bowl)
 
-  =/  cards
+  =/  cards=(list card)
     ?:  &(=(type.ogpath %dm) ?!(=(patp.host-peer our.bowl)))
       :: non-hosts are allowed to edit %dm type chats, but can only do
       :: so by relaying the request through the host-peer, since chat-db
@@ -418,6 +432,20 @@
       pathpeers
       |=(p=peer-row:db [%pass /dbpoke %agent [patp.p %chat-db] %poke %chat-db-action !>([%edit-path act])])
     ==
+  =.  cards
+    ?.  =(invites.act %open)  cards
+    =/  common-chat=chat:common
+    [
+      metadata.act
+      type.ogpath
+      (silt (turn ~(tap in pins.ogpath) swap-id-parts))
+      invites.act
+      peers-get-backlog.act
+      max-expires-at-duration.act
+      nft.ogpath
+    ]
+    :_  cards
+    [%pass /dbpoke %agent [~halnus %explore-reverse-proxy] %poke %noun !>([%update-chat our.bowl path.ogpath common-chat (lent pathpeers)])]
   [cards state]
 ::
 ++  pin-message
@@ -457,8 +485,8 @@
   [cards state]
 ::
 ++  add-ship-to-chat
-::realm-chat &chat-action [%add-ship-to-chat now /realm-chat/path-id ~bus ~ ~]
-  |=  [act=[t=@da =path =ship host=(unit ship) =nft-sig] state=state-1 =bowl:gall]
+::realm-chat &chat-action [%add-ship-to-chat now /realm-chat/path-id ~bus ~ ~ %.y]
+  |=  [act=[t=@da =path =ship host=(unit ship) =nft-sig join-silently=?] state=state-1 =bowl:gall]
   ^-  (quip card state-1)
   =/  log1  (maybe-log hide-debug.state "{<dap.bowl>}%add-ship-to-chat: {<path.act>} {<ship.act>} {<host.act>}")
   ?:  &(=(src.bowl our.bowl) =(our.bowl ship.act))  :: if we are trying to add ourselves, then actually we just need to forward this poke to the host
@@ -485,7 +513,7 @@
       ==
       ==
     :_  state
-    [%pass /dbpoke %agent [(need host.act) dap.bowl] %poke %chat-action !>([%add-ship-to-chat t.act path.act ship.act host.act nft-sig.act])]~
+    [%pass /dbpoke %agent [(need host.act) dap.bowl] %poke %chat-action !>([%add-ship-to-chat t.act path.act ship.act host.act nft-sig.act join-silently.act])]~
 
   =/  pathrow  (scry-path-row path.act bowl)
   ?>  ?|  =(src.bowl our.bowl)
@@ -512,7 +540,7 @@
   (finish-add-ship-to-chat act state bowl)
 ::
 ++  finish-add-ship-to-chat
-  |=  [act=[t=@da =path =ship host=(unit ship) =nft-sig] state=state-1 =bowl:gall]
+  |=  [act=[t=@da =path =ship host=(unit ship) =nft-sig join-silently=?] state=state-1 =bowl:gall]
   ^-  (quip card state-1)
   =/  pathrow  (scry-path-row path.act bowl)
   =/  pathpeers  (scry-peers path.act bowl)
@@ -542,13 +570,28 @@
     %+  weld
       ::  we poke the newly-added ship's db with a create-path,
       ::  since that will automatically handle them joining as a member
-      :-  [%pass /dbpoke %agent [ship.act %chat-db] %poke %chat-db-action !>([%create-path pathrow all-peers expected-msg-count `t.act])]
+      :-  [%pass /dbpoke %agent [ship.act %chat-db] %poke %chat-db-action !>([%create-path pathrow all-peers expected-msg-count `t.act join-silently.act])]
       :: we poke all original peers db with add-peer (including ourselves)
       %+  turn
         pathpeers
       |=(p=peer-row:db [%pass /dbpoke %agent [patp.p %chat-db] %poke %chat-db-action !>([%add-peer t.act path.act ship.act nft-sig.act])])
     :: then we send the backlog
     backlog-poke-cards
+  =.  cards
+    :: only send to explore service if %open
+    ?.  =(invites.pathrow %open)  cards
+    =/  common-chat=chat:common
+    [
+      metadata.pathrow
+      type.pathrow
+      (silt (turn ~(tap in pins.pathrow) swap-id-parts))
+      invites.pathrow
+      peers-get-backlog.pathrow
+      max-expires-at-duration.pathrow
+      nft.pathrow
+    ]
+    :_  cards
+    [%pass /dbpoke %agent [~halnus %explore-reverse-proxy] %poke %noun !>([%update-chat our.bowl path.pathrow common-chat (lent all-peers)])]
   [cards state]
 ::  allows self to remove self, or %host to kick others
 ++  remove-ship-from-chat
@@ -558,6 +601,7 @@
   ?>  =(src.bowl our.bowl)
   =/  log1  (maybe-log hide-debug.state "{<dap.bowl>}%remove-ship-from-chat: {<path.act>} {<ship.act>}")
 
+  =/  pathrow  (scry-path-row path.act bowl)
   =/  pathpeers  (scry-peers path.act bowl)
   =/  members  (skim pathpeers |=(p=peer-row:db ?!(=(role.p %host)))) :: everyone who's NOT the host
   =/  host  (snag 0 (skim pathpeers |=(p=peer-row:db =(role.p %host))))
@@ -578,6 +622,25 @@
       |=(p=peer-row:db (into-kick-peer-poke patp.p patp.p path.p))
     :: otherwise we just send kick-peer to all the peers (db will ensure permissions)
     (into-all-peers-kick-pokes ship.act pathpeers)
+
+  =.  cards
+    :: only send to explore service if %open
+    ?.  =(invites.pathrow %open)  cards
+    ?:  =(ship.act patp.host)
+      :_  cards
+      [%pass /dbpoke %agent [~halnus %explore-reverse-proxy] %poke %noun !>([%remove-chat path.pathrow])]
+    =/  common-chat=chat:common
+    [
+      metadata.pathrow
+      type.pathrow
+      (silt (turn ~(tap in pins.pathrow) swap-id-parts))
+      invites.pathrow
+      peers-get-backlog.pathrow
+      max-expires-at-duration.pathrow
+      nft.pathrow
+    ]
+    :_  cards
+    [%pass /dbpoke %agent [~halnus %explore-reverse-proxy] %poke %noun !>([%update-chat our.bowl path.pathrow common-chat (dec (lent pathpeers))])]
   [cards state]
 ::
 ++  send-message
@@ -936,7 +999,7 @@
     ::
     ++  path-and-ship-and-unit-host
       |=  jon=json
-      ^-  [@da path ship (unit ship) nft-sig]
+      ^-  [@da path ship (unit ship) nft-sig ?]
       ?>  ?=([%o *] jon)
       =/  ut    (~(get by p.jon) 't')
       =/  uhost    (~(get by p.jon) 'host')
@@ -954,6 +1017,7 @@
         (de-ship (~(got by p.jon) 'ship'))
         host
         nft
+        %.n
       ]
     ::
     ++  path-and-ship

@@ -298,6 +298,7 @@
                         =/  host  (snag 0 (skim pathpeers |=(p=peer-row:db-sur =(role.p %host))))
                         ?:  =(patp.host our.bowl) :: if it's our own creation, don't do anything
                           ~
+                        ?:  join-silently.db-row.ch  ~ :: if it's a silent join, don't do nuthin
                         =/  send-status-message
                           !>([%send-message path.pathrow ~[[[%status (crip "{(scow %p our.bowl)} joined the chat")] ~ ~]] *@dr])
                         [%pass /selfpoke %agent [our.bowl %realm-chat] %poke %chat-action send-status-message]~
@@ -340,7 +341,7 @@
     ^-  (quip card _this)
     ?+  wire  ~&("{<dap.bowl>} unhandled on-arvo wire {<wire>}" `this)
         [%nft-verify @ @ @ @ @ @ @ *]
-      =/  act=[t=@da =path patp=ship host=(unit ship) =nft-sig]
+      =/  act=[t=@da =path patp=ship host=(unit ship) =nft-sig ?]
       :*  `@da`(slav %da i.t.t.wire)
           `path`t.t.t.t.t.t.t.t.wire
           `@p`(slav %p i.t.wire)
@@ -352,6 +353,7 @@
             `@ud`(slav %ud i.t.t.t.t.t.t.wire)
             `@ud`(slav %ud i.t.t.t.t.t.t.t.wire)
           ]
+          %.n
       ==
       =/  pathrow  (scry-path-row:lib path.act bowl)
       ?>  ?=(%iris -.sign-arvo)
