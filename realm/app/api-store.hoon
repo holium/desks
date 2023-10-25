@@ -60,11 +60,11 @@
         =/  fp=fullpath:db  .^(fullpath:db %gx /(scot %p our.bowl)/bedrock/(scot %da now.bowl)/db/path/private/noun)
         =/  ucreds=(unit table:db)  (~(get by tables.fp) creds-type:common)
         ?~  ucreds
-          ``api-store-configuration+!>([%configuration ~ '' ''])
+          ``api-store-configuration+!>([%configuration ~ '' '' ~])
         =/  creds=row:db  (snag 0 (sort ~(val by u.ucreds) |=([a=row:db b=row:db] (gth t.id.a t.id.b))))
         ?+  -.data.creds  !!
             %creds
-          ``api-store-configuration+!>([%configuration buckets.data.creds current-bucket.data.creds region.data.creds])
+          ``api-store-configuration+!>([%configuration buckets.data.creds current-bucket.data.creds region.data.creds ~])
         ==
     ::
       [%x %credentials ~]
