@@ -704,8 +704,10 @@
   ^-  (quip card state-0)
   ?>  =(src.bowl our.bowl)
   =/  id  (our-passport-id:scries bowl)
+  =/  cid  (our-contact-id:scries bowl)
   :_  state
   :~  [%pass /dbpoke %agent [our.bowl %bedrock] %poke db-action+!>([%remove [our.bowl *@da] passport-type:common /private id])]
+      [%pass /dbpoke %agent [our.bowl %bedrock] %poke db-action+!>([%remove [our.bowl *@da] contact-type:common /private cid])]
       [%pass /dbpoke %agent [our.bowl dap.bowl] %poke passport-action+!>([%init-our-passport ~])]
   ==
 ::
@@ -740,8 +742,10 @@
     =/  p=passport:common
       [our-contact ~ %online %.y ~ ~ '' ~ ~ *passport-crypto:common]
     =/  cards=(list card)
-    :~  (create our.bowl passport-type:common [%passport p])
-        (create our.bowl contact-type:common [%contact contact.p])
+    :: ~s0..1000 create these records 1/16 of a second in the
+    :: future to prevent delete-log confusion
+    :~  (create-req our.bowl passport-type:common [%passport p] [our.bowl (add ~s0..1000 now.bowl)])
+        (create-req our.bowl contact-type:common [%contact contact.p] [our.bowl (add ~s0..1000 now.bowl)])
     ==
     [cards state]
     
@@ -761,8 +765,10 @@
   =/  p=passport:common
     [our-contact ~ %online %.y ~ ~ '' ~ ~ *passport-crypto:common]
   =/  cards=(list card)
-    :-  (create our.bowl passport-type:common [%passport p])
-    :-  (create our.bowl contact-type:common [%contact contact.p])
+    :: ~s0..1000 create these records 1/16 of a second in the
+    :: future to prevent delete-log confusion
+    :-  (create-req our.bowl passport-type:common [%passport p] [our.bowl (add ~s0..1000 now.bowl)])
+    :-  (create-req our.bowl contact-type:common [%contact contact.p] [our.bowl (add ~s0..1000 now.bowl)])
     ^-  (list card)
     %+  weld
       ^-  (list card)

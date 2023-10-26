@@ -1267,7 +1267,7 @@
     ==
 ::
 ++  create
-::bedrock &db-action [%create [~zod now] /example %foo 0 [%general ~[1 'a']] ~[['num' 'ud'] ['str' 't']]]
+::bedrock &db-action [%create [~zod now] /example [%foo 0v3.vumvj.9vf1a.f3lje.d8i4e.vrmeu] 0 [%general ~[1 'a']] ~[['num' 'ud'] ['str' 't']]]
 ::bedrock &db-action [%create /example %vote 0 [%vote [%.y our %foo [~zod now] /example]] ~]
 ::bedrock &db-action [%create /example %foo 1 [%general ~[1 'd' (jam /hello/goodbye)]] ~[['num' 'ud'] ['str' 't'] ['mypath' 'path']]]
 ::~zod/bedrock &db-action [%create /example %vote 0 [%vote %.y our %foo [~zod now] /example] ~]
@@ -1278,14 +1278,14 @@
   =/  kickcard=card  [%give %kick ~[vent-path] ~]
   :: form row from input
   =/  created-time=@da  
-    ?:(=(now.req-id *@da) now.bowl ?:((gth now.bowl now.req-id) now.req-id now.bowl))
+    ?:(=(now.req-id *@da) now.bowl now.req-id)
   =/  creator=ship
     ?:  &(=(our.bowl src.bowl) ?!(=(src.req-id our.bowl)))
       src.req-id
     src.bowl
   :: create with unique id
   ::
-  =?  created-time  (lth (sub now.bowl created-time) ~s30)
+  =?  created-time  |((gth created-time now.bowl) (lth (sub now.bowl created-time) ~s30))
     |-
     =/  =id:common  [creator created-time]
     ?~  get=(get-db type.input-row path.input-row id state)
