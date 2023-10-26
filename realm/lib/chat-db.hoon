@@ -18,10 +18,14 @@
   :: a ship within the peers list
   =/  src-peer  (snag 0 (skim peers |=(p=peer-row:sur =(patp.p src)))) :: will crash if src not in list
   :: AND
-  :: any peer-ship if set to %anyone
+  :: any peer-ship if set to %anyone or %open
   :: OR a ship whose role matches the path-row `invites` setting
   :: OR whose role is the %host
-  |(=(invites.path-row %anyone) =(role.src-peer invites.path-row) =(role.src-peer %host))
+  ?|  =(invites.path-row %anyone)
+      =(invites.path-row %open)
+      =(role.src-peer invites.path-row)
+      =(role.src-peer %host)
+  ==
 ::
 ++  fill-out-minimal-fragment
   |=  [frag=minimal-fragment:sur =path =msg-id:sur index=@ud updated-at=@da expires-at=@da now=@da]
