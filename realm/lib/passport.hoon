@@ -721,7 +721,7 @@
   ?.  =((lent passports) 0)  `state
   :: TODO ask %pals for as many contacts to prepopulate as we can and
   :: TODO create a poke to auto-add friends from mutuals in %pals
-
+ 
   :: if we already have a bunch of contacts, just re-create ourself,
   :: don't do the whole big import
   ?:  (gth (lent (our-contacts:scries bowl)) 2)
