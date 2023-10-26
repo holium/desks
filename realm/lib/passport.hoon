@@ -704,10 +704,8 @@
   ^-  (quip card state-0)
   ?>  =(src.bowl our.bowl)
   =/  id  (our-passport-id:scries bowl)
-  =/  cid  (our-contact-id:scries bowl)
   :_  state
   :~  [%pass /dbpoke %agent [our.bowl %bedrock] %poke db-action+!>([%remove [our.bowl *@da] passport-type:common /private id])]
-      [%pass /dbpoke %agent [our.bowl %bedrock] %poke db-action+!>([%remove [our.bowl *@da] contact-type:common /private cid])]
       [%pass /dbpoke %agent [our.bowl dap.bowl] %poke passport-action+!>([%init-our-passport ~])]
   ==
 ::
