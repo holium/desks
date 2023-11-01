@@ -149,8 +149,8 @@
   =/  sch=schema
   ?~  (~(get by schemas.state) type.row)    ~
   (~(got by schemas.state) type.row)
-  ?~  check.constraint  %.y
-  %+  levy    ~(tap in u.check.constraint)
+  ?~  checks.constraint  %.y
+  %+  levy    ~(tap in u.checks.constraint)
   |=  c=[agent=@tas scry=path]
   .=  %.y
   .^(* %gx (weld /(scot %p our.bowl)/[agent.c]/(scot %da now.bowl) (weld scry.c (row-to-json-path row sch))))
@@ -1930,7 +1930,7 @@
         ?~  uuniqs  ~
         ((as (as de-column-accessor)) u.uuniqs)
       =/  ucheck    (~(get by p.jon) 'checks')
-      =/  c=check
+      =/  c=checks
         ?~  ucheck  ~
         %-  some
         ((as (ot ~[agent+(se %tas) scry+pa])) u.ucheck)
@@ -2054,27 +2054,6 @@
     ::
     ++  de-ship  (su ;~(pfix sig fed:ag))
     ::
-    ++  da-or-bunt-null   :: specify in integer milliseconds, returns a @dr
-      |=  jon=json
-      ^-  @da
-      ?+  jon   !!
-        [%n *]  (di jon)
-        ~       *@da
-      ==
-    ::
-    ++  dri   :: specify in integer milliseconds, returns a @dr
-      (cu |=(t=@ud ^-(@dr (div (mul ~s1 t) 1.000))) ni)
-    ::
-    ++  null-or-dri   :: specify in integer milliseconds, returns a @dr
-      (cu |=(t=@ud ^-(@dr (div (mul ~s1 t) 1.000))) null-or-ni)
-    ::
-    ++  null-or-ni  :: accepts either a null or a n+'123', and converts nulls to 0, non-null to the appropriate number
-      |=  jon=json
-      ^-  @ud
-      ?+  jon  !!
-        [%n *]  (rash p.jon dem)
-        ~       0
-      ==
     --
   --
 ::
@@ -2361,7 +2340,7 @@
           ['replication' s+(scot %tas replication.path-row)]
           ['default-access' (en-access-rules default-access.path-row)]
           ['table-access' (en-table-access table-access.path-row)]
-          ['constraints' ~]  :: TODO actually do json conversion for constraints
+          ['constraints' (en-constraints:enjs:bedrock-json constraints.path-row)]
           ['created-at' (time created-at.path-row)]
           ['updated-at' (time updated-at.path-row)]
           ['received-at' (time received-at.path-row)]
@@ -2491,15 +2470,7 @@
         ~
       (time t)
     ::
-    ++  en-db-type
-      |=  =type:common
-      ^-  json
-      s+(db-type-to-cord type)
-    ::
-    ++  db-type-to-cord
-      |=  =type:common
-      ^-  cord
-      (spat ~[(scot %tas name.type) (scot %uv hash.type)])
+    ++  en-db-type  en-db-type:enjs:bedrock-json
     ::
     ++  numbrd
       |=  a=@rd

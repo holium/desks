@@ -234,5 +234,65 @@
       ~       0
     ==
   --
+::
+++  enjs
+  =,  enjs:format
+  |%
+  ++  en-constraints
+    |=  =constraints
+    ^-  json
+    =/  kvs
+      %+  turn
+        ~(tap by constraints)
+      |=  [k=type:common v=constraint]
+      ^-  [k=@t v=json]
+      [(db-type-to-cord k) (en-constraint v)]
 
+    :-  %o
+    ^-  (map @t json)
+    (~(gas by *(map @t json)) kvs)
+  ::
+  ++  en-constraint
+    |=  =constraint
+    ^-  json
+    %-  pairs
+    :~  [%uniques a+(turn ~(tap in uniques.constraint) en-uniq-col)]
+        [%checks (en-checks checks.constraint)]
+    ==
+  ::
+  ++  en-uniq-col
+    |=  =unique-columns
+    ^-  json
+    :-  %a
+    %+  turn
+      ~(tap in unique-columns)
+    |=  ca=column-accessor
+    ^-  json
+    ?@  ca  (numb `@`ca)
+    (tape:enjs:format ca)
+  ::
+  ++  en-checks
+    |=  =checks
+    ^-  json
+    :-  %a
+    ?~  checks  ~
+    %+  turn
+      ~(tap in u.checks)
+    |=  ch=check
+    ^-  json
+    %-  pairs
+    :~  [%agent s+agent.ch]
+        [%scry s+(spat scry.ch)]
+    ==
+  ++  en-db-type
+    |=  =type:common
+    ^-  json
+    s+(db-type-to-cord type)
+  ::
+  ++  db-type-to-cord
+    |=  =type:common
+    ^-  cord
+    (spat ~[(scot %tas name.type) (scot %uv hash.type)])
+  ::
+  --
 --
