@@ -98,7 +98,7 @@
   ^-  (list card:agent:gall)
   =/  url=@t
   %-  crip
-  :~  'https://realm-server-test.plymouth.network/alchemy/nfts/'
+  :~  'https://realm-server.holium.network/alchemy/nfts/'
     chain
     '/'
     addr.nft-sig
