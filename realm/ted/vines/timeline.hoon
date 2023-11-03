@@ -1,4 +1,4 @@
-/-  spider
+/-  spider, common
 /+  *ventio, t=timeline, db, cd=chat-db, server, scries=bedrock-scries
 =>  |%
     +$  gowl  bowl:gall
@@ -217,14 +217,15 @@
     (pure:m !>(`~))
     ::
       %convert-message
-    ;<  post=[req-id=[@p @da] post=timeline-post:t]  bind:m
+    ;<  row=(unit [req-id=[@p @da] =type:common data=columns:db =schema:db])  bind:m
       (convert-chat-db-msg-part [msg-id msg-part-id]:axn)
+    ?~  row  (pure:m !>(`~))
     |-
     ?~  to.axn  (pure:m !>(`~))
     =/  =action:db
-      :*  %create  req-id.post
-          i.to.axn  [%timeline-post 0v0]
-          [%timeline-post post.post]  ~
+      :*  %create  req-id.u.row
+          i.to.axn  type.u.row
+          data.u.row  schema.u.row
       ==
     ;<  ^vase  bind:m  (run-thread %realm %venter !>(`action))
     $(to.axn t.to.axn)
@@ -246,16 +247,16 @@
       (pure:m !>([~[%forerunners-timeline-already-exists] ~]))
     ;<  *  bind:m
       ((vent ,*) [our dap]:gowl timeline-action+[%create-timeline %forerunners])
-    ;<  posts=(list [[@p @da] timeline-post:t])  bind:m
+    ;<  rows=(list [[@p @da] type:common columns:db schema:db])  bind:m
       (convert-chat-db-msg-parts fore)
     =/  =cage
       :-  %db-action  !>
       :-  %create-many
-      %+  turn  posts
-      |=  [req-id=[@p @da] post=timeline-post:t]
+      %+  turn  rows
+      |=  [req-id=[@p @da] =type:common data=columns:db =schema:db]
       :*  req-id
-          db-fore  [%timeline-post 0v0]
-          [%timeline-post post]  ~
+          db-fore  type
+          data  schema
       ==
     ;<  ~  bind:m  (poke [our.gowl %bedrock] cage)
     (pure:m !>(`~))
@@ -267,16 +268,16 @@
       (pure:m !>([~[%chat-timeline-already-exists] ~]))
     ;<  *  bind:m
       ((vent ,*) [our dap]:gowl timeline-action+[%create-timeline name.axn])
-    ;<  posts=(list [[@p @da] timeline-post:t])  bind:m
+    ;<  rows=(list [[@p @da] type:common columns:db schema:db])  bind:m
       (convert-chat-db-msg-parts path.axn)
     =/  =cage
       :-  %db-action  !>
       :-  %create-many
-      %+  turn  posts
-      |=  [req-id=[@p @da] post=timeline-post:t]
+      %+  turn  rows
+      |=  [req-id=[@p @da] =type:common data=columns:db =schema:db]
       :*  req-id
-          timeline-path  [%timeline-post 0v0]
-          [%timeline-post post]  ~
+          timeline-path  type
+          data  schema
       ==
     ;<  ~  bind:m  (poke [our.gowl %bedrock] cage)
     (pure:m !>(`~))
@@ -407,7 +408,7 @@
 ::
 ++  convert-chat-db-msg-part
   |=  [=msg-id:cd =msg-part-id:cd]
-  =/  m  (strand ,[[@p @da] timeline-post:t])
+  =/  m  (strand ,(unit [[@p @da] type:common columns:db schema:db]))
   ^-  form:m
   ;<  dump=db-dump:cd  bind:m
     (scry db-dump:cd /gx/chat-db/db/chat-db-dump)
@@ -417,15 +418,13 @@
     (turn tables.dump |=(=table:cd [-.table table]))
   =/  =table:cd  (~(got by tables) %messages)
   ?>  ?=(%messages -.table)
-  =+  (got:msgon:cd messages-table.table [msg-id msg-part-id])
-  ;<  our=ship  bind:m  get-our
-  %-  pure:m
-  :-  [our created-at]
-  (convert-message:t msg-id msg-part-id content metadata)
+  =/  =msg-part:cd
+    (got:msgon:cd messages-table.table [msg-id msg-part-id])
+  (pure:m (convert-message:t msg-part))
 ::
 ++  convert-chat-db-msg-parts
   |=  =path
-  =/  m  (strand ,(list [[@p @da] timeline-post:t]))
+  =/  m  (strand ,(list [[@p @da] type:common columns:db schema:db]))
   ^-  form:m
   ;<  dump=db-dump:cd  bind:m
     (scry db-dump:cd /gx/chat-db/db/chat-db-dump)
@@ -435,13 +434,11 @@
     (turn tables.dump |=(=table:cd [-.table table]))
   =/  =table:cd  (~(got by tables) %messages)
   ?>  ?=(%messages -.table)
-  ;<  our=ship  bind:m  get-our
   %-  pure:m
   %+  murn  (tap:msgon:cd messages-table.table)
-  |=  [* msg-part:cd]
-  ?.  =(^path path)  ~
-  :-  ~  :-  [our created-at]
-  (convert-message:t msg-id msg-part-id content metadata)
+  |=  [* =msg-part:cd]
+  ?.  =(path path.msg-part)  ~
+  (convert-message:t msg-part)
 ::
 ++  timeline-post-ids
   |=  =path

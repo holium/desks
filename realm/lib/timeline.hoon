@@ -1,14 +1,19 @@
-/-  *timeline, cd=chat-db
+/-  *timeline, cd=chat-db, db, common
 |%
 ++  convert-message
-  |=  $:  =msg-id:cd
-          =msg-part-id:cd
-          =content:cd
-          metadata=(map cord cord)
-      ==
-  ^-  timeline-post
+  |=  msg-part:cd
+  ^-  (unit [[@p @da] type:common columns:db schema:db])
+  ?:  ?=(%status -.content)  ~
+  ?:  ?=(%react -.content)  ~
+    :: :*  [%react 0v0]
+    ::     [%react ``[%text p.content %md %normal %normal]~]
+    ::     ~
+    :: ==
+  :-  ~  :-  [sender.msg-id created-at]
+  =-  [[%timeline-post 0v0] - ~]
+  :-  %timeline-post
   :-  ~  :-  ~
-  ?-    -.content
+  ?-  -.content
     %custom               [%text (rap name.content ': ' value.content ~) %md %normal %normal]~
     %markdown             [%text p.content %md %normal %normal]~
     %plain                [%text p.content %md %normal %normal]~
@@ -24,8 +29,6 @@
     %ship                 [%text (scot %p p.content) %md %normal %normal]~
     %code                 [%text p.content %md %normal %normal]~
     %ur-link              [%text p.content %md %normal %normal]~
-    %react                [%text p.content %md %normal %normal]~
-    %status               [%text p.content %md %normal %normal]~
     %break                [%text '\0a' %sm %normal %normal]~
     ::
       %image
