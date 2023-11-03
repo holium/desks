@@ -21,6 +21,7 @@
       [%create-comment =path =comment:common]
       [%delete-comment =path =id:common]
       [%add-forerunners-bedrock force=?]
+      [%add-chat =path name=@ta force=?]
       [%create-personal-timeline ~]
       [%convert-message =msg-id:cd =msg-part-id:cd to=(list path)]
       [%add-random-emojis =path]

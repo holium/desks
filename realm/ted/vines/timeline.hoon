@@ -260,6 +260,27 @@
     ;<  ~  bind:m  (poke [our.gowl %bedrock] cage)
     (pure:m !>(`~))
     ::
+      %add-chat
+    =/  timeline-path=path  /timeline/(scot %p our.gowl)/[name.axn]
+    ?:  &(!force.axn (test-bedrock-path-existence:scries timeline-path gowl))
+      ~&  >>  %chat-timeline-already-exists
+      (pure:m !>([~[%chat-timeline-already-exists] ~]))
+    ;<  *  bind:m
+      ((vent ,*) [our dap]:gowl timeline-action+[%create-timeline name.axn])
+    ;<  posts=(list [[@p @da] timeline-post:t])  bind:m
+      (convert-chat-db-msg-parts path.axn)
+    =/  =cage
+      :-  %db-action  !>
+      :-  %create-many
+      %+  turn  posts
+      |=  [req-id=[@p @da] post=timeline-post:t]
+      :*  req-id
+          timeline-path  [%timeline-post 0v0]
+          [%timeline-post post]  ~
+      ==
+    ;<  ~  bind:m  (poke [our.gowl %bedrock] cage)
+    (pure:m !>(`~))
+    ::
       %add-random-emojis
     ;<  ids=(list id:common:db)  bind:m  (timeline-post-ids path.axn)
     =/  =cage
