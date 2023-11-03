@@ -25,6 +25,7 @@
   $:  =path
       metadata=(map cord cord)
       type=@tas     :: not officially specified, up to user to interpret for maybe %dm vs %group or %chat vs %board or whatever
+                    :: if %nft-gated, the `nft` logic comes into play
       created-at=time
       updated-at=time  :: updated when %edit-path-medatata is hit
       =pins
@@ -32,6 +33,7 @@
       peers-get-backlog=?
       max-expires-at-duration=@dr  :: optional chat-wide enforced expires-at on messages. 0 or *@dr means "not set"
       received-at=time
+      nft=(unit [contract=@t chain=@t standard=@t]) :: contract is the 0x789... address, chain is "eth-mainnet" or whatever, standard is "ERC-721"
   ==
 ::
 +$  paths-table  (map path path-row)
@@ -103,9 +105,10 @@
 ::  agent details
 ::
 +$  ship-roles  (list [s=@p role=@tas])
++$  nft-sig    (unit [sig=@t addr=@t name=@t nonce=@ud t=@ud])
 +$  action
   $%  
-      [%create-path =path-row peers=ship-roles expected-msg-count=@ud t=(unit @da)]
+      [%create-path =path-row peers=ship-roles expected-msg-count=@ud t=(unit @da) join-silently=?]
       [%edit-path =path metadata=(map cord cord) peers-get-backlog=? invites=@tas max-expires-at-duration=@dr]
       [%edit-path-pins =path =pins]
       [%leave-path =path]
@@ -114,10 +117,11 @@
       [%edit =edit-message-action]
       [%delete =msg-id]
       [%delete-backlog =path before=time]
-      [%add-peer t=@da =path patp=ship]
+      [%add-peer t=@da =path patp=ship =nft-sig]
       [%kick-peer =path patp=ship]
       [%dump-to-bedrock ~]
       [%dump-to-bedrock-messages our-paths=(list path-row)]
+      [%de-dup-peers ~]
 
       [%set-allowed-migrate-host =ship]
       [%remove-allowed-migrate-host =ship]
@@ -134,23 +138,27 @@
   $%  
       [%tables =tables]
   ==
++$  db-del-type
+  $%
+    [%del-paths-row =path timestamp=@da]
+    [%del-peers-row =path =ship timestamp=@da]
+    [%del-messages-row =path =uniq-id timestamp=@da]
+  ==
 +$  db-change-type
   $%
     [%add-row =db-row]
     [%upd-messages =msg-id =message]
     [%upd-paths-row =path-row old=path-row]
-    [%del-paths-row =path timestamp=@da]
-    [%del-peers-row =path =ship timestamp=@da]
-    [%del-messages-row =path =uniq-id timestamp=@da]
+    db-del-type
   ==
 +$  db-row
-  $%  [%paths =path-row]
+  $%  [%paths =path-row join-silently=?]
       [%messages =msg-part]
       [%peers =peer-row]
   ==
 +$  db-change  (list db-change-type)
-+$  del-log  ((mop time db-change-type) gth)
-++  delon  ((on time db-change-type) gth)
++$  del-log  ((mop time db-del-type) gth)
+++  delon  ((on time db-del-type) gth)
 ::
 +$  chat-vent
   $%  [%msg =message]
@@ -240,4 +248,47 @@
       updated-at=time
   ==
 +$  peers-table-1  (map path (list peer-row-1))
+::
++$  path-row-2
+  $:  =path
+      metadata=(map cord cord)
+      type=@tas
+      created-at=time
+      updated-at=time
+      =pins
+      invites=@tas
+      peers-get-backlog=?
+      max-expires-at-duration=@dr
+      received-at=time
+  ==
++$  paths-table-2  (map path path-row-2)
++$  db-change-type-2
+  $%
+    [%add-row =db-row-2]
+    [%upd-messages =msg-id =message]
+    [%upd-paths-row =path-row-2 old=path-row-2]
+    [%del-paths-row =path timestamp=@da]
+    [%del-peers-row =path =ship timestamp=@da]
+    [%del-messages-row =path =uniq-id timestamp=@da]
+  ==
++$  db-row-2
+  $%  [%paths =path-row-2]
+      [%messages =msg-part]
+      [%peers =peer-row]
+  ==
++$  del-log-2  ((mop time db-change-type-2) gth)
++$  del-log-3  ((mop time db-change-type-3) gth)
+++  delon-3  ((on time db-change-type-3) gth)
++$  db-change-type-3
+  $%
+    [%add-row db-row=db-row-3]
+    [%upd-messages =msg-id =message]
+    [%upd-paths-row =path-row old=path-row]
+    db-del-type
+  ==
++$  db-row-3
+  $%  [%paths =path-row]
+      [%messages =msg-part]
+      [%peers =peer-row]
+  ==
 --

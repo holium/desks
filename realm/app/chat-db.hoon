@@ -1,7 +1,7 @@
 ::  app/chat-db.hoon
 /-  *versioned-state, sur=chat-db
 /+  dbug, db-lib=chat-db
-=|  state-3
+=|  state-5
 =*  state  -
 :: ^-  agent:gall
 =<
@@ -12,10 +12,12 @@
   ::
   ++  on-init
     ^-  (quip card _this)
-    =/  default-state=state-3
-      [%3 *paths-table:sur *messages-table:sur *peers-table:sur *del-log:sur ~ ~]
+    =/  default-state=state-5
+      [%5 *paths-table:sur *messages-table:sur *peers-table:sur *del-log:sur ~ ~]
     :_  this(state default-state)
-    [%pass /timer %arvo %b %wait next-expire-time:core]~
+    :~  [%pass /timer %arvo %b %wait next-expire-time:core]
+    ::    [%pass /selfpoke %agent [our.bowl dap.bowl] %poke %chat-db-action !>([%dump-to-bedrock ~])]
+    ==
   ++  on-save   !>(state)
   ++  on-load
     |=  old-state=vase
@@ -27,6 +29,7 @@
     =/  default-cards
       :~  [%pass /timer %arvo %b %rest next-expire-time:core]
           [%pass /timer %arvo %b %wait next-expire-time:core]
+          [%pass /selfpoke %agent [our.bowl dap.bowl] %poke %chat-db-action !>([%de-dup-peers ~])]
       ==
     ?-  -.old
       %0  
@@ -35,11 +38,11 @@
 
       %1
         =/  paths
-          %-  ~(gas by *paths-table:sur)
+          %-  ~(gas by *paths-table-2:sur)
           %+  turn
             ~(tap by paths-table-1.old)
           |=  kv=[k=path v=path-row-1:sur]
-          ^-  [k=path:sur v=path-row:sur]
+          ^-  [k=path:sur v=path-row-2:sur]
           [
             k.kv
             [
@@ -102,18 +105,81 @@
               created-at.v.kv :: set received-at to be the created-at, since we don't actually know when it was recieved
             ]
           ]
-        =/  new-state  [
+        =/  new-state=state-2  [
           %2
           paths
           msgs
           peers
-          *del-log:sur :: technically we don't NEED to wipe this in order to upgrade... but who cares about the delete log.
+          *del-log-2:sur :: technically we don't NEED to wipe this in order to upgrade... but who cares about the delete log.
         ]
         (on-load !>(new-state))
       %2
-    =/  new-state=state-3  [%3 paths-table.old messages-table.old peers-table.old del-log.old ~ ~]
+    =/  new-state=state-3  [%3 paths-table-2.old messages-table.old peers-table.old del-log-2.old ~ ~]
+    (on-load !>(new-state))
+      %3
+    =/  paths
+      %-  ~(gas by *paths-table:sur)
+      %+  turn
+        ~(tap by paths-table-2.old)
+      |=  kv=[k=path v=path-row-2:sur]
+      ^-  [k=path:sur v=path-row:sur]
+      [
+        k.kv
+        [
+          path.v.kv
+          metadata.v.kv
+          type.v.kv
+          created-at.v.kv
+          updated-at.v.kv
+          pins.v.kv
+          invites.v.kv
+          peers-get-backlog.v.kv
+          max-expires-at-duration.v.kv
+          received-at.v.kv
+          ~
+        ]
+      ]
+
+    =/  new-state  [
+      %4
+      paths
+      messages-table.old
+      peers-table.old
+      *del-log-3:sur :: technically we don't NEED to wipe this in order to upgrade... but who cares about the delete log.
+      ~
+      ~
+    ]
+    (on-load !>(new-state))
+      %4
+    =/  dl=del-log:sur
+    %-  ~(gas by *del-log:sur)
+    ^-  (list [k=time v=db-del-type:sur])
+    %+  turn
+      %+  skim  (tap:delon-3:sur del-log.old)
+      |=  [k=time v=db-change-type-3]
+      ?+  -.v  %.n
+        %del-paths-row  %.y
+        %del-peers-row  %.y
+        %del-messages-row  %.y
+      ==
+    |=  [k=time v=db-change-type-3]
+    ^-  [time db-del-type]
+    ?+  -.v  !!
+      %del-paths-row  [k v]
+      %del-peers-row  [k v]
+      %del-messages-row  [k v]
+    ==
+    =/  new-state  [
+      %5
+      paths-table.old
+      messages-table.old
+      peers-table.old
+      dl
+      allowed-migration-hosts.old
+      ongoing-migrations.old
+    ]
     [default-cards this(state new-state)]
-      %3  [default-cards this(state old)]
+      %5  [default-cards this(state old)]
     ==
   ::
   ++  on-poke
@@ -154,6 +220,8 @@
         (dump-to-bedrock:db-lib state bowl)
       %dump-to-bedrock-messages
         (dump-to-bedrock-messages:db-lib +.act state bowl)
+      %de-dup-peers
+        (de-dup-peers-and-leave-empty-dms:db-lib state bowl)
 
       %set-allowed-migrate-host
         (set-allowed-migrate-host:db-lib +.act state bowl)
@@ -331,7 +399,7 @@
     |=  path
       `this
   ::
-  ::  only used for behn timers
+  ::  only used for behn timers and nft-verification
   ++  on-arvo
     |=  [=wire =sign-arvo]
     ^-  (quip card _this)
@@ -348,6 +416,41 @@
           [[%pass /timer %arvo %b %rest next-expire-time:core] [%pass /timer %arvo %b %wait next-expire-time:core] ~]
           this
         ]
+      [%nft-verify @ @ @ @ @ @ @ *]
+        =/  act=[t=@da =path patp=ship =nft-sig:sur]
+        :*  `@da`(slav %da i.t.t.wire)
+            `path`t.t.t.t.t.t.t.t.wire
+            `@p`(slav %p i.t.wire)
+            %-  some  [
+              i.t.t.t.wire
+              i.t.t.t.t.wire
+              i.t.t.t.t.t.wire
+              `@ud`(slav %ud i.t.t.t.t.t.t.wire)
+              `@ud`(slav %ud i.t.t.t.t.t.t.t.wire)
+            ]
+        ==
+        =/  pathrow               (~(got by paths-table.state) path.act)
+        ?>  ?=(%iris -.sign-arvo)
+        =/  i  +.sign-arvo
+        ?>  ?=(%http-response -.i)
+        ?>  ?=(%finished -.+.i)
+        =/  payload  full-file.client-response.i
+        ?~  payload  `this
+        =/  cleaned-contract=@t  (crip (cass (trip contract:(need nft.pathrow))))
+        =/  contracts=(list @t)
+          (parse-alchemy-json (need (de:json:html q.data.u.payload)))
+        ?>  |-
+          ?:  =((lent contracts) 0)
+            ~&  >>>  "failed to find matching contract {<nft.pathrow>}"
+            %.n
+          ?:  =(cleaned-contract (snag 0 contracts))
+            ~&  >  "found matching contract {<nft.pathrow>} {<(snag 0 contracts)>}"
+            %.y
+          $(contracts +.contracts)
+
+        =^  cards  state
+        (finish-add-peer:db-lib act state bowl)
+        [cards this]
     ==
   ::
   ++  on-fail
@@ -362,4 +465,16 @@
 ++  next-expire-time  `@da`(add (mul (div now.bowl ~m1) ~m1) ~m1)  :: TODO decide on actual timer interval
 ++  all-tables
   [[%paths paths-table.state] [%messages messages-table.state] [%peers peers-table.state] ~]
+++  parse-alchemy-json
+  |=  jon=json
+  ^-  (list @t)
+  ?>  ?=([%o *] jon)
+  =/  contracts=json  (~(got by p.jon) 'contracts')
+  ?>  ?=([%a *] contracts)
+  %+  turn  p.contracts
+  |=  jn=json
+  ^-  @t
+  ?>  ?=([%o *] jn)
+  =/  address=json  (~(got by p.jn) 'address')
+  (crip (cass (trip (so:dejs:format address))))
 --

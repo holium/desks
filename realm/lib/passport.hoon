@@ -1,5 +1,5 @@
 /-  *passport, common, db
-/+  scries=bedrock-scries, eth=ethereum
+/+  scries=bedrock-scries, crypto-helper
 |%
 ::
 :: helpers
@@ -25,82 +25,6 @@
   =/  keys=(list @t)  (~(got by entity-to-addresses.pki-state.crypto.p) entity)
   ?~  (find [key]~ keys)  %.n  ::invalid signing key
   %.y
-::
-++  ud-to-t
-  |=  a=@u
-  ^-  @t
-  ?:  =(0 a)  '0'
-  %-  crip
-  %-  flop
-  |-  ^-  ^tape
-  ?:(=(0 a) ~ [(add '0' (mod a 10)) $(a (div a 10))])
-++  split-sig
-  |=  sig=@
-  ^-  [v=@ r=@ s=@]
-  |^
-    =^  v  sig  (take 3)
-    =^  s  sig  (take 3 32)
-    =^  r  sig  (take 3 32)
-    =?  v  (gte v 27)  (sub v 27)
-    [v r s]
-  ::
-  ++  take
-    |=  =bite
-    [(end bite sig) (rsh bite sig)]
-  --
-::
-++  recover-pub-key
-  |=  [msg=@t sig=@t addr=@t]  ^-  @ux
-  =/  hashed-msg=@ux
-    %-  keccak-256:keccak:crypto
-    %-  as-octs:mimes:html
-    %-  crip
-    ^-  tape
-    %+  weld
-    (trip '\19Ethereum Signed Message:\0a')
-    %+  weld
-    %-  trip
-    (en:json:html (numb:enjs:format (lent (trip msg))))
-    (trip msg)
-    ::export function hashMessage(message: Bytes | string): string {
-    ::    if (typeof(message) === "string") { message = toUtf8Bytes(message); }
-    ::    return keccak256(concat([
-    ::        toUtf8Bytes(messagePrefix),
-    ::        toUtf8Bytes(String(message.length)),
-    ::        message]));
-  =/  ux-sig=@ux  (hex-to-num:eth sig)
-  =/  vrs         (split-sig ux-sig)
-  ::SigningKey.recoverPublicKey(digest, signature)
-  %-  serialize-point:secp256k1:secp:crypto
-  (ecdsa-raw-recover:secp256k1:secp:crypto hashed-msg vrs)
-::
-++  verify-message
-  |=  [msg=@t sig=@t addr=@t]  ^-  ?
-  =/  pubkey=@ux  (recover-pub-key msg sig addr)
-  :: if the passed in address equals the address for the the recovered public key of the sig, then it is verified
-  =((hex-to-num:eth addr) (address-from-pub:key:eth pubkey))
-::
-++  ether-hash-to-ux
-  |=  str=@t
-  ^-  @ux
-  =/  ta=tape  (cass (slag 2 (trip str)))
-  =/  reordered=tape  ""
-  =/  i=@ud  0
-  =/  ready=tape
-    |-
-      ?:  =(0 (lent ta))
-        +.reordered
-      =/  b1=@t  (snag 0 ta)
-      =/  b2=@t  (snag 1 ta)
-      ?:  =(1 (mod i 2))
-        $(reordered ['.' b1 b2 reordered], ta +.+.ta, i +(i))
-      $(reordered [b1 b2 reordered], ta +.+.ta, i +(i))
-  |- :: handle the urbit bullshit %ux parsing rules
-    ?:  =('0' (snag 0 ready))
-      $(ready +.ready)
-    ?:  =('.' (snag 0 ready))
-      $(ready +.ready)
-    `@ux`(slav %ux (crip ['0' 'x' ready]))
 ::
 ++  parse-signing-key
   |=  ln=passport-link-container:common
@@ -236,7 +160,7 @@
   ^-  contact:common
   =.  display-name.contact
     ?~  display-name.contact  ~
-    (some (remove-newlines u.display-name.contact))
+    (some (trim-whitespace (remove-newlines u.display-name.contact)))
   =.  avatar.contact
     ?~  avatar.contact  ~
     ?-  -.u.avatar.contact
@@ -281,13 +205,12 @@
     ?:  =(0 (lent contacts))
       ?:  =(0 (lent create-args))
         [cards state]
-      ~&  >  "lent of create-args {<(lent create-args)>}"
-      ~&  >  "lent of cards {<(lent cards)>}"
       :_  state
       :-  (create-many our.bowl create-args)
       cards
     =/  con=contact:common  (cleanup-contact contact:(snag 0 contacts))
-    ?:  =(our.bowl ship.con)  :: don't create a contact record for ourselves
+    =/  is-sender-contact  =(src.bowl ship.con)
+    ?:  |(=(our.bowl ship.con) ?!(is-sender-contact))  :: don't create a contact record for ourselves, or for others who aren't the sender
       $(contacts +.contacts)
     =/  index=(unit @)      (find-contact con old)
     ?~  index
@@ -322,6 +245,7 @@
 
   =/  new-fren=friend:common      [ship %pending-outgoing %.n mtd]
   =/  pass=passport:common   (our-passport:scries bowl)
+  =/  pass-time=@da  updated-at:(our-passport-row:scries bowl)
 
   :: check that we don't already have a friendship with this ship
   =/  frs=(list friend:common)    (get-friends:scries bowl)
@@ -330,7 +254,7 @@
     ?~  (find [ship ~] ships)
       :~  (create-req our.bowl friend-type:common [%friend new-fren] req-id)
           [%pass /selfpoke %agent [ship dap.bowl] %poke %passport-action !>([%get-friend mtd])]
-          [%pass /contacts %agent [ship dap.bowl] %poke %passport-action !>([%receive-contacts [[now.bowl contact.pass] ~]])]
+          [%pass /contacts %agent [ship dap.bowl] %poke %passport-action !>([%receive-contacts [[pass-time contact.pass] ~]])]
       ==
     ~
   [cards state]
@@ -343,9 +267,10 @@
 
   =/  new-fren=friend:common  [src.bowl %pending-incoming %.n mtd]
   =/  pass=passport:common   (our-passport:scries bowl)
+  =/  pass-time=@da  updated-at:(our-passport-row:scries bowl)
 
   =/  cards=(list card)
-    :~  [%pass /contacts %agent [src.bowl dap.bowl] %poke %passport-action !>([%receive-contacts [[now.bowl contact.pass] ~]])]
+    :~  [%pass /contacts %agent [src.bowl dap.bowl] %poke %passport-action !>([%receive-contacts [[pass-time contact.pass] ~]])]
         (create our.bowl friend-type:common [%friend new-fren])
     ==
   [cards state]
@@ -441,6 +366,7 @@
   =/  kickcard=card  [%give %kick ~[vent-path] ~]
 
   =/  pass=passport:common   (our-passport:scries bowl)
+  =/  pass-time=@da  updated-at:(our-passport-row:scries bowl)
   =/  src-fren=?  (is-friend:scries src.bowl bowl)
   :: only actually give out the passport if we are discoverable
   :: OR we are friends with the requester
@@ -449,7 +375,7 @@
   =/  cards=(list card)
     :-  [%give %fact ~[vent-path] passport-vent+!>([%passport pass])]
     :-  kickcard
-    :-  [%pass /contacts %agent [src.bowl dap.bowl] %poke %passport-action !>([%receive-contacts [[now.bowl contact.pass] ~]])]
+    :-  [%pass /contacts %agent [src.bowl dap.bowl] %poke %passport-action !>([%receive-contacts [[pass-time contact.pass] ~]])]
     ~
   [cards state]
 ::
@@ -476,7 +402,7 @@
   =/  cards=(list card)
     :-  [%give %fact ~[vent-path] db-vent+!>([%row r ~])]
     :-  kickcard
-    :-  [%pass /contacts %agent [src.bowl dap.bowl] %poke %passport-action !>([%receive-contacts [[now.bowl contact.pass] ~]])]
+    :-  [%pass /contacts %agent [src.bowl dap.bowl] %poke %passport-action !>([%receive-contacts [[updated-at.r contact.pass] ~]])]
     ~
   [cards state]
 ::
@@ -495,11 +421,12 @@
   :: only actually give out the passport if we are discoverable
   :: OR we are friends with the requester
   ?>  |(discoverable.pass src-fren)
+  =/  pass-time=@da  updated-at:(our-passport-row:scries bowl)
 
   =/  cards=(list card)
     :-  [%give %fact ~[vent-path] passport-vent+!>([%contact contact.pass])]
     :-  kickcard
-    :-  [%pass /contacts %agent [src.bowl dap.bowl] %poke %passport-action !>([%receive-contacts [[now.bowl contact.pass] ~]])]
+    :-  [%pass /contacts %agent [src.bowl dap.bowl] %poke %passport-action !>([%receive-contacts [[pass-time contact.pass] ~]])]
     ~
   [cards state]
 ::
@@ -516,6 +443,7 @@
   =/  kickcard=card  [%give %kick ~[vent-path] ~]
 
   =/  p=passport:common  (our-passport:scries bowl)
+  =/  pass-time=@da  updated-at:(our-passport-row:scries bowl)
   =/  old-contact=contact:common  contact.p
   =.  contact.p  (cleanup-contact c)
 
@@ -535,7 +463,7 @@
       =(our.bowl ship.contact.c)
     |=  c=[id:common @da =contact:common]
     ^-  card
-    [%pass /contacts %agent [ship.contact.c dap.bowl] %poke %passport-action !>([%receive-contacts [[now.bowl contact.p] ~]])]
+    [%pass /contacts %agent [ship.contact.c dap.bowl] %poke %passport-action !>([%receive-contacts [[pass-time contact.p] ~]])]
 
   [cards state]
 ::
@@ -554,16 +482,16 @@
   =/  old-contact=contact:common  contact.p
   :: verify the link is valid, then save it to bedrock
   :: validate the hash of data is what the payload claims it is
-  ?>  =((shax data.ln) (ether-hash-to-ux hash.ln))
+  ?>  =((shax data.ln) (ether-hash-to-ux:crypto-helper hash.ln))
 
   :: parse the signer address
   =/  addr=@t  (parse-signing-key ln)
   :: and verify that the signing key matches the signature and the message
-  ?>  (verify-message hash.ln hash-signature.ln addr)
+  ?>  (verify-message:crypto-helper hash.ln hash-signature.ln addr)
   =/  t-pk=@t
   %-  crip
-  %-  num-to-hex:eth
-  (recover-pub-key hash.ln hash-signature.ln addr)
+  %-  num-to-hex:crypto-helper
+  (recover-pub-key:crypto-helper hash.ln hash-signature.ln addr)
 
   =.  p
     ?:  =('PASSPORT_ROOT' link-type.ln)
@@ -583,7 +511,6 @@
       =/  key=@t        signing-address.mtd.parsed-link
       ?+  -.data.parsed-link  !!
         %key-add
-      =/  new-key-type=@t   address-type.data.parsed-link
       =/  new-key=@t        address.data.parsed-link
       =/  new-entity=@t     name.data.parsed-link
       ::  add new key to the pki-state for the new-entity
@@ -597,7 +524,7 @@
       =.  address-to-nonce.pki-state.crypto.p    (~(put by address-to-nonce.pki-state.crypto.p) new-key 0)
       :: update known addresses
       =/  sig=crypto-signature:common  [data.ln hash.ln hash-signature.ln t-pk]
-      =.  addresses.p  (snoc addresses.p [new-key-type new-key '' sig])
+      =.  addresses.p  (snoc addresses.p [address-type.data.parsed-link new-key '' sig])
       p
       ==
     ?:  =('SIGNED_KEY_ADD' link-type.ln)
@@ -606,21 +533,16 @@
       ?+  -.data.parsed-link  !!
         %signed-key-add
       =/  new-sig=@t        key-signature.data.parsed-link
-      =/  new-key-type=@t   address-type.data.parsed-link
       =/  new-key=@t        address.data.parsed-link
       =/  new-entity=@t     name.data.parsed-link
       =/  msg=@t
-      %-  crip
-      ^-  tape
-      :~  new-entity
-          ' owns '
+        %:  signed-key-add-msg:crypto-helper
+          new-entity
           new-key
-          ', '
-          (ud-to-t nonce.data.parsed-link)
-          ', '
-          (ud-to-t timestamp.data.parsed-link)
-      ==  
-      ?>  (verify-message msg new-sig new-key)
+          nonce.data.parsed-link
+          timestamp.data.parsed-link
+        ==
+      ?>  (verify-message:crypto-helper msg new-sig new-key)
       ::  add new key to the pki-state for the new-entity
       =/  keys=(list @t)  (~(got by entity-to-addresses.pki-state.crypto.p) new-entity)
       =.  entity-to-addresses.pki-state.crypto.p  (~(put by entity-to-addresses.pki-state.crypto.p) new-entity (snoc keys new-key))
@@ -634,9 +556,9 @@
       =/  sig=crypto-signature:common  [data.ln hash.ln hash-signature.ln t-pk]
       =/  new-pk=@t
       %-  crip
-      %-  num-to-hex:eth
-      (recover-pub-key msg new-sig new-key)
-      =.  addresses.p  (snoc addresses.p [new-key-type new-key new-pk sig])
+      %-  num-to-hex:crypto-helper
+      (recover-pub-key:crypto-helper msg new-sig new-key)
+      =.  addresses.p  (snoc addresses.p [address-type.data.parsed-link new-key new-pk sig])
       p
       ==
     ?:  =('KEY_REMOVE' link-type.ln)
@@ -712,7 +634,18 @@
         kickcard
     ==
   =.  cards
+    ?.  discoverable.p
+      :: not discoverable, delete contact
+      :_  cards
+      [%pass /contacts %agent [~halnus %explore-reverse-proxy] %poke %noun !>([%remove-contact ~])]
+    :: if discoverable, 
+    ?:  =(contact.p old-contact)  cards :: don't poke if the contact is the same as it was
+    :: otherwise, update-contact
+    :_  cards
+    [%pass /contacts %agent [~halnus %explore-reverse-proxy] %poke %noun !>([%update-contact contact.p])]
+  =.  cards
     ?:  =(contact.p old-contact)  cards :: don't poke everyone if the contact is the same as it was
+    =/  pass-time=@da  updated-at:(our-passport-row:scries bowl)
     %+  weld  cards
     %+  turn
       %+  skip  (our-contacts:scries bowl)
@@ -721,8 +654,7 @@
       =(our.bowl ship.contact.c)
     |=  c=[id:common @da =contact:common]
     ^-  card
-    [%pass /contacts %agent [ship.contact.c dap.bowl] %poke %passport-action !>([%receive-contacts [[now.bowl contact.p] ~]])]
-
+    [%pass /contacts %agent [ship.contact.c dap.bowl] %poke %passport-action !>([%receive-contacts [[pass-time contact.p] ~]])]
   [cards state]
 ::
 ++  change-passport
@@ -791,7 +723,7 @@
   ?.  =((lent passports) 0)  `state
   :: TODO ask %pals for as many contacts to prepopulate as we can and
   :: TODO create a poke to auto-add friends from mutuals in %pals
-
+ 
   :: if we already have a bunch of contacts, just re-create ourself,
   :: don't do the whole big import
   ?:  (gth (lent (our-contacts:scries bowl)) 2)
@@ -810,8 +742,10 @@
     =/  p=passport:common
       [our-contact ~ %online %.y ~ ~ '' ~ ~ *passport-crypto:common]
     =/  cards=(list card)
-    :~  (create our.bowl passport-type:common [%passport p])
-        (create our.bowl contact-type:common [%contact contact.p])
+    :: ~s0..1000 create these records 1/16 of a second in the
+    :: future to prevent delete-log confusion
+    :~  (create-req our.bowl passport-type:common [%passport p] [our.bowl (add ~s0..1000 now.bowl)])
+        (create-req our.bowl contact-type:common [%contact contact.p] [our.bowl (add ~s0..1000 now.bowl)])
     ==
     [cards state]
     
@@ -831,8 +765,10 @@
   =/  p=passport:common
     [our-contact ~ %online %.y ~ ~ '' ~ ~ *passport-crypto:common]
   =/  cards=(list card)
-    :-  (create our.bowl passport-type:common [%passport p])
-    :-  (create our.bowl contact-type:common [%contact contact.p])
+    :: ~s0..1000 create these records 1/16 of a second in the
+    :: future to prevent delete-log confusion
+    :-  (create-req our.bowl passport-type:common [%passport p] [our.bowl (add ~s0..1000 now.bowl)])
+    :-  (create-req our.bowl contact-type:common [%contact contact.p] [our.bowl (add ~s0..1000 now.bowl)])
     ^-  (list card)
     %+  weld
       ^-  (list card)
@@ -1059,8 +995,8 @@
   ::
   ++  de-chain-id
     |=  jon=json
-    ^-  ?(%eth-mainnet %eth-testnet)
-    ?+  ((se %tas) jon)  !!
+    ^-  ?(@tas %eth-mainnet %eth-testnet)
+    ?+  ((se %tas) jon)  ((se %tas) jon)
       %eth-mainnet    %eth-mainnet
       %eth-testnet    %eth-testnet
     ==

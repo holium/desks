@@ -48,6 +48,8 @@
       =message:db
   ==
 ::
++$  nft-sig    nft-sig:db
+::
 +$  action
   $%
       :: interface to %chat-db
@@ -56,7 +58,7 @@
       [%edit-chat =path metadata=(map cord cord) peers-get-backlog=? invites=@tas max-expires-at-duration=@dr]
       [%pin-message =path =msg-id:db pin=?]
       [%clear-pinned-messages =path]
-      [%add-ship-to-chat t=@da =path =ship host=(unit ship)]
+      [%add-ship-to-chat t=@da =path =ship host=(unit ship) =nft-sig join-silently=?]
       [%remove-ship-from-chat =path =ship]
       [%send-message =path fragments=(list minimal-fragment:db) expires-in=@dr]
       [%vented-send-message t=@da =path fragments=(list minimal-fragment:db) expires-in=@dr]
@@ -78,5 +80,13 @@
 
       [%create-notes-to-self-if-not-exists ~]
   ==
-+$  create-chat-data  [metadata=(map cord cord) type=@tas peers=(list ship) invites=@tas max-expires-at-duration=@dr peers-get-backlog=?]
++$  create-chat-data
+  $:  metadata=(map cord cord)
+      type=@tas
+      peers=(list ship)
+      invites=@tas
+      max-expires-at-duration=@dr
+      peers-get-backlog=?
+      nft=(unit [contract=@t chain=@t standard=@t])
+  ==
 --
