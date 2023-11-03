@@ -17,7 +17,7 @@
 
 /-  *db, sstore=spaces-store, vstore=visas
 /+  dbug, db
-=|  state-1
+=|  state-2
 =*  state  -
 =<
   %-  agent:dbug
@@ -27,7 +27,7 @@
   ::
   ++  on-init
     ^-  (quip card _this)
-    =|  default-state=state-1
+    =/  default-state=state-2   *state-2
     :: make sure the relay table exists on-init
     =.  tables.default-state
       %-  ~(gas by *^tables)
@@ -65,6 +65,13 @@
       =/  default-state=state-1   *state-1
       =.  paths.default-state     paths.old-paths-and-peers
       =.  peers.default-state     peers.old-paths-and-peers
+      =.  tables-1.default-state
+      (~(gas by *tables-1) ~[[relay-type:common *pathed-table-1] [vote-type:common *pathed-table-1] [react-type:common *pathed-table-1]])
+      default-state
+        %2
+      =/  default-state=state-2   *state-2
+      =.  paths.default-state     paths.old-paths-and-peers
+      =.  peers.default-state     peers.old-paths-and-peers
       =.  tables.default-state
       (~(gas by *^tables) ~[[relay-type:common *pathed-table] [vote-type:common *pathed-table] [react-type:common *pathed-table]])
       default-state
@@ -94,8 +101,19 @@
         (transform-del-log-0-to-del-log:db del-log.old schemas.old)
         hide-logs.old
       ]
-      [cards this(state new-state)]
+      (on-load !>(new-state))
         %1
+      =/  new-state=state-2  [
+        %2
+        (transform-tables-1-to-tables:db tables-1.old)
+        schemas.old
+        paths.old
+        peers.old
+        del-log.old
+        hide-logs.old
+      ]
+      [cards this(state new-state)]
+        %2
       [cards this(state old)]
     ==
   ::
@@ -413,7 +431,7 @@
             :: handle the update by updating our local state and
             :: pushing db-changes out to our subscribers
             =^  cards  state
-            ^-  (quip card state-1)
+            ^-  (quip card state-2)
             =/  dbpath=path         +.+.wire
             =/  factmark  -.+.sign
             ~&  >>>  "%fact on {(spud wire)}: {<factmark>}"
@@ -661,6 +679,54 @@
           pokes
           this
         ]
+      [%nft-verify @ @ *]
+    =/  =path    `path`t.t.t.wire
+    =/  =ship    `@p`(slav %p i.t.wire)
+    =/  =role    `@tas`(slav %tas i.t.t.wire)
+    ?>  ?=(%iris -.sign-arvo)
+    =/  i  +.sign-arvo
+    ?>  ?=(%http-response -.i)
+    ?>  ?=(%finished -.+.i)
+    =/  payload  full-file.client-response.i
+    ?~  payload  `this
+    =/  contracts=(list @t)
+      (parse-alchemy-json (need (de:json:html q.data.u.payload)))
+    =/  path-row=path-row    (~(got by paths.state) path)
+    =/  chatrow=row  (snag 0 ~(val by (need (get-tbl:db chat-type:common path state))))
+    ?>  ?=(%chat -.data.chatrow)
+    ?>  |-
+      ?:  =((lent contracts) 0)
+        %.n
+      ?:  =(contract:(need nft.data.chatrow) (snag 0 contracts))
+        ~&  >  "found matching contract {<nft.data.chatrow>} {<(snag 0 contracts)>}"
+        %.y
+      $(contracts +.contracts)
+    =/  newpeer=peer  [path ship role now.bowl now.bowl now.bowl]
+
+    :: local state updates
+    :: update paths table
+    =.  updated-at.path-row     now.bowl
+    =.  received-at.path-row    now.bowl
+    =.  paths.state             (~(put by paths.state) path path-row)
+    :: update peers table
+    =/  original-peers=(list peer)    (~(got by peers.state) path)
+    =/  newlist=(list peer)     [newpeer (skip original-peers |=(p=peer =(ship.p ship)))]
+    =.  peers.state             (~(put by peers.state) path newlist)
+
+    =/  thechange=db-changes    [%add-peer newpeer]~
+    :: emit the change to subscribers
+    =/  cards=(list card)
+      :: poke `ship` with %get path
+      :-  (get-path-card:db ship path-row (peers-to-ship-roles:db (~(got by peers.state) path)))
+      :: tell clients about the new peer
+      :-  [%give %fact [/db (weld /path path) ~] db-changes+!>(thechange)]
+      :: tell subs about the new peer
+      %+  turn
+        (living-peers:db original-peers now.bowl our.bowl)
+      |=  p=peer
+      ^-  card
+      (handle-changes-card:db ship.p thechange path)
+    [cards this]
     ==
   ::
   ++  on-fail
@@ -679,4 +745,16 @@
   |=  p=path
   ^-  type:common
   [`@tas`(slav %tas +2:p) `@uvH`(slav %uv +6:p)]
+++  parse-alchemy-json
+  |=  jon=json
+  ^-  (list @t)
+  ?>  ?=([%o *] jon)
+  =/  contracts=json  (~(got by p.jon) 'contracts')
+  ?>  ?=([%a *] contracts)
+  %+  turn  p.contracts
+  |=  jn=json
+  ^-  @t
+  ?>  ?=([%o *] jn)
+  =/  address=json  (~(got by p.jn) 'address')
+  (so:dejs:format address)
 --

@@ -298,6 +298,7 @@
                         =/  host  (snag 0 (skim pathpeers |=(p=peer-row:db-sur =(role.p %host))))
                         ?:  =(patp.host our.bowl) :: if it's our own creation, don't do anything
                           ~
+                        ?:  join-silently.db-row.ch  ~ :: if it's a silent join, don't do nuthin
                         =/  send-status-message
                           !>([%send-message path.pathrow ~[[[%status (crip "{(scow %p our.bowl)} joined the chat")] ~ ~]] *@dr])
                         [%pass /selfpoke %agent [our.bowl %realm-chat] %poke %chat-action send-status-message]~
@@ -334,11 +335,49 @@
   ++  on-leave
     |=  path
       `this
-  :: we don't care about arvo
+  ::
   ++  on-arvo
     |=  [=wire =sign-arvo]
     ^-  (quip card _this)
-    `this
+    ?+  wire  ~&("{<dap.bowl>} unhandled on-arvo wire {<wire>}" `this)
+        [%nft-verify @ @ @ @ @ @ @ *]
+      =/  act=[t=@da =path patp=ship host=(unit ship) =nft-sig ?]
+      :*  `@da`(slav %da i.t.t.wire)
+          `path`t.t.t.t.t.t.t.t.wire
+          `@p`(slav %p i.t.wire)
+          ~
+          %-  some  [
+            i.t.t.t.wire
+            i.t.t.t.t.wire
+            i.t.t.t.t.t.wire
+            `@ud`(slav %ud i.t.t.t.t.t.t.wire)
+            `@ud`(slav %ud i.t.t.t.t.t.t.t.wire)
+          ]
+          %.n
+      ==
+      =/  pathrow  (scry-path-row:lib path.act bowl)
+      ?>  ?=(%iris -.sign-arvo)
+      =/  i  +.sign-arvo
+      ?>  ?=(%http-response -.i)
+      ?>  ?=(%finished -.+.i)
+      =/  payload  full-file.client-response.i
+      ?~  payload  `this
+      =/  cleaned-contract=@t  (crip (cass (trip contract:(need nft.pathrow))))
+      =/  contracts=(list @t)
+        (parse-alchemy-json (need (de:json:html q.data.u.payload)))
+      ?>  |-
+        ?:  =((lent contracts) 0)
+          ~&  >>>  "failed to find matching contract {<nft.pathrow>}"
+          %.n
+        ?:  =(cleaned-contract (snag 0 contracts))
+          ~&  >  "found matching contract {<nft.pathrow>} {<(snag 0 contracts)>}"
+          %.y
+        $(contracts +.contracts)
+
+      =^  cards  state
+      (finish-add-ship-to-chat:lib act state bowl)
+      [cards this]
+    ==
   ::
   ++  on-fail
     |=  [=term =tang]
@@ -350,7 +389,7 @@
 ++  this  .
 ++  core  .
 ++  maybe-log
-  |=  [hide-debug=? msg=*]
+  |=  [hide-debug=? msg=tape]
   ?:  =(%.y hide-debug)  ~
   ~&  >>>  msg
   ~
@@ -481,4 +520,16 @@
       t
     $(t (weld (trip c) t))
 ::
+++  parse-alchemy-json
+  |=  jon=json
+  ^-  (list @t)
+  ?>  ?=([%o *] jon)
+  =/  contracts=json  (~(got by p.jon) 'contracts')
+  ?>  ?=([%a *] contracts)
+  %+  turn  p.contracts
+  |=  jn=json
+  ^-  @t
+  ?>  ?=([%o *] jn)
+  =/  address=json  (~(got by p.jn) 'address')
+  (crip (cass (trip (so:dejs:format address))))
 --

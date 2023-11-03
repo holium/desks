@@ -300,9 +300,9 @@
 ==
 ::
 ++  bedrock-state
-  =/  m  (strand ,state-1:db)
+  =/  m  (strand ,state-2:db)
   ^-  form:m
-  (scry state-1:db /gx/bedrock/db/db-state)
+  (scry state-2:db /gx/bedrock/db/db-state)
 :: accepts trailing fas
 ::
 ++  purl  |=(url=@t (rash url ;~(pfix fas (most fas urs:ab))))
@@ -329,7 +329,7 @@
   =/  =path  /timeline/(scot %p host)/[name]
   =/  m  (strand ,?)
   ^-  form:m
-  ;<  state-1:db  bind:m  bedrock-state
+  ;<  state-2:db  bind:m  bedrock-state
   :: if timeline type doesn't exist, no valid timelines
   ::
   ?~  tim=(~(get by tables) [%timeline 0v0])  (pure:m |)

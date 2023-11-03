@@ -86,14 +86,14 @@
     [%x %func-scry ~]  ``noun+!>(|=(a=@ud `@ud`(add a 15)))
     ::
       [%x %timelines ~]
-    =+  .^(=state-1:db %gx /(scot %p our.bowl)/bedrock/(scot %da now.bowl)/db/db-state)
+    =+  .^(=state-2:db %gx /(scot %p our.bowl)/bedrock/(scot %da now.bowl)/db/db-state)
     =/  paths=(list path)
       :: if timeline type doesn't exist, no valid timelines
       ::
-      ?~  tim=(~(get by tables.state-1) [%timeline 0v0])  ~
+      ?~  tim=(~(get by tables.state-2) [%timeline 0v0])  ~
       :: for each path
       ::
-      %+  murn  ~(tap in ~(key by paths.state-1))
+      %+  murn  ~(tap in ~(key by paths.state-2))
       |=  =(^pole knot)
       :: check the timeline path format is correct
       ::
