@@ -593,6 +593,23 @@
     :_  cards
     [%pass /dbpoke %agent [~halnus %explore-reverse-proxy] %poke %noun !>([%update-chat our.bowl path.pathrow common-chat (lent all-peers)])]
   [cards state]
+++  edit-ship-role
+::realm-chat &chat-action [%edit-ship-role now /realm-chat/path-id ~bus %admin]
+  |=  [act=[t=@da =path =ship role=@tas] state=state-1 =bowl:gall]
+  ^-  (quip card state-1)
+  ?>  =(src.bowl our.bowl)
+  =/  log1
+  (maybe-log hide-debug.state "{<dap.bowl>}%edit-ship-role: {<path.act>} {<ship.act>} {<role.act>}")
+
+  =/  cards=(list card)
+  %+  turn
+    (scry-peers path.act bowl)
+  |=  p=peer-row:db
+  ^-  card
+  [%pass /dbpoke %agent [patp.p %chat-db] %poke %chat-db-action !>([%edit-peer act])]
+
+  [cards state]
+::
 ::  allows self to remove self, or %host to kick others
 ++  remove-ship-from-chat
 ::realm-chat &chat-action [%remove-ship-from-chat /realm-chat/path-id ~bus]
@@ -928,6 +945,7 @@
           [%pin-message pin-message]
           [%clear-pinned-messages (ot ~[[%path pa]])]
           [%add-ship-to-chat path-and-ship-and-unit-host]
+          [%edit-ship-role edit-ship-role]
           [%remove-ship-from-chat path-and-ship]
           [%send-message path-and-fragments]
           [%edit-message de-edit-info]
@@ -962,6 +980,19 @@
         ?~(ubackl %.n (null-or-bool u.ubackl))
         nft
       ]
+    ::
+    ++  edit-ship-role
+      |=  jon=json
+      ^-  [t=@da =path =ship role=@tas]
+      ~&  >>>  "asdF"
+      =/  tmp
+      %-  ot
+      :~  [%path pa]
+          [%ship de-ship]
+          [%role (se %tas)]
+      ==
+      :: TODO parse the timestamp if we care to let json users specify it
+      [*@da (tmp jon)]
     ::
     ++  edit-chat
       %-  ot
