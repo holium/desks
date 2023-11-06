@@ -350,6 +350,7 @@
 +$  timeline
   $:  metadata=(map cord cord)
       public=?
+      nft=(unit [contract=@t chain=@t standard=@t])
   ==
 ++  timeline-type  `type`[name=%timeline hash=0v0]
 +$  timeline-post

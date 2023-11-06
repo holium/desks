@@ -2116,7 +2116,10 @@
       %-  ot
       :~  metadata+(om so)
           public+bo
+          nft+de-nft
       ==
+    ++  de-nft
+      |=(j=json ?~(j ~ `((ot ~[contract+so chain+so standard+so]) j)))
     ::
     ++  de-timeline-post
       %-  ot
