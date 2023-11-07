@@ -1,13 +1,13 @@
 /-  common, db, cd=chat-db
 :: create personal timeline 
 |%
-+$  cid  @t
-::
 +$  timeline-post  timeline-post:common
++$  nft  (unit [contract=@t chain=@t standard=@t])
 ::
 +$  action
   $%  [%create-timeline name=@ta]
       [%delete-timeline name=@ta]
+      [%set-timeline-nft =path =nft]
       [%follow-timeline =path]
       [%handle-follow-request name=@ta]
       [%leave-timeline =path]
@@ -39,10 +39,10 @@
 +$  vent
   %+  pair  wain  :: printf
   $@  ~
-  $%  [%timeline =path]
+  $%  [%timeline-path =path]
+      [%timeline =row:db =schema:db]
       [%timeline-post =row:db =schema:db]
       [%react =row:db =schema:db]
       [%comment =row:db =schema:db]
-
   ==
 --

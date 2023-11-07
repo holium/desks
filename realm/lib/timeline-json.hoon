@@ -33,7 +33,8 @@
         ?~  q.vent  ~
         %+  frond  -.q.vent
         ?-  -.q.vent
-          %timeline       (path path.q.vent)
+          %timeline-path  (path path.q.vent)
+          %timeline       (en-row row.q.vent (~(put by *schemas:db) type.row.q.vent schema.q.vent))
           %timeline-post  (en-row row.q.vent (~(put by *schemas:db) type.row.q.vent schema.q.vent))
           %react          (en-row row.q.vent (~(put by *schemas:db) type.row.q.vent schema.q.vent))
           %comment        (en-row row.q.vent (~(put by *schemas:db) type.row.q.vent schema.q.vent))
@@ -61,6 +62,7 @@
     %-  of
     :~  [%create-timeline (ot ~[name+seta])]
         [%delete-timeline (ot ~[name+seta])]
+        [%set-timeline-nft (ot ~[path+pa nft+de-timeline-nft])]
         [%follow-timeline (ot ~[path+pa])]
         [%leave-timeline (ot ~[path+pa])]
         [%create-timeline-posts (ot ~[path+pa posts+(ar de-timeline-post)])]

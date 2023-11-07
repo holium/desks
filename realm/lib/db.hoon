@@ -2116,9 +2116,9 @@
       %-  ot
       :~  metadata+(om so)
           public+bo
-          nft+de-nft
+          nft+de-timeline-nft
       ==
-    ++  de-nft
+    ++  de-timeline-nft
       |=(j=json ?~(j ~ `((ot ~[contract+so chain+so standard+so]) j)))
     ::
     ++  de-timeline-post
@@ -2560,6 +2560,7 @@
           %timeline
             :~  ['metadata' o+(malt (turn ~(tap by metadata.data.row) |=([k=@t v=@t] [k s+v])))]
                 ['public' b+public.data.row]
+                ['nft' (timeline-nft-to-json nft.data.row)]
             ==
           %timeline-post
             :~  ['parent' ?~(parent.data.row ~ (parent-to-json u.parent.data.row))]
@@ -2734,6 +2735,16 @@
       :~  [%type (en-db-type type.parent)]
           [%id (row-id-to-json id.parent)]
           [%path (path path.parent)]
+      ==
+    ::
+    ++  timeline-nft-to-json
+      |=  nft=(unit [contract=@t chain=@t standard=@t]) 
+      ^-  json
+      ?~  nft  ~
+      %-  pairs
+      :~  [%contract s+contract.u.nft]
+          [%chain s+chain.u.nft]
+          [%standard s+standard.u.nft]
       ==
     ::
     ++  app-to-json

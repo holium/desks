@@ -58,7 +58,7 @@
     =/  =path  /timeline/(scot %p our.gowl)/[name.axn]
     ?:  (test-bedrock-path-existence:scries path gowl)
       ~&  >>  %timeline-already-exists
-      (pure:m !>([~[%timeline-already-exists] [%timeline path]]))
+      (pure:m !>([~[%timeline-already-exists] [%timeline-path path]]))
     =|  row=input-path-row:db
     =:  path.row         path
         replication.row  %host
@@ -75,12 +75,12 @@
       :*  %create  [our now]:gowl
           path     [%timeline 0v0]
           :: for now defaults to public: true
-          [%timeline ~ &]  ~
+          [%timeline ~ & ~]  ~
       ==
     ;<  ~  bind:m  (poke [our.gowl %bedrock] cage)
     :: return created path
     ::
-    (pure:m !>(`[%timeline path]))
+    (pure:m !>(`[%timeline-path path]))
     ::
       %delete-timeline
     ?>  =(src our):gowl
@@ -91,6 +91,24 @@
     =/  =cage  db-action+!>([%delete-path path])
     ;<  ~  bind:m  (poke [our.gowl %bedrock] cage)
     (pure:m !>(`~))
+    ::
+      %set-timeline-nft
+    =/  owner=@ta  ?>(?=([%timeline @ta @ta ~] path.axn) i.t.path.axn)
+    ?>  =(src.gowl (slav %p owner))
+    ?.  (test-bedrock-path-existence:scries path.axn gowl)
+      ~&  >>  %timeline-does-not-exist
+      (pure:m !>([~[%timeline-does-not-exist] ~]))
+    ;<  =row:db  bind:m  (timeline-row path.axn)
+    ?>  ?=(%timeline -.data.row)
+    =/  =action:db
+      :*  %edit  [our now]:gowl  id.row
+          path.row  [%timeline 0v0]
+          data.row(nft nft.axn)  ~
+      ==
+    ;<  out=^vase  bind:m  (run-thread %realm %venter !>(`action))
+    =+  ;;(vnt=vent:db q.out)
+    (pure:m !>(?>(?=(%row -.vnt) `[%timeline +.vnt])))
+    :: get the timeline contents
     ::
       %follow-timeline
     ?>  =(src our):gowl
@@ -452,4 +470,32 @@
   ;<  [* pt=pathed-table:db *]  bind:m
     (scry ,[* pt=pathed-table:db *] scry-path)
   (pure:m ~(tap in ~(key by (~(got by pt) path))))
+::
+++  timeline-metadata-id
+  |=  =path
+  =/  scry-path=^path
+    ;:  welp
+      /gx/bedrock/db/table-by-path/timeline/0v0
+      path  /db-table
+    ==
+  =/  m  (strand ,id:common:db)
+  ^-  form:m
+  ;<  [* pt=pathed-table:db *]  bind:m
+    (scry ,[* pt=pathed-table:db *] scry-path)
+  =/  ids=(list id:common:db)  ~(tap in ~(key by (~(got by pt) path)))
+  (pure:m ?>(?=([id:common:db ~] ids) i.ids))
+::
+++  timeline-row
+  |=  =path
+  =/  scry-path=^path
+    ;:  welp
+      /gx/bedrock/db/table-by-path/timeline/0v0
+      path  /db-table
+    ==
+  =/  m  (strand ,row:db)
+  ^-  form:m
+  ;<  [* pt=pathed-table:db *]  bind:m
+    (scry ,[* pt=pathed-table:db *] scry-path)
+  =/  rows=(list row:db)  ~(val by (~(got by pt) path))
+  (pure:m ?>(?=([* ~] rows) i.rows))
 --
