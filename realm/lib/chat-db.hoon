@@ -484,6 +484,9 @@
       :: 2. that `addr` owns the nft (which we do via calling outside api)
       ?~  nft-sig.act  %.n
       =/  msg=@t
+      ?:  &(=(0 nonce.u.nft-sig.act) =(0 t.u.nft-sig.act))
+        :: passport root address owns the nft, uses different signing message
+        name.u.nft-sig.act
       %:  signed-key-add-msg:crypto-helper
         name.u.nft-sig.act
         addr.u.nft-sig.act
