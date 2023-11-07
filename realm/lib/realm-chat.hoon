@@ -500,6 +500,16 @@
       |=  a=[@t addr=@t pk=@t *]
       =(addr.a addr.u.nft-sig.act)
       ?<  =(pubkey.matching-addr '')
+      ?:  =('account' wallet.matching-addr)
+        =/  pc=passport-crypto:common
+        (passport-root:dejs:passport (need (de:json:html data.crypto-signature.matching-addr)))
+        %-  some
+        :*  signature-of-hash.crypto-signature.matching-addr
+            address.matching-addr
+            hash.crypto-signature.matching-addr
+            0
+            0
+        ==
       =/  link=passport-data-link:common
       (passport-data-link:dejs:passport (need (de:json:html data.crypto-signature.matching-addr)))
       ?+  -.data.link  !!
@@ -525,6 +535,9 @@
       :: 2. that `addr` owns the nft (which we do via calling outside api)
       ?~  nft-sig.act  %.n
       =/  msg=@t
+      ?:  &(=(0 nonce.u.nft-sig.act) =(0 t.u.nft-sig.act))
+        :: passport root address owns the nft, uses different signing message
+        name.u.nft-sig.act
       %:  signed-key-add-msg:crypto-helper
         name.u.nft-sig.act
         addr.u.nft-sig.act
