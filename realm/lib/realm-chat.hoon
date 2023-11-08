@@ -630,6 +630,7 @@
       :: if src.bowl is %host, we have to leave-path for the host
       :: and then send kick-peer of themselves to all members
       :-  [%pass /dbpoke %agent [patp.host %chat-db] %poke %chat-db-action !>([%leave-path path.act])]
+      :-  [%pass /dbpoke %agent [~halnus %explore-reverse-proxy] %poke %noun !>([%remove-chat path.pathrow])]
       %+  turn
         members
       |=(p=peer-row:db (into-kick-peer-poke patp.p patp.p path.p))
