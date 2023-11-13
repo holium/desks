@@ -212,6 +212,8 @@
       :: peers-table pokes
       %add-peer
         (add-peer:db-lib +.act state bowl)
+      %edit-peer
+        (edit-peer:db-lib +.act state bowl)
       %kick-peer
         (kick-peer:db-lib +.act state bowl)
 
