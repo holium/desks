@@ -1054,6 +1054,8 @@
 
   =/  log2  (maybe-log hide-logs.state "we either got kicked or the host deleted the whole path: {(spud path)}")
 
+  =/  old-peers=(list peer)  (~(got by peers.state) path)
+
   :: remove from paths table, and peers table
   =.  paths.state  (~(del by paths.state) path)
   =.  peers.state  (~(del by peers.state) path)
@@ -1062,10 +1064,18 @@
 
   :: add to del-log (implies that the other stuff is also deleted)
   =.  del-log.state   (~(put by del-log.state) now.bowl [%del-path path now.bowl])
+  =.  del-log.state
+    %-  ~(gas by del-log.state)
+    %+  turn  old-peers
+    |=(peer [now.bowl %del-peer path ship now.bowl])
 
   :: emit the change to subscribers
   =/  cards=(list card)
-    [%give %fact [/db /db/common (weld /path path) ~] db-changes+!>([%del-path path now.bowl]~)]~
+    =/  changes=db-changes
+      :-  [%del-path path now.bowl]
+      %+  turn  old-peers
+      |=(peer [%del-peer path ship now.bowl])
+    [%give %fact [/db /db/common (weld /path path) ~] db-changes+!>(changes)]~
   [cards state]
 ::
 ++  refresh-path
