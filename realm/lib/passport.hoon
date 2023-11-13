@@ -711,6 +711,31 @@
       [%pass /dbpoke %agent [our.bowl dap.bowl] %poke passport-action+!>([%init-our-passport ~])]
   ==
 ::
+++  add-pals-as-friends
+::passport &passport-action [%add-pals-as-friends ~]
+  |=  [state=state-0 =bowl:gall]
+  ^-  (quip card state-0)
+  :: make sure they are actually running %pals
+  ?.  .^(? %gu /(scot %p our.bowl)/pals/(scot %da now.bowl)/$)  `state
+
+  =/  mutuals=(set ship)
+  .^((set ship) %gx /(scot %p our.bowl)/pals/(scot %da now.bowl)/mutuals/noun)
+  =/  targets=(set ship)
+  .^((set ship) %gx /(scot %p our.bowl)/pals/(scot %da now.bowl)/targets/noun)
+
+  =/  cards=(list card)
+  %+  weld
+    %+  turn  ~(tap in targets)
+    |=  s=ship
+    :: get-contact for the ships we were just "following"
+    [%pass /selfpoke %agent [s dap.bowl] %poke %passport-action !>([%get-contact [our.bowl *@da]])]
+  %+  turn  ~(tap in mutuals)
+  |=  s=ship
+  :: add-friend for the ships we were "mutuals" with
+  [%pass /selfpoke %agent [our.bowl dap.bowl] %poke %passport-action !>([%add-friend [our.bowl *@da] s ~])]
+
+  [cards state]
+::
 ++  init-our-passport  :: (does nothing if already exists)
 ::passport &passport-action [%init-our-passport ~]
   |=  [state=state-0 =bowl:gall]
