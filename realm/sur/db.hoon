@@ -107,10 +107,12 @@
 :: by default the host can CED everything and everyone else can CED the objects they created
 ++  default-access-rules  (~(gas by *access-rules) ~[[%host [%.y %table %table]] [%$ [%.y %own %own]]])
 +$  constraints   (map type:common constraint)
-+$  constraint    [=type:common =uniques =check]
++$  constraint    [=type:common =uniques =checks]
 +$  uniques       (set unique-columns)  :: the various uniqueness rules that must all be true
 +$  unique-columns  (set column-accessor)  :: names of columns that taken together must be unique in the table+path
-+$  check         ~  :: I want check to be the mold for a gate that takes in a row and produces %.y or %.n, which will allow applications to specify arbitrary check functions to constrain their data
+:: I want check to be the mold for a gate that takes in a row and produces %.y or %.n, which will allow applications to specify arbitrary check functions to constrain their data
++$  checks        (unit (set check)) :: check functions must be implemented by some other agent. the `scry` here is the root path to query. the path will be appended with a stringified json versino of the row being checked. (it is assumed that the sub-agent will then parse the row and scry from %bedrock for whatever other info it might need to confirm/deny the row. We expect the scry to return a flag %.y or %.n
++$  check        [agent=@tas scry=path]
 ++  default-vote-constraint  [vote-type:common (silt ~[(~(gas in *unique-columns) ~[1 2 3 "ship.id"])]) ~]
 ++  default-rating-constraint  [rating-type:common (silt ~[(~(gas in *unique-columns) ~[3 4 5 "ship.id" 2])]) ~]
 ++  default-contact-constraint  [contact-type:common (silt ~[(~(gas in *unique-columns) ~[0])]) ~]
@@ -272,7 +274,7 @@
   ==
 +$  table-access-0  (map type-prefix:common access-rules)
 +$  constraints-0   (map type-prefix:common constraint-0)
-+$  constraint-0    [type=type-prefix:common =uniques =check]
++$  constraint-0    [type=type-prefix:common =uniques check=checks]
 +$  db-row-del-change-0    [%del-row =path type=type-prefix:common =id:common t=@da]
 +$  db-del-change-0
   $%  db-row-del-change-0

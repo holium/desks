@@ -16,7 +16,7 @@
 ::    you can just pass ~ in that spot
 
 /-  *db, sstore=spaces-store, vstore=visas
-/+  dbug, db
+/+  dbug, db, bedrock-json
 =|  state-2
 =*  state  -
 =<
@@ -336,6 +336,23 @@
       [%x %db %start-ms @ ~]
         =/  timestamp=@da   (di:dejs:format n+i.t.t.t.path)
         ``db-state+!>((after-time:db state timestamp))
+    ::
+    :: /x/only-upvotes/[json-ified row object]
+    :: example check scry
+      [%x %only-upvotes @ ~]
+        =/  r=row
+        %+  decode-row:dejs:bedrock-json
+          %-  need
+          %-  de:json:html
+          (slav %t i.t.t.path)
+        state
+        ?.  =(type.r vote-type:common)  ``ud+!>(1)  ::false
+        ?.  ?=(%vote -.data.r)  ``ud+!>(1)  ::false
+        ?:  up.data.r
+          ~&  >  "the passed in row is an upvote, and therefore allowed"
+          ``ud+!>(0) :: true
+        ~&  >>>  "the passed in row is a DOWNvote, and therefore NOT allow"
+        ``ud+!>(1) :: false
     ==
   ::
   ++  on-agent
