@@ -342,7 +342,9 @@
   ++  on-arvo
     |=  [=wire =sign-arvo]
     ^-  (quip card _this)
-    ?+  wire  ~&("{<dap.bowl>} unhandled on-arvo wire {<wire>}" `this)
+    ?+  wire
+      =/  log1  (maybe-log hide-debug.state "{<dap.bowl>} unhandled on-arvo wire {<wire>}")
+      `this
         [%nft-verify @ @ @ @ @ @ @ *]
       =/  act=[t=@da =path patp=ship host=(unit ship) =nft-sig ?]
       :*  `@da`(slav %da i.t.t.wire)
