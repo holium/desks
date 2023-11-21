@@ -69,6 +69,8 @@
         (clear-pinned-messages:lib +.act state bowl)
       %add-ship-to-chat
         (add-ship-to-chat:lib +.act state bowl)
+      %edit-ship-role
+        (edit-ship-role:lib +.act state bowl)
       %remove-ship-from-chat
         (remove-ship-from-chat:lib +.act state bowl)
       :: message management pokes
@@ -150,6 +152,7 @@
           %poke-ack
             ?~  p.sign  `this
             =/  log1  (maybe-log hide-debug.state "%realm-chat: {<(spat wire)>} dbpoke failed")
+            =/  log2  (maybe-log hide-debug.state "{<p.sign>}")
             :: ~&  >>>  p.sign
             `this
             :: ?~  +.wire

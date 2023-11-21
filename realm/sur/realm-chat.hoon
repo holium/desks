@@ -59,6 +59,7 @@
       [%pin-message =path =msg-id:db pin=?]
       [%clear-pinned-messages =path]
       [%add-ship-to-chat t=@da =path =ship host=(unit ship) =nft-sig join-silently=?]
+      [%edit-ship-role t=@da =path =ship role=@tas]
       [%remove-ship-from-chat =path =ship]
       [%send-message =path fragments=(list minimal-fragment:db) expires-in=@dr]
       [%vented-send-message t=@da =path fragments=(list minimal-fragment:db) expires-in=@dr]
