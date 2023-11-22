@@ -130,6 +130,11 @@
         =/  hash  .^(@uv %cz [(scot %p our.bowl) i.t.t.path (scot %da now.bowl) ~])
         ``bazaar-view+!>([%app-hash hash])
       ::
+      [%x %vere-version ~]     ::  ~/scry/bazaar/vere-version.json
+        =/  info  .^(vere %$ /(scot %p our.bowl)//(scot %da now.bowl)/zen/ver)
+        =/  jon=json   n+(crip (oust [0 2] (trip `@t`-.+.+.rev.-.info)))
+        ``json+!>(jon)
+      ::
       [%x %catalog ~]     ::  ~/scry/bazaar/catalog
         ``bazaar-view+!>([%catalog catalog.state])
       ::
