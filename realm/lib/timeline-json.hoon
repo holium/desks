@@ -77,8 +77,6 @@
         [%add-chat (ot ~[path+pa name+seta force+bo])]
         [%convert-message (ot ~[msg-id+msg-id msg-part-id+ni to+(ar pa)])]
         [%add-random-emojis (ot ~[path+pa])]
-        [%scry-test ul]
-        [%crash-test ul]
     ==
   --
 --

@@ -3,9 +3,9 @@
     vio=ventio, server, dbug, verb, default-agent
 :: Import during development to force compilation...
 ::
-/=  tv-  /mar/timeline/view
-/=  ta-  /mar/timeline/action
-/=  td-  /ted/vines/timeline
+/=  x  /mar/timeline/view
+/=  x  /mar/timeline/action
+/=  x  /ted/vines/timeline
 ::
 |%
 +$  state-0  [%0 ~]
@@ -24,6 +24,7 @@
 ++  on-init
   ^-  (quip card _this)
   :_  this
+  ~&  %initing
   :~  [%pass /eyre/connect %arvo %e %connect `/apps/timeline dap.bowl]
       [%pass / %agent [our dap]:bowl %poke timeline-action+!>([%create-personal-timeline ~])]
   ==
@@ -36,6 +37,7 @@
   =/  old=state-0  !<(state-0 ole)
   =.  state  old
   :_  this
+  ~&  %loading
   [%pass / %agent [our dap]:bowl %poke timeline-action+!>([%create-personal-timeline ~])]~
 ::
 ++  on-poke
@@ -83,8 +85,6 @@
   |=  =(pole knot)
   ^-  (unit (unit cage))
   ?+    pole  (on-peek:def pole)
-    [%x %func-scry ~]  ``noun+!>(|=(a=@ud `@ud`(add a 15)))
-    ::
       [%x %timelines ~]
     =+  .^(=state-2:db %gx /(scot %p our.bowl)/bedrock/(scot %da now.bowl)/db/db-state)
     =/  paths=(list path)

@@ -25,8 +25,6 @@
       [%create-personal-timeline ~]
       [%convert-message =msg-id:cd =msg-part-id:cd to=(list path)]
       [%add-random-emojis =path]
-      [%scry-test ~]
-      [%crash-test ~]
   ==
 ::
 +$  update  ~

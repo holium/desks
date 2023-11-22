@@ -17,6 +17,8 @@
 ::
 ;<  ~  bind:m  (trace %running-timeline-vine ~)
 ::
+~&  mark+mark
+::
 |^
 ?+    mark  (just-poke [our dap]:gowl mark vase) :: poke normally
     %handle-http-request
@@ -78,6 +80,12 @@
           [%timeline ~ & ~]  ~
       ==
     ;<  ~  bind:m  (poke [our.gowl %bedrock] cage)
+    :: poke the %explore-reverse-proxy
+    ::
+    =/  =^cage
+      :-  %explore-action  !>
+      [%update-timeline our.gowl path [%timeline ~ & ~]]
+    ;<  ~  bind:m  (poke proxy cage)
     :: return created path
     ::
     (pure:m !>(`[%timeline-path path]))
@@ -90,6 +98,10 @@
       (pure:m !>([~[%timeline-does-not-exist] ~]))
     =/  =cage  db-action+!>([%delete-path path])
     ;<  ~  bind:m  (poke [our.gowl %bedrock] cage)
+    :: poke the %explore-reverse-proxy
+    ::
+    =/  =^cage  explore-action+!>([%remove-timeline path])
+    ;<  ~  bind:m  (poke proxy cage)
     (pure:m !>(`~))
     ::
       %set-timeline-nft
@@ -250,6 +262,7 @@
     ::
       %create-personal-timeline
     =/  =path  /timeline/(scot %p our.gowl)/our
+    ~&  %creating-personal-timeline
     ?:  (test-bedrock-path-existence:scries path gowl)
       ~&  >>  %personal-timeline-already-exists
       (pure:m !>([~[%personal-timeline-already-exists] ~]))
@@ -318,26 +331,10 @@
     ~&  >>  %poking-bedrock-with-create-many
     ;<  ~  bind:m  (poke [our.gowl %bedrock] cage)
     (pure:m !>(`~))
-    ::
-      %scry-test
-    ~&  >>  %scrying
-    ;<  ~  bind:m  (poke [our.gowl %venter] fail-scry+!>(~))
-    ~&  >>  %we-scried
-    (pure:m !>([~[%hello] ~]))
-    ::
-      %crash-test
-    ~&  %crash-test
-    =|  idx=@ud
-    |-
-    ;<  a=$-(@ud ^)  bind:m
-      (scry-hard ,$-(@ud ^) /gx/timeline/func-scry/noun)
-    ?:  =(idx 100)
-      ~&  >>  %we-got-here
-      ~&  [idx a+(a 43)]
-      (pure:m !>(`~))
-    $(idx +(idx))
   ==
 ==
+::
+++  proxy  [~halnus %explore-reverse-proxy]
 ::
 ++  bedrock-state
   =/  m  (strand ,state-2:db)
