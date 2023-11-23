@@ -68,10 +68,12 @@
       ==
     :: create the timeline path in bedrock
     ::
+    ~&  >  %creating-new-timeline
     ;<  ~  bind:m
       (poke [our.gowl %bedrock] db-action+!>([%create-path row]))
     :: add the %timeline entry at this path
     ::
+    ~&  >  %adding-timeline-entry
     =/  =cage
       :-  %db-action  !>
       :*  %create  [our now]:gowl
@@ -82,12 +84,14 @@
     ;<  ~  bind:m  (poke [our.gowl %bedrock] cage)
     :: poke the %explore-reverse-proxy
     ::
+    ~&  >  %sending-to-reverse-proxy
     =/  =^cage
       :-  %explore-action  !>
       [%update-timeline our.gowl path [%timeline ~ & ~]]
     ;<  ~  bind:m  (poke proxy cage)
     :: return created path
     ::
+    ~&  >  %returning-created-path
     (pure:m !>(`[%timeline-path path]))
     ::
       %delete-timeline
