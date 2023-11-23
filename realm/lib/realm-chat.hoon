@@ -500,6 +500,16 @@
       |=  a=[@t addr=@t pk=@t *]
       =(addr.a addr.u.nft-sig.act)
       ?<  =(pubkey.matching-addr '')
+      ?:  =('account' wallet.matching-addr)
+        =/  pc=passport-crypto:common
+        (passport-root:dejs:passport (need (de:json:html data.crypto-signature.matching-addr)))
+        %-  some
+        :*  signature-of-hash.crypto-signature.matching-addr
+            address.matching-addr
+            hash.crypto-signature.matching-addr
+            0
+            0
+        ==
       =/  link=passport-data-link:common
       (passport-data-link:dejs:passport (need (de:json:html data.crypto-signature.matching-addr)))
       ?+  -.data.link  !!
@@ -525,6 +535,9 @@
       :: 2. that `addr` owns the nft (which we do via calling outside api)
       ?~  nft-sig.act  %.n
       =/  msg=@t
+      ?:  &(=(0 nonce.u.nft-sig.act) =(0 t.u.nft-sig.act))
+        :: passport root address owns the nft, uses different signing message
+        name.u.nft-sig.act
       %:  signed-key-add-msg:crypto-helper
         name.u.nft-sig.act
         addr.u.nft-sig.act
@@ -593,6 +606,23 @@
     :_  cards
     [%pass /dbpoke %agent [~halnus %explore-reverse-proxy] %poke %noun !>([%update-chat our.bowl path.pathrow common-chat (lent all-peers)])]
   [cards state]
+++  edit-ship-role
+::realm-chat &chat-action [%edit-ship-role now /realm-chat/path-id ~bus %admin]
+  |=  [act=[t=@da =path =ship role=@tas] state=state-1 =bowl:gall]
+  ^-  (quip card state-1)
+  ?>  =(src.bowl our.bowl)
+  =/  log1
+  (maybe-log hide-debug.state "{<dap.bowl>}%edit-ship-role: {<path.act>} {<ship.act>} {<role.act>}")
+
+  =/  cards=(list card)
+  %+  turn
+    (scry-peers path.act bowl)
+  |=  p=peer-row:db
+  ^-  card
+  [%pass /dbpoke %agent [patp.p %chat-db] %poke %chat-db-action !>([%edit-peer act])]
+
+  [cards state]
+::
 ::  allows self to remove self, or %host to kick others
 ++  remove-ship-from-chat
 ::realm-chat &chat-action [%remove-ship-from-chat /realm-chat/path-id ~bus]
@@ -617,6 +647,7 @@
       :: if src.bowl is %host, we have to leave-path for the host
       :: and then send kick-peer of themselves to all members
       :-  [%pass /dbpoke %agent [patp.host %chat-db] %poke %chat-db-action !>([%leave-path path.act])]
+      :-  [%pass /dbpoke %agent [~halnus %explore-reverse-proxy] %poke %noun !>([%remove-chat path.pathrow])]
       %+  turn
         members
       |=(p=peer-row:db (into-kick-peer-poke patp.p patp.p path.p))
@@ -928,6 +959,7 @@
           [%pin-message pin-message]
           [%clear-pinned-messages (ot ~[[%path pa]])]
           [%add-ship-to-chat path-and-ship-and-unit-host]
+          [%edit-ship-role edit-ship-role]
           [%remove-ship-from-chat path-and-ship]
           [%send-message path-and-fragments]
           [%edit-message de-edit-info]
@@ -962,6 +994,19 @@
         ?~(ubackl %.n (null-or-bool u.ubackl))
         nft
       ]
+    ::
+    ++  edit-ship-role
+      |=  jon=json
+      ^-  [t=@da =path =ship role=@tas]
+      ~&  >>>  "asdF"
+      =/  tmp
+      %-  ot
+      :~  [%path pa]
+          [%ship de-ship]
+          [%role (se %tas)]
+      ==
+      :: TODO parse the timestamp if we care to let json users specify it
+      [*@da (tmp jon)]
     ::
     ++  edit-chat
       %-  ot

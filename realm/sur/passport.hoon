@@ -32,6 +32,7 @@
 
       [%reset ~]
       [%init-our-passport ~]
+      [%add-pals-as-friends ~]
   ==
 ::
 +$  req-id  [src=ship now=@da] :: the request-id, used for threads and venting

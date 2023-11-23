@@ -9,6 +9,21 @@
 ::
 ::  random helpers
 ::
+++  is-valid-editor :: %host or %admin
+  |=  [editor=@p peers=(list peer-row:sur)]
+  ^-  ?
+  =/  admins=(list ship)
+  %+  turn
+    (skim peers |=(p=peer-row:sur |(=(role.p %host) =(role.p %admin))))
+  |=  p=peer-row:sur
+  ^-  ship
+  patp.p
+
+  %+  lien
+    admins
+  |=  s=@p
+  =(s editor)
+::
 ++  is-valid-inviter
   |=  [=path-row:sur peers=(list peer-row:sur) src=ship patp=ship]
   ^-  ?
@@ -244,10 +259,8 @@
   ^-  (quip card state-5)
 
   =/  original-peers-list   (~(got by peers-table.state) path)
-  :: edit-path-metadata pokes are only valid from the ship which is
-  :: the %host of the path
-  =/  host-peer-row         (snag 0 (skim original-peers-list |=(p=peer-row:sur =(role.p %host))))
-  ?>  =(patp.host-peer-row src.bowl)
+  :: assert that this edit comes from the %host or an %admin
+  ?>  (is-valid-editor src.bowl original-peers-list)
 
   =/  row=path-row:sur        (~(got by paths-table.state) path)
   =/  oldrow=path-row:sur     (~(got by paths-table.state) path)
@@ -295,8 +308,7 @@
   |=  [=path state=state-5 =bowl:gall]
   ^-  (quip card state-5)
   ?>  =(our.bowl src.bowl)  :: leave pokes are only valid from ourselves. if others want to kick us, that is a different matter
-  ~&  %leaving-path
-  ~&  path
+  ~&  "%leaving-path {<path>}"
   =.  messages-table.state  messages-table:s:(remove-messages-for-path state path now.bowl)
   =.  paths-table.state  (~(del by paths-table.state) path)
   =.  peers-table.state  (~(del by peers-table.state) path)
@@ -484,6 +496,9 @@
       :: 2. that `addr` owns the nft (which we do via calling outside api)
       ?~  nft-sig.act  %.n
       =/  msg=@t
+      ?:  &(=(0 nonce.u.nft-sig.act) =(0 t.u.nft-sig.act))
+        :: passport root address owns the nft, uses different signing message
+        name.u.nft-sig.act
       %:  signed-key-add-msg:crypto-helper
         name.u.nft-sig.act
         addr.u.nft-sig.act
@@ -523,6 +538,50 @@
     [%give %fact [/db (weld /db/path path.act) ~] thechange]
     :: give vent response
     [%give %fact ~[vent-path] chat-vent+!>([%path (~(got by paths-table.state) path.act)])]
+    [%give %kick ~[vent-path] ~]
+  ==
+  [gives state]
+::
+++  edit-peer
+::chat-db &chat-db-action [%edit-peer now /a/path/to/a/chat ~bus %admin]
+  |=  [act=[t=@da =path patp=ship role=@tas] state=state-5 =bowl:gall]
+  ^-  (quip card state-5)
+  ?.  (~(has by paths-table.state) path.act)
+    `state  :: do nothing if we get an edit-peer on a path we aren't in
+
+  =/  original-pr   (~(got by paths-table.state) path.act)
+  =/  original-peers-list   (~(got by peers-table.state) path.act)
+
+  :: assert that this edit comes from the %host or an %admin
+  ?>  (is-valid-editor src.bowl original-peers-list)
+  :: assert that the target ship being edited is NOT the host (host is stuck as %host)
+  =/  host-peer-row         (snag 0 (skim original-peers-list |=(p=peer-row:sur =(role.p %host))))
+  ?<  =(patp.host-peer-row patp.act)
+  :: assert that the target ship being edited is already a peer
+  =/  og-peer=peer-row:sur  (snag 0 (skim original-peers-list |=(p=peer-row:sur =(patp.act patp.p))))
+
+  ::  do the update
+  =/  row=peer-row:sur   [
+    path.act
+    patp.act
+    role.act
+    created-at.og-peer
+    t.act
+    now.bowl
+  ]
+  =/  peers=(list peer-row:sur)
+  %+  snoc
+    (skip original-peers-list |=(p=peer-row:sur =(patp.act patp.p)))
+  row
+  =.  peers-table.state  (~(put by peers-table.state) path.act peers)
+
+  :: return response
+  =/  thechange  chat-db-change+!>(~[[%add-row [%peers row]]])
+  =/  vent-path=path  /chat-vent/(scot %da t.act)
+  =/  gives  :~
+    [%give %fact [/db (weld /db/path path.act) ~] thechange]
+    :: give vent response
+    [%give %fact ~[vent-path] chat-vent+!>([%peers peers])]
     [%give %kick ~[vent-path] ~]
   ==
   [gives state]
@@ -597,7 +656,6 @@
     `state  :: since the path already exists in bedrock, assume we have already dumped
 
   :: second, push everything into bedrock
-  ~&  >  "have not dumped to bedrock, dumping now"
   =/  create-path-pokes=(list card)
     %+  turn 
       our-paths
@@ -1102,6 +1160,9 @@
         %ack     s/%ack
         %msg     a+(turn message.chat-vent |=(m=msg-part:sur (messages-row [msg-id.m msg-part-id.m] m)))
         %path    (path-row path-row.chat-vent)
+        %peers
+        :-  %a
+        (turn peers.chat-vent peer-row)
         %path-and-count
       =/  prj=json  (path-row path-row.chat-vent)
       ?>  ?=([%o *] prj)

@@ -118,6 +118,7 @@
       [%delete =msg-id]
       [%delete-backlog =path before=time]
       [%add-peer t=@da =path patp=ship =nft-sig]
+      [%edit-peer t=@da =path patp=ship role=@tas]
       [%kick-peer =path patp=ship]
       [%dump-to-bedrock ~]
       [%dump-to-bedrock-messages our-paths=(list path-row)]
@@ -163,6 +164,7 @@
 +$  chat-vent
   $%  [%msg =message]
       [%path =path-row]
+      [%peers peers=(list peer-row)]
       [%path-and-count =path-row msg-count=@ud]
       [%ack ~]
   ==
