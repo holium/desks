@@ -499,8 +499,7 @@
 ::
 ++  proxy
   |%
-  :: [~halnus %explore-reverse-proxy]
-  ++  agent  [~tomsug-nalwet-niblyx-malnus %explore-reverse-proxy]
+  ++  agent  [~halnus %explore-reverse-proxy]
   ::
   ++  create-timeline
     |=  [host=@p row:db]
