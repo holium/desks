@@ -135,6 +135,9 @@
         =/  jon=json   n+(crip (oust [0 2] (trip `@t`-.+.+.rev.-.info)))
         ``json+!>(jon)
       ::
+      [%x %zuse ~]     ::  ~/scry/bazaar/zuse.json
+        ``json+!>((numb:enjs:format zuse))
+      ::
       [%x %catalog ~]     ::  ~/scry/bazaar/catalog
         ``bazaar-view+!>([%catalog catalog.state])
       ::
