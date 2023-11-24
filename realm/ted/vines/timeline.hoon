@@ -85,10 +85,8 @@
     :: poke the %explore-reverse-proxy
     ::
     ~&  >  %sending-to-reverse-proxy
-    =/  =^cage
-      :-  %explore-action  !>
-      [%update-timeline our.gowl path [%timeline ~ & ~]]
-    ;<  ~  bind:m  (poke proxy cage)
+    ;<  =row:db  bind:m  (timeline-row path)
+    ;<  ~        bind:m  (create-timeline:proxy our.gowl row)
     :: return created path
     ::
     ~&  >  %returning-created-path
@@ -102,10 +100,6 @@
       (pure:m !>([~[%timeline-does-not-exist] ~]))
     =/  =cage  db-action+!>([%delete-path path])
     ;<  ~  bind:m  (poke [our.gowl %bedrock] cage)
-    :: poke the %explore-reverse-proxy
-    ::
-    =/  =^cage  explore-action+!>([%remove-timeline path])
-    ;<  ~  bind:m  (poke proxy cage)
     (pure:m !>(`~))
     ::
       %set-timeline-nft
@@ -175,7 +169,12 @@
       ==
     ;<  out=^vase  bind:m  (run-thread %realm %venter !>(`action))
     =+  ;;(vnt=vent:db q.out)
-    (pure:m !>(?>(?=(%row -.vnt) `[%timeline-post +.vnt])))
+    :: poke the %explore-reverse-proxy
+    ::
+    ~&  >  %sending-to-reverse-proxy
+    ?>  ?=(%row -.vnt)
+    ;<  ~  bind:m  (create-timeline-post:proxy our.gowl row.vnt)
+    (pure:m !>(`[%timeline-post +.vnt]))
     ::
       %delete-timeline-post
     =/  =action:db
@@ -338,8 +337,6 @@
   ==
 ==
 ::
-++  proxy  [~halnus %explore-reverse-proxy]
-::
 ++  bedrock-state
   =/  m  (strand ,state-2:db)
   ^-  form:m
@@ -499,4 +496,55 @@
     (scry ,[* pt=pathed-table:db *] scry-path)
   =/  rows=(list row:db)  ~(val by (~(got by pt) path))
   (pure:m ?>(?=([* ~] rows) i.rows))
+::
+++  proxy
+  |%
+  :: [~halnus %explore-reverse-proxy]
+  ++  agent  [~tomsug-nalwet-niblyx-malnus %explore-reverse-proxy]
+  ::
+  ++  create-timeline
+    |=  [host=@p row:db]
+    =/  m  (strand ,~)
+    ^-  form:m
+    =;  =cage  (poke agent cage)
+    :-  %explore-action  !>
+    :*  %update-timeline
+        host
+        path
+        id
+        type
+        ?>  ?=(%timeline -.data)
+        %-  pairs:enjs:format
+        :~  ['metadata' o+(malt (turn ~(tap by metadata.data) |=([k=@t v=@t] [k s+v])))]
+            ['public' b+public.data]
+            ['title' s+'Placeholder Title']
+            :: ['nft' (timeline-nft-to-json:enjs:db nft.data)]
+        ==
+        created-at
+        updated-at
+        received-at
+    ==
+  ::
+  ++  create-timeline-post
+    |=  [host=@p row:db]
+    =/  m  (strand ,~)
+    ^-  form:m
+    =;  =cage  (poke agent cage)
+    :-  %explore-action  !>
+    :*  %update-timeline-post
+        host
+        path
+        id
+        type
+        ?>  ?=(%timeline-post -.data)
+        %-  pairs:enjs:format
+        :~  ['parent' ?~(parent.data ~ (parent-to-json:enjs:db u.parent.data))]
+            ['app' ?~(app.data ~ (app-to-json:enjs:db u.app.data))]
+            ['blocks' a+(turn blocks.data block-to-json:enjs:db)]
+        ==
+        created-at
+        updated-at
+        received-at
+    ==
+  --
 --
