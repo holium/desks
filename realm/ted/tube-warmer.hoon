@@ -25,15 +25,15 @@
 ::
 ;<  files=(map path vase)  bind:m
   (build-all-files our.bowl desk now.bowl paths)
-=/  marks=(list mark)  (turn paths en-fit)
 :: get list of all possible mark conversions (tubes) in the desk
 ::
+=/  marks=(list mark)  (turn paths en-fit)
 =/  mars=(list mars:clay)
   %~  tap  in
   %-  ~(gas in *(set mars:clay))
   %-  zing
   %+  turn  ~(tap by files)
-  mark-pairs
+  (mark-pairs (sy marks))
 :: warm all the tubes
 ::
 ;<  ~  bind:m  (build-all-tubes verb our.bowl desk now.bowl mars)
@@ -82,14 +82,15 @@
 ::   - to mark from grow arms
 ::
 ++  mark-pairs
+  |=  marks=(set mark)
   |=  [=path =vase]
   ^-  (list mars:clay)
   =/  fit=mark  (en-fit path)
   =/  [grab=(list mark) grow=(list mark)]
     (get-marks vase)
   ;:  weld  [fit fit]~
-    (turn grab |=(=mark [mark fit]))
-    (turn grow |=(=mark [fit mark]))
+    (murn grab |=(=mark ?.((~(has in marks) mark) ~ `[mark fit])))
+    (murn grow |=(=mark ?.((~(has in marks) mark) ~ `[fit mark])))
   ==
 ::
 ++  build-tube-soft
@@ -121,7 +122,8 @@
   ^-  form:m
   =*  loop  $
   ?~  mars  (pure:m ~)
-  ;<  tub=(unit tube:clay)  bind:m  (build-tube-soft [our des da+now] i.mars)
+  ;<  tub=(unit tube:clay)  bind:m
+    (build-tube-soft [our des da+now] i.mars)
   ?~  tub
     ~?  >>>  verb  [%build-tube-failed i.mars]
     loop(mars t.mars)
@@ -135,7 +137,8 @@
   ^-  form:m
   =*  loop  $
   ?~  marks  (pure:m ~)
-  ;<  das=(unit dais:clay)  bind:m  (build-dais-soft [our des da+now] i.marks)
+  ;<  das=(unit dais:clay)  bind:m
+    (build-dais-soft [our des da+now] i.marks)
   ?~  das
     ~?  >>>  verb  [%build-dais-failed i.marks]
     loop(marks t.marks)
