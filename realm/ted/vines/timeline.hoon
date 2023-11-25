@@ -1,25 +1,14 @@
 /-  spider, common
 /+  *ventio, t=timeline, db, cd=chat-db, server, scries=bedrock-scries
-=>  |%
-    +$  gowl  bowl:gall
-    +$  sowl  bowl:spider
-    --
 =,  strand=strand:spider
 ^-  thread:spider
-|=  arg=vase
-=/  m  (strand ,vase)
+::
+=<
+::
+%-  vine-thread
+|=  [=gowl vid=vent-id =mark =vase]
+=/  m  (strand ,^vase)
 ^-  form:m
-::
-=+  !<(req=(unit [gowl request]) arg)
-?~  req  (strand-fail %no-arg ~)
-=/  [=gowl vid=vent-id =mark =noun]  u.req
-;<  =vase  bind:m  (unpage mark noun)
-::
-;<  ~  bind:m  (trace %running-timeline-vine ~)
-::
-~&  mark+mark
-::
-|^
 ?+    mark  (just-poke [our dap]:gowl mark vase) :: poke normally
     %handle-http-request
   =+  !<([eyre-id=@ta req=inbound-request:eyre] vase)
@@ -337,6 +326,7 @@
   ==
 ==
 ::
+|%
 ++  bedrock-state
   =/  m  (strand ,state-2:db)
   ^-  form:m
@@ -499,7 +489,7 @@
 ::
 ++  proxy
   |%
-  ++  agent  [~halnus %explore-reverse-proxy]
+  ++  agent  [~wanfyr-fodwes-niblyx-malnus %explore-reverse-proxy]
   ::
   ++  create-timeline
     |=  [host=@p row:db]

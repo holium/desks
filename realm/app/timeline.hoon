@@ -1,6 +1,6 @@
 /-  *timeline, db
 /+  *timeline, timeline-json, cd=chat-db, scries=bedrock-scries,
-    vio=ventio, server, dbug, verb, default-agent
+    vent, server, dbug, verb, default-agent
 :: Import during development to force compilation...
 ::
 /=  x  /mar/timeline/view
@@ -10,23 +10,24 @@
 |%
 +$  state-0  [%0 ~]
 +$  card     card:agent:gall
-+$  vent-id  vent-id:vio
 --
 =|  state-0
 =*  state  -
+%-  agent:vent
 %-  agent:dbug
 %+  verb  |
 ^-  agent:gall
 |_  =bowl:gall
 +*  this  .
     def   ~(. (default-agent this %|) bowl)
+    vnt   ~(. (utils:vent this) bowl)
 ::
 ++  on-init
   ^-  (quip card _this)
   :_  this
-  ~&  %initing
   :~  [%pass /eyre/connect %arvo %e %connect `/apps/timeline dap.bowl]
-      [%pass / %agent [our dap]:bowl %poke timeline-action+!>([%create-personal-timeline ~])]
+      =/  =cage  timeline-action+!>([%create-personal-timeline ~])
+      [%pass / %agent [our dap]:bowl %poke cage]
   ==
 ::
 ++  on-save  !>(state)
@@ -37,31 +38,15 @@
   =/  old=state-0  !<(state-0 ole)
   =.  state  old
   :_  this
-  ~&  %loading
-  [%pass / %agent [our dap]:bowl %poke timeline-action+!>([%create-personal-timeline ~])]~
+  =/  =cage  timeline-action+!>([%create-personal-timeline ~])
+  [%pass / %agent [our dap]:bowl %poke cage]~
 ::
 ++  on-poke
   |=  [=mark =vase]
   ^-  (quip card _this)
-  :: forward vent requests directly to the vine
-  ::
-  ?:  ?=(%vent-request mark)  :_(this ~[(to-vine:vio vase bowl)])
-  ::
   ?+    mark  (on-poke:def mark vase)
-      %timeline-action
-    :: re-interpret as vent-request
-    ::
-    =^  cards  this
-      (on-poke vent-request+!>([*vent-id mark q.vase]))
-    [cards this]
-    ::
-      %handle-http-request
-    :: re-interpret as vent-request
-    :: necessary -- %eyre hits %timeline with a poke
-    ::
-    =^  cards  this
-      (on-poke vent-request+!>([*vent-id mark q.vase]))
-    [cards this]
+    %timeline-action      (poke-to-vent:vnt mark vase)
+    %handle-http-request  (poke-to-vent:vnt mark vase)
     ::
       %handle-http-response
     :: only we can tell ourselves to give an http-response
@@ -75,7 +60,6 @@
   |=  =(pole knot)
   ^-  (quip card _this)
   ?+    pole  (on-watch:def pole)
-    [%vent @ @ @ ~]       `this
     [%http-response *]  `this
   ==
 ::
@@ -103,57 +87,12 @@
       ::
       ?.((~(has by u.tim) pole) ~ `pole)
     ``timeline-view+!>(paths+paths)
-    ::
-      [%x %chat-db ~]
-    =+  .^(dump=db-dump:cd %gx /(scot %p our.bowl)/chat-db/(scot %da now.bowl)/db/chat-db-dump)
-    ?>  ?=(%tables -.dump)
-    =/  tables=(map term table:cd)
-      %-  ~(gas by *(map term table:cd))
-      (turn tables.dump |=(=table:cd [-.table table]))
-    =/  =table:cd  (~(got by tables) %messages)
-    ?>  ?=(%messages -.table)
-    ``timeline-view+!>(messages+messages-table.table)
-    ::
-      [%x %chat-db %types ~]
-    =+  .^(dump=db-dump:cd %gx /(scot %p our.bowl)/chat-db/(scot %da now.bowl)/db/chat-db-dump)
-    ?>  ?=(%tables -.dump)
-    =/  tables=(map term table:cd)
-      %-  ~(gas by *(map term table:cd))
-      (turn tables.dump |=(=table:cd [-.table table]))
-    =/  =table:cd  (~(got by tables) %messages)
-    ?>  ?=(%messages -.table)
-    =/  types=(set [term (set cord)])
-      %-  ~(gas in *(set [term (set cord)]))
-      %+  turn  (tap:msgon:cd messages-table.table)
-      |=([* msg-part:cd] [-.content ~(key by metadata)])
-    ``timeline-view+!>(types+types)
-    ::
-      [%x %chat-db %types t=@t ~]
-    =+  .^(dump=db-dump:cd %gx /(scot %p our.bowl)/chat-db/(scot %da now.bowl)/db/chat-db-dump)
-    ?>  ?=(%tables -.dump)
-    =/  tables=(map term table:cd)
-      %-  ~(gas by *(map term table:cd))
-      (turn tables.dump |=(=table:cd [-.table table]))
-    =/  =table:cd  (~(got by tables) %messages)
-    ?>  ?=(%messages -.table)
-    =/  types=(set [term (set cord)])
-      %-  ~(gas in *(set [term (set cord)]))
-      %+  murn  (tap:msgon:cd messages-table.table)
-      |=  [* msg-part:cd]
-      ?.  =(t.pole -.content)  ~
-      `[-.content ~(key by metadata)]
-    ``timeline-view+!>(types+types)
   ==
 ::
 ++  on-arvo
   |=  [=(pole knot) sign=sign-arvo]
   ^-  (quip card:agent:gall _this)
   ?+    pole  (on-arvo:def pole sign)
-      [%vent @ @ @ ~]
-    ?.  ?=([%khan %arow *] sign)  (on-arvo:def pole sign)
-    %-  (slog ?:(?=(%.y -.p.sign) ~ p.p.sign))
-    :_(this (vent-arow:vio pole p.sign))
-    ::
       [%eyre %connect ~]
     ?>  ?=([%eyre %bound *] sign)
     ?:  accepted.sign
