@@ -150,6 +150,7 @@
     (pure:m !>(`~))
     ::
       %create-timeline-post
+    ~&  %creating-timeline-post
     =/  =action:db
       :-  %create
       :*  [our now]:gowl  path.axn
@@ -330,7 +331,7 @@
 ++  bedrock-state
   =/  m  (strand ,state-2:db)
   ^-  form:m
-  (scry state-2:db /gx/bedrock/db/db-state)
+  (scry-hard state-2:db /gx/bedrock/db/db-state)
 :: accepts trailing fas
 ::
 ++  purl  |=(url=@t (rash url ;~(pfix fas (most fas urs:ab))))
@@ -350,7 +351,7 @@
   |=  [host=ship name=@ta]
   =/  m  (strand ,fullpath:db)
   ^-  form:m
-  (scry fullpath:db /gx/bedrock/db/path/timeline/(scot %p host)/[name]/db-path)
+  (scry-hard fullpath:db /gx/bedrock/db/path/timeline/(scot %p host)/[name]/db-path)
 ::
 ++  is-public
   |=  [host=ship name=@ta]
@@ -417,7 +418,7 @@
   =/  m  (strand ,(unit [[@p @da] type:common columns:db schema:db]))
   ^-  form:m
   ;<  dump=db-dump:cd  bind:m
-    (scry db-dump:cd /gx/chat-db/db/chat-db-dump)
+    (scry-hard db-dump:cd /gx/chat-db/db/chat-db-dump)
   ?>  ?=(%tables -.dump)
   =/  tables=(map term table:cd)
     %-  ~(gas by *(map term table:cd))
@@ -433,7 +434,7 @@
   =/  m  (strand ,(list [[@p @da] type:common columns:db schema:db]))
   ^-  form:m
   ;<  dump=db-dump:cd  bind:m
-    (scry db-dump:cd /gx/chat-db/db/chat-db-dump)
+    (scry-hard db-dump:cd /gx/chat-db/db/chat-db-dump)
   ?>  ?=(%tables -.dump)
   =/  tables=(map term table:cd)
     %-  ~(gas by *(map term table:cd))
@@ -456,7 +457,7 @@
   =/  m  (strand ,(list id:common:db))
   ^-  form:m
   ;<  [* pt=pathed-table:db *]  bind:m
-    (scry ,[* pt=pathed-table:db *] scry-path)
+    (scry-hard ,[* pt=pathed-table:db *] scry-path)
   (pure:m ~(tap in ~(key by (~(got by pt) path))))
 ::
 ++  timeline-metadata-id
@@ -469,7 +470,7 @@
   =/  m  (strand ,id:common:db)
   ^-  form:m
   ;<  [* pt=pathed-table:db *]  bind:m
-    (scry ,[* pt=pathed-table:db *] scry-path)
+    (scry-hard ,[* pt=pathed-table:db *] scry-path)
   =/  ids=(list id:common:db)  ~(tap in ~(key by (~(got by pt) path)))
   (pure:m ?>(?=([id:common:db ~] ids) i.ids))
 ::
@@ -483,13 +484,13 @@
   =/  m  (strand ,row:db)
   ^-  form:m
   ;<  [* pt=pathed-table:db *]  bind:m
-    (scry ,[* pt=pathed-table:db *] scry-path)
+    (scry-hard ,[* pt=pathed-table:db *] scry-path)
   =/  rows=(list row:db)  ~(val by (~(got by pt) path))
   (pure:m ?>(?=([* ~] rows) i.rows))
 ::
 ++  proxy
   |%
-  ++  agent  [~wanfyr-fodwes-niblyx-malnus %explore-reverse-proxy]
+  ++  agent  [~tomsug-nalwet-niblyx-malnus %explore-reverse-proxy]
   ::
   ++  create-timeline
     |=  [host=@p row:db]
