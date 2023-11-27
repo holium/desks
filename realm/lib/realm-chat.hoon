@@ -973,6 +973,7 @@
           [%remove-device remove-device]
           [%mute-chat mute-chat]
           [%pin-chat pin-chat]
+          [%toggle-msg-preview-notif bo]
       ==
     ::
     ++  create-chat
