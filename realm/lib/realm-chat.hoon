@@ -308,6 +308,33 @@
 
   [%pass /push-notification/(scot %da now.bowl) %arvo %i %request request *outbound-config:iris]
 ::
+++  voip-push-notification-card
+  |=  [=bowl:gall state=state-1 =path-row:db message=@t]
+  ^-  card
+  =/  details
+  :*  app-id.state
+      path-row
+      message
+  ==
+  ::  send http request
+  ::
+  =/  =header-list:http    ['Content-Type' 'application/json']~
+  =|  =request:http
+  =:  method.request       %'POST'
+      url.request          'https://onesignal.com/api/v1/notifications'
+      header-list.request  header-list
+      body.request
+        :-  ~
+        %-  as-octt:mimes:html
+        %-  trip
+        %-  en:json:html
+        %+  voip-request:encode
+          details
+        devices.state
+  ==
+
+  [%pass /push-notification/(scot %da now.bowl) %arvo %i %request request *outbound-config:iris]
+::
 ++  dm-already-exists
   |=  [typ=@tas peers=(list ship) =bowl:gall]
   ^-  ?
@@ -886,6 +913,22 @@
       %-  pairs
       :~  push-enabled+b+push-enabled.s
           msg-preview-notif+b+msg-preview-notif.s
+      ==
+    ::
+    ++  voip-request :: encodes for iris outbound
+      |=  [details=[app-id=@t =path-row:db msg=@t] =devices]
+      ^-  json
+      =/  player-ids  ~(val by devices)
+      %-  pairs
+      :~
+          ['app_id' s+app-id.details]
+          ['include_player_ids' a+(turn player-ids |=([id=@t] s+id))]
+          ['contents' (pairs ~[en+s+msg.details])]
+          ['apns_push_type_override' s+'voip']
+          :-  'data'
+          %-  pairs
+          :_  ~
+          ['path-row' (path-row:encode:chat-db path-row.details)]
       ==
     ::
     ++  notify-request :: encodes for iris outbound

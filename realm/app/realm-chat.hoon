@@ -225,6 +225,27 @@
                   ?:  =(sender.id our.bowl)   ~  :: if it's our message, don't do anything
 
                   =/  thepath   path.first-msg-part
+                  =/  prow      (scry-path-row:lib thepath bowl)
+
+                  :: VoIP push logic
+                  =/  should-voip-push=?
+                  ?+  -.content.first-msg-part  %.n
+                    %status
+                  =/  ucall  (find "started a call with you" (trip p.content.first-msg-part))
+                  ?~  ucall  %.n
+                  %.y
+                  ==
+                  =/  voip-cards=(list card)
+                  ?.  should-voip-push  ~
+                  ?>  ?=(%status -.content.first-msg-part)
+                  :_  ~
+                  %:  voip-push-notification-card:lib
+                      bowl
+                      state
+                      prow
+                      p.content.first-msg-part
+                  ==
+
                   ::  if it's a %react AND it's not reacting to our
                   ::  message, don't do anything
                   =/  not-replying-to-us=?
@@ -233,13 +254,12 @@
                   ?:  &(=(-.content.first-msg-part %react) not-replying-to-us)  ~
                   ?:  (~(has in mutes.state) thepath)               :: if it's a muted path, send a pre-dismissed notif to notif-db
                     =/  notif-db-card  (notif-new-msg:core parts our.bowl %.y bowl)
-                    [notif-db-card ~]
+                    [notif-db-card voip-cards]
                   =/  notif-db-card  (notif-new-msg:core parts our.bowl %.n bowl)
                   ?:  :: if we should do a push notification also,
                   ?&  push-enabled.state                  :: push is enabled
                       (gth (lent ~(tap by devices.state)) 0) :: there is at least one device
                   ==
-                    =/  prow            (scry-path-row:lib thepath bowl)
                     =/  mess            (scry-message:lib id bowl)
                     =/  space-scry=(unit view:spc)
                       ?.  =(%space type.prow)  ~
@@ -282,9 +302,9 @@
                           avatar
                           mess
                       ==
-                    [push-card notif-db-card ~]
+                    [push-card notif-db-card voip-cards]
                   :: otherwise, just send to notif-db
-                  [notif-db-card ~]
+                  [notif-db-card voip-cards]
 
                 =/  cards=(list card)
                   %-  zing
