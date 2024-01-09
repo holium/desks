@@ -57,6 +57,7 @@
       =del-log
       allowed-migration-hosts=(set @p)
       ongoing-migrations=(set [=ship =path])
+      blocked=(set @p)
   ==
 +$  state-and-changes   [s=state-5 ch=db-change]
 --

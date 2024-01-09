@@ -124,6 +124,7 @@
       [%dump-to-bedrock-messages our-paths=(list path-row)]
       [%de-dup-peers ~]
 
+      [%toggle-block =ship block=?]
       [%set-allowed-migrate-host =ship]
       [%remove-allowed-migrate-host =ship]
       [%migrate-chat new-host=ship =path]

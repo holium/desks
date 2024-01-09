@@ -11,6 +11,7 @@
 ++  grab
   |%
   ++  noun  action:chat-db
+  ++  json  action:dejs:db-lib
   --
 --
 
