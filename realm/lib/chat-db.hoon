@@ -230,6 +230,7 @@
 ::chat-db &chat-db-action [%create-path [/example ~ %group *@da *@da ~ %host %.y *@dr *@da (some ['0x000386E3F7559d9B6a2F5c46B4aD1A9587D59Dc3' 'eth-mainnet' 'ERC721'])] ~[[~zod %host] [~bus %member]] 100 ~ %.n]
   |=  [[row=path-row:sur peers=ship-roles:sur expected-msg-count=@ud t=(unit @da) join-silently=?] state=state-5 =bowl:gall]
   ^-  (quip card state-5)
+  ?<  (~(has in blocked.state) src.bowl)  ::assert that this message is NOT coming from someone we blocked
 
   ?>  ?!((~(has by paths-table.state) path.row))  :: ensure the path doesn't already exist!!!
   =.  received-at.row     now.bowl
@@ -328,6 +329,7 @@
 :: :chat-db &db-action [%insert ~2023.2.2..23.11.10..234a /a/path/to/a/chat (limo [[[%plain '0'] ~ ~] [[%plain '1'] ~ ~] [[%plain '1'] ~ ~] [[%plain '3'] ~ ~] ~]) ~2000.1.1]
   |=  [msg-act=insert-message-action:sur state=state-5 =bowl:gall]
   ^-  (quip card state-5)
+  ?<  (~(has in blocked.state) src.bowl)  ::assert that this message is NOT coming from someone we blocked
 
   =/  thepeers   (silt (turn (~(got by peers-table.state) path.msg-act) |=(a=peer-row:sur patp.a)))
   ?>  (~(has in thepeers) src.bowl)  :: messages can only be inserted by ships which are in the peers-list
@@ -363,6 +365,8 @@
 :: :chat-db &db-action [%insert-backlog list-of-msg-parts]
   |=  [=message:sur state=state-5 =bowl:gall]
   ^-  (quip card state-5)
+  ?<  (~(has in blocked.state) src.bowl)  ::assert that this message is NOT coming from someone we blocked
+
   ?:  =(0 (lent message))  `state  :: if the list is empty, don't do anything
   =/  index=@ud   0
   =/  changes=db-change:sur  *db-change:sur
@@ -407,6 +411,7 @@
 ::  :chat-db &db-action [%edit [[~2023.2.2..23.11.10..234a ~zod] /a/path/to/a/chat (limo [[[%plain 'poop'] ~ ~] ~])]]
   |=  [[=msg-id:sur p=path fragments=(list minimal-fragment:sur)] state=state-5 =bowl:gall]
   ^-  (quip card state-5)
+  ?<  (~(has in blocked.state) src.bowl)  ::assert that this message is NOT coming from someone we blocked
 
   ?>  =(sender.msg-id src.bowl)  :: edit pokes are only valid from the ship which is the original sender
   ?>  (has:msgon:sur messages-table.state [msg-id 0])  :: edit pokes are only valid if there is a fragment 0 in the table for the msg-id
@@ -436,6 +441,7 @@
 ::  :chat-db &db-action [%delete [timestamp=~2023.2.2..23.11.10..234a sender=~zod]]
   |=  [=msg-id:sur state=state-5 =bowl:gall]
   ^-  (quip card state-5)
+  ?<  (~(has in blocked.state) src.bowl)  ::assert that this message is NOT coming from someone we blocked
 
   :: delete pokes are only valid if there is a fragment 0 in the table for the msg-id
   =/  msg-part=msg-part:sur       (got:msgon:sur messages-table.state `uniq-id:sur`[msg-id 0])
@@ -486,6 +492,7 @@
   |=  [act=[t=@da =path patp=ship =nft-sig:sur] state=state-5 =bowl:gall]
   ^-  (quip card state-5)
   ~&  "{<dap.bowl>}%add-peer {<act>}"
+  ?<  (~(has in blocked.state) src.bowl)  ::assert that this message is NOT coming from someone we blocked
 
   =/  original-peers-list   (~(got by peers-table.state) path.act)
   =/  pathrow               (~(got by paths-table.state) path.act)
@@ -511,10 +518,11 @@
     :_  state
     (check-alchemy:crypto-helper path.act patp.act t.act chain:(need nft.pathrow) (need nft-sig.act))
   (finish-add-peer act state bowl)
-
+::
 ++  finish-add-peer
   |=  [act=[t=@da =path patp=ship =nft-sig:sur] state=state-5 =bowl:gall]
   ^-  (quip card state-5)
+  ?<  (~(has in blocked.state) src.bowl)  ::assert that this message is NOT coming from someone we blocked
   =/  original-peers-list   (~(got by peers-table.state) path.act)
   :: don't double-add a peer
   =/  ships=(set @p)  %-  silt
@@ -546,6 +554,7 @@
 ::chat-db &chat-db-action [%edit-peer now /a/path/to/a/chat ~bus %admin]
   |=  [act=[t=@da =path patp=ship role=@tas] state=state-5 =bowl:gall]
   ^-  (quip card state-5)
+  ?<  (~(has in blocked.state) src.bowl)  ::assert that this message is NOT coming from someone we blocked
   ?.  (~(has by paths-table.state) path.act)
     `state  :: do nothing if we get an edit-peer on a path we aren't in
 
@@ -590,6 +599,7 @@
 ::  :chat-db &chat-db-action [%kick-peer /a/path/to/a/chat ~bus]
   |=  [act=[=path patp=ship] state=state-5 =bowl:gall]
   ^-  (quip card state-5)
+  ?<  (~(has in blocked.state) src.bowl)  ::assert that this message is NOT coming from someone we blocked
   ?.  (~(has by paths-table.state) path.act)
     `state  :: do nothing if we get a kick-peer on a path we have already left
 
@@ -779,6 +789,16 @@
     =/  empty-dm=path-row:sur  (snag 0 empty-dms)
     =/  cs  (leave-path path.empty-dm state bowl)
     $(empty-dms +.empty-dms, cards (weld -.cs cards), state +.cs)
+::
+++  toggle-block
+::chat-db &chat-db-action [%toggle-block ~zod %.y]
+  |=  [[=ship block=?] state=state-5 =bowl:gall]
+  ^-  (quip card state-5)
+  ?>  =(src.bowl our.bowl)
+  =.  blocked.state
+    ?:  block  (~(put in blocked.state) ship)
+    (~(del in blocked.state) ship)
+  `state
 ::
 ++  set-allowed-migrate-host
 ::chat-db &chat-db-action [%set-allowed-migrate-host ~zod]
@@ -1231,5 +1251,21 @@
           updated-at+(time updated-at.peer-row)
           received-at+(time received-at.peer-row)
       ==
+  --
+::
+++  dejs
+  =,  dejs:format
+  |%
+  ++  action
+    |=  jon=json
+    ^-  ^action
+    =<  (decode jon)
+    |%
+    ++  decode
+      %-  of
+      :~  [%toggle-block (ot ~[ship+de-ship block+bo])]
+      ==
+    ++  de-ship  (su ;~(pfix sig fed:ag))
+    --
   --
 --

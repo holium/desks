@@ -13,7 +13,7 @@
   ++  on-init
     ^-  (quip card _this)
     =/  default-state=state-5
-      [%5 *paths-table:sur *messages-table:sur *peers-table:sur *del-log:sur ~ ~]
+      [%5 *paths-table:sur *messages-table:sur *peers-table:sur *del-log:sur ~ ~ ~]
     :_  this(state default-state)
     :~  [%pass /timer %arvo %b %wait next-expire-time:core]
     ::    [%pass /selfpoke %agent [our.bowl dap.bowl] %poke %chat-db-action !>([%dump-to-bedrock ~])]
@@ -177,6 +177,7 @@
       dl
       allowed-migration-hosts.old
       ongoing-migrations.old
+      ~
     ]
     [default-cards this(state new-state)]
       %5  [default-cards this(state old)]
@@ -225,6 +226,8 @@
       %de-dup-peers
         (de-dup-peers-and-leave-empty-dms:db-lib state bowl)
 
+      %toggle-block
+        (toggle-block:db-lib +.act state bowl)
       %set-allowed-migrate-host
         (set-allowed-migrate-host:db-lib +.act state bowl)
       %remove-allowed-migrate-host
